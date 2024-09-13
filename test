@@ -1,6 +1,0 @@
-#include <math.h>
-
-void main(void)
-{
-printf("tu es tres beau");
-}
