@@ -1,3 +1,4 @@
 # Python-Project
 # Logique -> Générer Maps -> Batiments -> Villageois
-# IA ->
+// IA -> Utiliser terminal pour connaitre la map
+
