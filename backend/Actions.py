@@ -1,155 +1,111 @@
-import heapq  # For priority queue
-from frontend.Terrain import *
+import heapq
 import time
+from frontend.Terrain import *
 
 class Action:
     def __init__(self, game_map):
-        self.map = game_map  # The map is passed in, so we can use it for pathfinding
+        self.map = game_map
+        #self.block_size = 5 #Essayer d'ajouter la granularité plus tard, pour l'instant c'est 1 et ca ne bug pas grace à dikjstra
 
     def move_unit(self, unit, target_x, target_y):
-        # Check if target coordinates are within map bounds
-        if not (0 <= target_x < self.map.width and 0 <= target_y < self.map.height):
-            print(f"Target ({target_x}, {target_y}) is out of bounds.")
+        # Check if the target destination is valid
+        if not self._is_within_bounds(target_x, target_y) or not self.map.is_tile_free(target_x, target_y):
             return False
 
-        # Check if target tile is walkable
-        if not self.map.is_tile_free(target_x, target_y):
-            print(f"Target ({target_x}, {target_y}) is not walkable.")
-            return False
-
-        # Get the unit's current position
+        # get current/starting position of the unit
         start_x, start_y = unit.position
         unit.target_position = (target_x, target_y)
 
-        # Find the path using A* algorithm
-        path = self.a_star_pathfinding((start_x, start_y), (target_x, target_y))
+        # If path is not already constructed, construct it using dijkstra algorithm
+        if not hasattr(unit, 'path') or not unit.path:
+            unit.path = self.dijkstra_pathfinding((start_x, start_y), (target_x, target_y))
 
-        # Initialize movement timer if not set
         if not hasattr(unit, 'last_move_time'):
-            unit.last_move_time = time.time()  # Record the time of the first move
+            unit.last_move_time = time.time()
 
-        # Calculate how much time has passed since the last move
+        # calculate time passed since last move of the unit
         current_time = time.time()
         time_since_last_move = current_time - unit.last_move_time
 
-        # If a path is found, move the unit step by step, respecting the unit's speed
-        if path:        
-            # Only move if enough time has passed for one step
-            if time_since_last_move >= unit.speed:
-                # Move only one step along the path
-                next_step = path[0]
-                step_x, step_y = next_step
+        # make unit move if enough time has passed
+        if unit.path and time_since_last_move >= unit.speed:
+            next_step = unit.path.pop(0)
+            self.map.move_unit(unit, *next_step)
+            unit.position = next_step
 
-                # Move the unit on the map
-                self.map.move_unit(unit, step_x, step_y)  # Update unit's position on the map
-                unit.position = (step_x, step_y)  # Update unit's internal position
-                if step_x == target_x and step_y == target_y:
-                    unit.target_position = None
-                # Reset the timer after moving
-                unit.last_move_time = current_time
-                return True
-            else:
-                return False
-        else:
-            return False
+            # update last move time of the unit 
+            unit.last_move_time = current_time
 
-        
-    def a_star_pathfinding(self, start, goal):
-        # Priority queue for open nodes
+            # If unit reach destination, flush path
+            if next_step == (target_x, target_y):
+                unit.target_position = None
+                unit.path = None
+            return True
+        return False
+
+    def dijkstra_pathfinding(self, start, goal):
         open_list = []
-        heapq.heappush(open_list, (0, start))  # (f, (x, y))
-        
-        # Dictionaries to store the cost and path
-        came_from = {}
-        g_score = {start: 0}
-        f_score = {start: self.heuristic(start, goal)}
-        
-        # Set of visited nodes
-        closed_list = set()
+        heapq.heappush(open_list, (0, start))  # add a starting node to the open list
+
+        came_from = {}  # stock where each node came from
+        cost_so_far = {start: 0}  # stock costs for each node
+
+        closed_list = set()  # already processed nodes
 
         while open_list:
-            # Get the node with the lowest f_score
-            _, current = heapq.heappop(open_list)
+            _, current = heapq.heappop(open_list)  # Get lowest cost node from open list
 
-            # If we reached the goal, reconstruct the path
+            # If destination reached, reconstruct path
             if current == goal:
-                return self.reconstruct_path(came_from, current)
-            
+                return self._reconstruct_path(came_from, current)
+
             closed_list.add(current)
 
-            # Check for distant nodes far from obstacles and skip some checks for performance
-            if self.is_far_from_obstacles(current):
-                # Directly move towards goal if far from obstacles
-                next_step = self.move_directly_towards_goal(current, goal)
-                if next_step:
-                    came_from[next_step] = current
-                    return [next_step]  # Return direct path when far from obstacles
-
-            # Otherwise, explore the neighbors (up, down, left, right, and diagonals)
-            neighbors = self.get_neighbors(current)
+            neighbors = self._get_neighbors(current)
             for neighbor in neighbors:
                 if neighbor in closed_list:
                     continue
 
-                # Diagonal move cost (can be adjusted if needed)
-                tentative_g_score = g_score[current] + (1.414 if abs(neighbor[0] - current[0]) + abs(neighbor[1] - current[1]) == 2 else 1)
+                new_cost = cost_so_far[current] + self._move_cost(current, neighbor)
 
-                if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
-                    # This path to the neighbor is better than any previous one
+                if neighbor not in cost_so_far or new_cost < cost_so_far[neighbor]:
+                    cost_so_far[neighbor] = new_cost
+                    priority = new_cost
+                    heapq.heappush(open_list, (priority, neighbor))
                     came_from[neighbor] = current
-                    g_score[neighbor] = tentative_g_score
-                    f_score[neighbor] = tentative_g_score + self.heuristic(neighbor, goal)
-                    
-                    if neighbor not in [item[1] for item in open_list]:
-                        heapq.heappush(open_list, (f_score[neighbor], neighbor))
 
-        # No path found
-        return None
+        return None # no path found
 
-    def is_far_from_obstacles(self, position):
-        # Check if the unit is far from obstacles
+    def _is_within_bounds(self, x, y):
+        return 0 <= x < self.map.width and 0 <= y < self.map.height
+
+    def _get_neighbors(self, position):
         x, y = position
-        for dx, dy in [(-2, 0), (2, 0), (0, -2), (0, 2)]:
+        neighbors = []
+
+        # Possible directions
+        directions = [
+            (-1, 0), (1, 0),
+            (0, -1), (0, 1),
+            (-1, -1), (-1, 1),
+            (1, -1), (1, 1)
+        ]
+
+        for dx, dy in directions:
             nx, ny = x + dx, y + dy
-            if 0 <= nx < self.map.width and 0 <= ny < self.map.height:
-                if not self.map.is_tile_free(nx, ny):  # If there's an obstacle within 2 tiles
-                    return False
-        return True
+            if self._is_within_bounds(nx, ny) and self.map.is_tile_free(nx, ny):
+                neighbors.append((nx, ny))
 
-    def move_directly_towards_goal(self, current, goal):
-        # Move directly in a straight line toward the goal if no obstacles nearby
-        direction_x = 1 if goal[0] > current[0] else -1 if goal[0] < current[0] else 0
-        direction_y = 1 if goal[1] > current[1] else -1 if goal[1] < current[1] else 0
-
-        next_step = (current[0] + direction_x, current[1] + direction_y)
-        if self.map.is_tile_free(next_step[0], next_step[1]):
-            return next_step
-        return None
+        return neighbors
 
 
-    def heuristic(self, a, b):
-        # Use Euclidean distance heuristic for better diagonal movement estimation
-        return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5
+    def _move_cost(self, current, neighbor):
+        return 1 if abs(current[0] - neighbor[0]) + abs(current[1] - neighbor[1]) == 1 else 1.414
 
-    def reconstruct_path(self, came_from, current):
+    def _reconstruct_path(self, came_from, current):
         path = []
         while current in came_from:
             path.append(current)
             current = came_from[current]
-        path.reverse()  # Reverse the path to go from start to goal
+        path.reverse()  #inverse the path for it to be in the right order
         return path
-
-    def get_neighbors(self, position):
-        x, y = position
-        neighbors = []
-
-        # Check all eight directions (up, down, left, right, and diagonals)
-        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1), 
-                       (-1, -1), (-1, 1), (1, -1), (1, 1)]:
-            nx, ny = x + dx, y + dy
-            if 0 <= nx < self.map.width and 0 <= ny < self.map.height:
-                # Only add walkable tiles
-                if self.map.is_tile_free(nx, ny):
-                    neighbors.append((nx, ny))
-        
-        return neighbors
