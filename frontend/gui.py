@@ -3,7 +3,6 @@ from backend.Starter_File import GUI_size
 from backend.Building import TownCenter
 from frontend.Terrain import Map
 
-#branch test
 # Define isometric tile dimensions
 TILE_WIDTH = 64
 TILE_HEIGHT = 32
