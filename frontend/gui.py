@@ -3,7 +3,11 @@ from backend.Starter_File import GUI_size
 from backend.Building import TownCenter
 from frontend.Terrain import Map
 
+<<<<<<< HEAD
 #branch test
+=======
+#ouais c Ghali
+>>>>>>> ed48777 (C Ghali test)
 # Define isometric tile dimensions
 TILE_WIDTH = 64
 TILE_HEIGHT = 32
