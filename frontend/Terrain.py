@@ -103,12 +103,21 @@ class Map:
                 pass
             return is_free
         return False
+    
+    def is_area_free(self, x, y, size):
+        for i in range(size):
+            for j in range(size):
+                if not self.is_tile_free(x + i, y + j):
+                    return False
+        return True
 
     def place_building(self, x, y, building):
-        if self.is_tile_free(x, y):
-            self.grid[y][x].building = building  # Update this line to set the building
+        if self.is_area_free(x, y, building.size):
             building.x = x
             building.y = y
+            for i in range(building.size):
+                for j in range(building.size):
+                    self.grid[y + j][x + i].building = building
 
     def place_unit(self, x, y, unit):
         if 0 <= x < self.width and 0 <= y < self.height:

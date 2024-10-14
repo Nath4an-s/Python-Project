@@ -34,7 +34,7 @@ def draw_isometric_map(screen, game_map, offset_x, offset_y):
             tile = game_map.grid[y][x]  # Correctly refer to the `grid` of the `game_map` instance
             
             # Check if there is a building on the tile
-            if isinstance(tile.building, TownCenter):  # Use `isinstance` to check for a TownCenter instance
+            if tile.building:
                 player = tile.building.player
                 color = PLAYER_COLORS.get(player.id, (255, 255, 255))  # Default to white if no player color
             else:
