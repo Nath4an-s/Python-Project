@@ -1,15 +1,14 @@
 from Units import *
 import random
 import math
-from frontend.Terrain import Map
 from Starter_File import players as players_list
 
 # Building Class
 class Building:
-    def __init__(self, player, name, hp, build_time, cost, size, position=(0, 0)):
+    def __init__(self, player, name, hp, build_time, cost, size=1, position=(0, 0)):
         self.player = player  # The player who owns the building
         self.name = name
-        self.hp = hp  # Health points
+        self.hp = hp
         self.build_time = build_time  # Time it takes to build the building
         self.cost = cost  # Cost is represented as {"Resource": amount}
         self.size = size  # Size is represented as (width, height)
@@ -37,29 +36,29 @@ class Building:
             town_center_y = map_center_y + int(radius * math.sin(angle))
 
             # Adjust the location if tile is not free
-            while not game_map.is_tile_free(town_center_x, town_center_y):
+            while not game_map.is_area_free(town_center_x, town_center_y, TownCenter(player).size):
                 town_center_x += random.choice([-1, 0, 1])
                 town_center_y += random.choice([-1, 0, 1])
 
-            if game_map.is_tile_free(town_center_x, town_center_y):
+            if game_map.is_area_free(town_center_x, town_center_y, TownCenter(player).size):
                 # Create an instance of Building (or TownCenter) to call spawn_building
-                building_instance = Building(player, "TownCenter", 1500, 60, {"wood": 275}, (2, 2), (town_center_x, town_center_y))
+                building_instance = Building(player, "TownCenter", 1500, 60, {"wood": 275}, TownCenter(player).size, (town_center_x, town_center_y))
                 building_instance.spawn_building(player, town_center_x, town_center_y, TownCenter, game_map)
 
                 # Check if the civilization is Marines
                 if player.civilization == "Marines":
                     marine_buildings = [
-                        (TownCenter, 2, 0), (TownCenter, -2, 0), 
-                        (Barracks, 3, 1), (Barracks, -3, -1), 
-                        (Stable, 3, -1), (Stable, -3, 1), 
-                        (ArcheryRange, 4, 0), (ArcheryRange, -4, 0)
+                        (TownCenter, 5, 0), (TownCenter, -5, 0), 
+                        (Barracks, 10, 4), (Barracks, -9, -4), 
+                        (Stable, 10, -4), (Stable, -9, 4),
+                        (ArcheryRange, 13, 0), (ArcheryRange, -12, 0)
                     ]
 
                     for building, offset_x, offset_y in marine_buildings:
                         new_x = town_center_x + offset_x
                         new_y = town_center_y + offset_y
 
-                        while not game_map.is_tile_free(new_x, new_y):
+                        while not game_map.is_area_free(new_x, new_y, building(player).size):
                             new_x += random.choice([-1, 0, 1])
                             new_y += random.choice([-1, 0, 1])
 
@@ -83,7 +82,7 @@ class Building:
 # TownCenter Class
 class TownCenter(Building):
     def __init__(self, player):
-        super().__init__(player, "Town Center", hp=1000, build_time=150, cost={"Wood": 350}, size=(4, 4))
+        super().__init__(player, "Town Center", hp=1000, build_time=150, cost={"Wood": 350}, size=4)
         self.symbol = 'T'
         self.population_increase = 5
 
@@ -102,7 +101,7 @@ class TownCenter(Building):
 # House Class
 class House(Building):
     def __init__(self, player):
-        super().__init__(player, "House", hp=200, build_time=25, cost={"Wood": 25}, size=(2, 2))
+        super().__init__(player, "House", hp=200, build_time=25, cost={"Wood": 25}, size=2)
         self.symbol = 'H'
         self.population_increase = 5
 
@@ -113,7 +112,7 @@ class House(Building):
 # Camp Class
 class Camp(Building):
     def __init__(self, player):
-        super().__init__(player, "Camp", hp=200, build_time=25, cost={"Wood": 100}, size=(2, 2))
+        super().__init__(player, "Camp", hp=200, build_time=25, cost={"Wood": 100}, size=2)
         self.symbol = 'C'
 
     def drop_point(self):
@@ -123,7 +122,7 @@ class Camp(Building):
 
 class Farm(Building):
     def __init__(self, player):
-        super().__init__(player, "Farm", hp=100, build_time=10, cost={"Wood": 60}, size=(2, 2))
+        super().__init__(player, "Farm", hp=100, build_time=10, cost={"Wood": 60}, size=2)
         self.symbol = 'F'
         self.food = 300  # Contains 300 Food
 
@@ -147,7 +146,7 @@ class Farm(Building):
 # Barracks Class
 class Barracks(Building):
     def __init__(self, player):
-        super().__init__(player, "Barracks", hp=500, build_time=50, cost={"Wood": 175}, size=(3, 3))
+        super().__init__(player, "Barracks", hp=500, build_time=50, cost={"Wood": 175}, size=3)
         self.symbol = 'B'
 
     def spawn_swordsman(self):
@@ -161,7 +160,7 @@ class Barracks(Building):
 # Stable Class
 class Stable(Building):
     def __init__(self, player):
-        super().__init__(player, "Stable", hp=500, build_time=50, cost={"Wood": 175}, size=(3, 3))
+        super().__init__(player, "Stable", hp=500, build_time=50, cost={"Wood": 175}, size=3)
         self.symbol = 'S'
 
     def spawn_horseman(self):
@@ -175,7 +174,7 @@ class Stable(Building):
 # ArcheryRange Class
 class ArcheryRange(Building):
     def __init__(self, player):
-        super().__init__(player, "Archery Range", hp=500, build_time=50, cost={"Wood": 175}, size=(3, 3))
+        super().__init__(player, "Archery Range", hp=500, build_time=50, cost={"Wood": 175}, size=3)
         self.symbol = 'A'
 
     def spawn_archer(self):
@@ -189,7 +188,7 @@ class ArcheryRange(Building):
 # Keep Class
 class Keep(Building):
     def __init__(self, player):
-        super().__init__(player, "Keep", hp=800, build_time=80, cost={"Wood": 35, "Gold": 125}, size=(1, 1))
+        super().__init__(player, "Keep", hp=800, build_time=80, cost={"Wood": 35, "Gold": 125}, size=1)
         self.symbol = 'K'
         self.attack = 5
         self.range = 8
@@ -211,4 +210,5 @@ class Keep(Building):
 
     def is_walkable(self):
         return False
+
 
