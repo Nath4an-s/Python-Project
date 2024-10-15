@@ -94,12 +94,12 @@ class Unit:
 
         
     @classmethod
-    def kill_unit(cls, player, unit_to_kill):
+    def kill_unit(cls, player, unit_to_kill, game_map):
         if unit_to_kill in player.units:
             player.units.remove(unit_to_kill)  # Remove the unit from the player's list of units
             player.population -= 1  # Decrease the player's population
             x, y = unit_to_kill.position
-            player.game_map.remove_unit(x, y)  # Assuming game_map is a property of the player
+            game_map.remove_unit(x, y)  # Assuming game_map is a property of the player
             print(f"Unit {unit_to_kill} belonging to {player.name} at ({x}, {y}) killed.")
         else:
             print(f"Unit {unit_to_kill} does not belong to {player.name}.")
