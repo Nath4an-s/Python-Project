@@ -11,34 +11,64 @@ class Action:
         if not self._is_within_bounds(target_x, target_y) or not self.map.is_tile_free(target_x, target_y):
             return False
 
-        # get current/starting position of the unit
-        start_x, start_y = unit.position
+        # Get current/starting position of the unit
+        start_x, start_y = unit.position[0], unit.position[1]
         unit.target_position = (target_x, target_y)
 
-        # If path is not already constructed, construct it using dijkstra algorithm
+        # If path is not already constructed, construct it using Dijkstra algorithm
         if not hasattr(unit, 'path') or not unit.path:
             unit.path = self.dijkstra_pathfinding((start_x, start_y), (target_x, target_y))
 
+        # Assuming 'unit' has a position attribute as a tuple of floats
         if not hasattr(unit, 'last_move_time'):
             unit.last_move_time = current_time_called
 
-        # calculate time passed since last move of the unit
+        # Calculate time passed since last move of the unit
         current_time = current_time_called
         time_since_last_move = current_time - unit.last_move_time
 
-        # make unit move if enough time has passed
-        if unit.path and time_since_last_move >= 1 / unit.speed:
-            next_step = unit.path.pop(0)
-            self.map.move_unit(unit, *next_step)
-            unit.position = next_step
+        # Calculate the distance the unit can move based on its speed
+        distance_to_move = unit.speed * time_since_last_move
 
-            # update last move time of the unit 
+        # Make unit move if enough time has passed
+        if unit.path and distance_to_move > 0:
+            # Get the next target position
+            next_step = unit.path[0]
+            
+            # Calculate direction vector to the next step
+            direction_x = next_step[0] - unit.position[0]
+            direction_y = next_step[1] - unit.position[1]
+            
+            # Calculate the length of the direction vector
+            length = (direction_x**2 + direction_y**2) ** 0.5
+            
+            if length > 0:
+                # Normalize the direction vector
+                normalized_x = direction_x / length
+                normalized_y = direction_y / length
+                
+                # Move the unit a fraction of the distance based on its speed
+                unit.position = (unit.position[0] + normalized_x * distance_to_move,
+                                unit.position[1] + normalized_y * distance_to_move)
+                
+                # Check if the unit has reached the next step
+                if ((unit.position[0] - next_step[0]) ** 2 + 
+                    (unit.position[1] - next_step[1]) ** 2) < (distance_to_move ** 2):
+                    # The unit has reached the next step, so remove it from the path
+                    unit.position = next_step
+                    unit.path.pop(0)
+
+            # Update the last move time
             unit.last_move_time = current_time
+            Map.move_unit(self.map, unit, int(unit.position[0]), int(unit.position[1]), int(start_x), int(start_y))
 
-            # If unit reach destination, flush path
-            if next_step == (target_x, target_y):
+            # If unit reaches destination, flush path
+            if unit.path == [unit.target_position]:
                 unit.target_position = None
                 unit.path = None
+                unit.position = (target_x, target_y)
+                Map.move_unit(self.map, unit, int(unit.position[0]), int(unit.position[1]), int(start_x), int(start_y))
+                print("MIRACLE !")
             return True
         return False
 

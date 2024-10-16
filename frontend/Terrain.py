@@ -131,15 +131,15 @@ class Map:
         else:
             print(f"No unit on tile ({x}, {y})")
 
-    def move_unit(self, unit, target_x, target_y):
+    def move_unit(self, unit, target_x, target_y, start_x, start_y):
         current_x, current_y = unit.position
 
         if 0 <= target_x < self.width and 0 <= target_y < self.height:
-            self.remove_unit(current_x, current_y)
+            self.remove_unit(start_x, start_y)
             self.place_unit(target_x, target_y, unit)
-            unit.position = (target_x, target_y)
         else:
             print(f"Target ({target_x}, {target_y}) is out of bounds.")
+            
     def get_viewport(self, top_left_x, top_left_y, viewport_width, viewport_height):
         viewport = []
         for y in range(top_left_y, min(top_left_y + viewport_height, self.height)):
