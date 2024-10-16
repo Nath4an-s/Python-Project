@@ -1,6 +1,5 @@
-import random
-import math
 import curses
+import time
 
 from Units import *
 from Building import *
@@ -32,6 +31,7 @@ class GameEngine:
 
         try:
             while not self.check_victory():
+                current_time = time.time()
 
                 # Handle input
                 stdscr.nodelay(True)  # Make getch() non-blocking
@@ -53,12 +53,11 @@ class GameEngine:
                     continue  # Skip the rest of the loop to reinitialize game engine state
                 elif key == ord('h'):  # When 'h' is pressed, test for the functions
                     action = Action(self.map)  # Create an Action instance
-                    action.move_unit(self.players[0].units[0], 0, 0)  # Move the first unit to (0, 0)
+                    action.move_unit(self.players[0].units[0], 0, 0, current_time) # Move the first unit to (0, 0)
                 elif key == ord('g'):  # When 'g' is pressed, test for the functions
                     Unit.kill_unit(self.players[0], self.players[0].units[1], self.map)
                 elif key == ord('\t'):  # TAB key
                     generate_html_report(Unit.get_all_units(self.players), self.players)
-
 
                 # Move units toward their target position
                 for player in self.players:
@@ -66,7 +65,7 @@ class GameEngine:
                         if unit.target_position:
                             target_x, target_y = unit.target_position
                             action = Action(self.map)  # Create an Action instance for movement
-                            action.move_unit(unit, target_x, target_y)
+                            action.move_unit(unit, target_x, target_y, current_time)
 
                 # Clear the screen and display the new part of the map after moving
                 stdscr.clear()

@@ -1,5 +1,4 @@
 import heapq
-import time
 from frontend.Terrain import *
 
 class Action:
@@ -7,7 +6,7 @@ class Action:
         self.map = game_map
         #self.block_size = 5 #Essayer d'ajouter la granularité plus tard, pour l'instant c'est 1 et ca ne bug pas grace à dikjstra
 
-    def move_unit(self, unit, target_x, target_y):
+    def move_unit(self, unit, target_x, target_y, current_time_called):
         # Check if the target destination is valid
         if not self._is_within_bounds(target_x, target_y) or not self.map.is_tile_free(target_x, target_y):
             return False
@@ -21,14 +20,14 @@ class Action:
             unit.path = self.dijkstra_pathfinding((start_x, start_y), (target_x, target_y))
 
         if not hasattr(unit, 'last_move_time'):
-            unit.last_move_time = time.time()
+            unit.last_move_time = current_time_called
 
         # calculate time passed since last move of the unit
-        current_time = time.time()
+        current_time = current_time_called
         time_since_last_move = current_time - unit.last_move_time
 
         # make unit move if enough time has passed
-        if unit.path and time_since_last_move >= unit.speed:
+        if unit.path and time_since_last_move >= 1 / unit.speed:
             next_step = unit.path.pop(0)
             self.map.move_unit(unit, *next_step)
             unit.position = next_step
@@ -109,3 +108,4 @@ class Action:
             current = came_from[current]
         path.reverse()  #inverse the path for it to be in the right order
         return path
+

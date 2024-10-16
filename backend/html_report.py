@@ -118,7 +118,7 @@ def generate_html_report(units, players):
             if unit_list:
                 for unit in unit_list:
                     html_content += f"<h3>{unit.name} (HP: {unit.hp})</h3>"
-                    html_content += f"<p>Position: {unit.position}</p>"
+                    html_content += f"<p>Position: ({unit.position[0]:.2f}, {unit.position[1]:.2f})</p>"
                     html_content += f"<p>Current Task: {unit.task}</p>"
             else:
                 html_content += "<p>No units yet</p>"

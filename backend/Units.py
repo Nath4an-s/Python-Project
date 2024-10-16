@@ -5,7 +5,7 @@ from Building import TownCenter
 
 # Unit Class
 class Unit:
-    def __init__(self, player, hp, cost, attack, speed, symbol="u", training_time=0, position=(0, 0)):
+    def __init__(self, player, hp, cost, attack, speed, symbol="u", training_time=0, position=(0.0, 0.0)):
         self.player = player
         self.hp = hp
         self.cost = cost
