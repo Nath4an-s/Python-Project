@@ -2,10 +2,12 @@ import curses
 import os
 import sys
 
+# Ajouter le chemin du projet à sys.path pour ne pas à le faire dans le terminal
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(project_root)
+
 from Game_Engine import GameEngine
 from Starter_File import players, map_size
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Main function to initialize and start the game using curses
 def main(stdscr):
@@ -19,4 +21,3 @@ def main(stdscr):
 
 if __name__ == "__main__":
     curses.wrapper(main)
-
