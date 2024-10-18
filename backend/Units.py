@@ -104,24 +104,12 @@ class Unit:
         else:
             print(f"Unit {unit_to_kill} does not belong to {player.name}.")
 
-    
-    @classmethod
-    def update_units(cls, players):
-        for player in players:
-            for unit in player.units:
-                unit.update()
-
-
     @classmethod
     def get_all_units(cls, players):
         units = []
         for player in players:
             units.extend(player.units)
         return units
-    
-    @classmethod
-    def update_units(self):
-        self.update_units(self.players)  # Call the updated method from the Unit class
 
 
 # Villager Class

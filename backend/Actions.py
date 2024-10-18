@@ -35,6 +35,13 @@ class Action:
             # Get the next target position
             next_step = unit.path[0]
             
+            # Check if the next step is still free (dynamic obstacle detection)
+            if not self.map.is_tile_free(next_step[0], next_step[1]):
+                # Recalculate path if the next step is blocked
+                unit.path = self.dijkstra_pathfinding((int(start_x), int(start_y)), (target_x, target_y))
+                if not unit.path:
+                    return False  # No valid path found
+            
             # Calculate direction vector to the next step
             direction_x = next_step[0] - unit.position[0]
             direction_y = next_step[1] - unit.position[1]

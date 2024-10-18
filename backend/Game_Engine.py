@@ -53,11 +53,13 @@ class GameEngine:
                     continue  # Skip the rest of the loop to reinitialize game engine state
                 elif key == ord('h'):  # When 'h' is pressed, test for the functions
                     action = Action(self.map)  # Create an Action instance
-                    action.move_unit(self.players[2].units[0], 0, 0, current_time) # Move the first unit to (0, 0)
+                    action.move_unit(self.players[0].units[0], 0, 0, current_time) # Move the first unit to (0, 0)
                 elif key == ord('g'):  # When 'g' is pressed, test for the functions
                     Unit.kill_unit(self.players[2], self.players[2].units[1], self.map)
                 elif key == ord('\t'):  # TAB key
                     generate_html_report(Unit.get_all_units(self.players), self.players)
+                elif key == ord('j'):
+                    Building.spawn_building(self.players[2], 1, 1, Barracks, self.map)
 
                 # Move units toward their target position
                 for player in self.players:
