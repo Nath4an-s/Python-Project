@@ -1,19 +1,14 @@
 
-STARTING_RESOURCES = [200, 50, 50]  # [Wood, Gold, Food]
-STARTING_RESOURCES_AI = [200, 50, 50]
+starting_resources = {
+    "Means": {"Wood": 200, "Food": 50, "Gold": 50},
+    "Leans": {"Wood": 2000, "Food": 2000, "Gold": 2000},
+    "Marines": {"Wood": 20000, "Food": 20000, "Gold": 20000},
+}
 
 class Resource:
-    def __init__(self):
-        self.starting_resources = {
-            "Wood": STARTING_RESOURCES[0],
-            "Gold": STARTING_RESOURCES[1],
-            "Food": STARTING_RESOURCES[2]
-        }
-        self.starting_resources_AI = {
-            "Wood": STARTING_RESOURCES_AI[0],
-            "Gold": STARTING_RESOURCES_AI[1],
-            "Food": STARTING_RESOURCES_AI[2]
-        }
+    def __init__(self, player):
+        self.starting_resources = starting_resources.get(player.civilization, {})
+        player.owned_resources = self.starting_resources.copy()
         self.costs = {
             "Villager": {"Wood": 0, "Gold": 0, "Food": 50},
             "Swordsman": {"Wood": 0, "Gold": 20, "Food": 50},
@@ -29,20 +24,15 @@ class Resource:
             "Keep": {"Wood": 35, "Gold": 125, "Food": 0}
         }
 
-    def is_affordable(self, entity, team="Blue"):
-        current_resources = self.starting_resources if team == "Blue" else self.starting_resources_AI
+    def is_affordable(self, entity, player):
         for resource, cost in self.costs[entity].items():
-            if current_resources[resource] < cost:
+            if player.owned_resources[resource] < cost:
                 return False
         return True
 
-    def buy(self, entity, team="Blue"):
-        if self.is_affordable(entity, team):
-            if team == "Blue":
-                for resource, cost in self.costs[entity].items():
-                    self.starting_resources[resource] -= cost
-            elif team == "Red":
-                for resource, cost in self.costs[entity].items():
-                    self.starting_resources_AI[resource] -= cost
+    def buy(self, entity, player):
+        if self.is_affordable(entity, player):
+            for resource, cost in self.costs[entity].items():
+                player.owned_resources[resource] -= cost
             return True
         return False
