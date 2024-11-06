@@ -53,21 +53,30 @@ class GameEngine:
                     continue  # Skip the rest of the loop to reinitialize game engine state
                 elif key == ord('h'):  # When 'h' is pressed, test for the functions
                     action = Action(self.map)  # Create an Action instance
-                    action.move_unit(self.players[0].units[0], 0, 0, current_time) # Move the first unit to (0, 0)
+                    action.move_unit(self.players[2].units[0], 2, 2, current_time) # Move the first unit to (0, 0)
                 elif key == ord('g'):  # When 'g' is pressed, test for the functions
                     Unit.kill_unit(self.players[2], self.players[2].units[1], self.map)
                 elif key == ord('\t'):  # TAB key
-                    generate_html_report(Unit.get_all_units(self.players), self.players)
+                    generate_html_report(self.players)
                 elif key == ord('j'):
                     Building.spawn_building(self.players[2], 1, 1, Barracks, self.map)
+                elif key == ord('k'):
+                    action = Action(self.map)  # Create an Action instance
+                    action.gather_resources(self.players[2].units[2], "Gold", current_time)
+                elif key == ord('l'):
+                    print(self.map.find_nearest_resource(self.players[2].units[2].position, "Gold"))
 
                 # Move units toward their target position
+                action = Action(self.map)
                 for player in self.players:
                     for unit in player.units:
                         if unit.target_position:
                             target_x, target_y = unit.target_position
-                            action = Action(self.map)  # Create an Action instance for movement
                             action.move_unit(unit, target_x, target_y, current_time)
+                        if unit.task == "gathering" or unit.task == "returning":
+                            action._gather(unit, unit.last_gathered, current_time)
+                        if unit.task == "marching":
+                            action.gather_resources(unit, unit.last_gathered, current_time)
 
                 # Clear the screen and display the new part of the map after moving
                 stdscr.clear()

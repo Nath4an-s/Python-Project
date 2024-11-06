@@ -2,7 +2,6 @@ import random
 import math
 from Building import TownCenter
 
-
 # Unit Class
 class Unit:
     def __init__(self, player, hp, cost, attack, speed, symbol="u", training_time=0, position=(0.0, 0.0)):
@@ -60,7 +59,7 @@ class Unit:
                     if (0 <= spawn_x < game_map.width and 
                         0 <= spawn_y < game_map.height):
                         
-                        if game_map.is_tile_free(spawn_x, spawn_y):  # Check if tile is free
+                        if game_map.is_tile_free_for_unit(spawn_x, spawn_y):  # Check if tile is free
                             cls.spawn_unit(Villager, spawn_x, spawn_y, player, game_map)  # Pass game_map
                             placed = True
                         else:
@@ -99,7 +98,7 @@ class Unit:
             player.units.remove(unit_to_kill)  # Remove the unit from the player's list of units
             player.population -= 1  # Decrease the player's population
             x, y = unit_to_kill.position
-            game_map.remove_unit(x, y)  # Assuming game_map is a property of the player
+            game_map.remove_unit(x, y, unit_to_kill)  # Assuming game_map is a property of the player
             print(f"Unit {unit_to_kill} belonging to {player.name} at ({x}, {y}) killed.")
         else:
             print(f"Unit {unit_to_kill} does not belong to {player.name}.")
@@ -121,21 +120,8 @@ class Villager(Unit):
         self.gather_rate = 25 / 60  # 25 resources per minute (in resources per second)
         self.name = name
         self.task = None
-
-    def gather_resource(self, tile):
-        if tile.resource:
-            gathered = tile.resource.gather(self.gather_rate)
-            self.carrying[tile.resource.type] = min(self.carrying[tile.resource.type] + gathered, self.carry_capacity)
-
-    def build(self, building, tile, remaining_build_time, num_villagers):
-        if not tile.building:
-            tile.building = building
-            actual_build_time = (3 * remaining_build_time) / (num_villagers + 2)
-            return actual_build_time
-
-    def update(self):
-        pass
-
+        self.position = (0, 0)  # Initial position should be set appropriately
+        self.last_gathered = None
 
 # Swordsman Class
 class Swordsman(Unit):

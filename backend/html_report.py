@@ -3,7 +3,7 @@ import webbrowser
 from Units import *
 from Building import *
 
-def generate_html_report(units, players):
+def generate_html_report(players):
     html_content = """
     <html>
     <head>

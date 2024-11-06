@@ -26,7 +26,7 @@ class Building:
         map_center_x = game_map.width // 2
         map_center_y = game_map.height // 2
         radius = int(0.45 * min(game_map.width, game_map.height))  # 90% of half the map size
-
+    
         angle_step = 360 // num_players  # Equal angular distance between town centers
         random.seed()  # Explicitly seed the random number generator
 

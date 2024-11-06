@@ -9,7 +9,8 @@ class Map:
         self.width = width
         self.height = height
         self.grid = [[Tile(x, y) for y in range(height)] for x in range(width)]  # Ensure this is correct
-        self.generate_map() 
+        self.resources = {"Gold": [], "Wood": []}
+        self.generate_map()
 
     def generate_map(self):
         self.generate_resources()
@@ -28,12 +29,14 @@ class Map:
             for _ in range(num_gold):
                 x = random.randint(0, self.width - 1)
                 y = random.randint(0, self.height - 1)
-                tile = self.grid[x][y]
+                tile = self.grid[y][x]
 
                 if tile.resource is None:  # Ensure no other resources overwrite the tile
                     resource_amount = random.randint(50, 200)
                     resource = Resource("Gold", resource_amount, symbol=resource_symbols["Gold"])
                     tile.resource = resource
+                    self.resources["Gold"].append((x, y))  # Store the position of Gold resources
+
 
         elif GameMode == "Gold Rush":
             # Gold Rush: All gold resources are concentrated in a smaller circle within a larger circle
@@ -56,12 +59,13 @@ class Map:
                     if (x - center_x) ** 2 + (y - center_y) ** 2 <= large_radius ** 2:
                         x = max(0, min(x, self.width - 1))
                         y = max(0, min(y, self.height - 1))
-                        tile = self.grid[x][y]
+                        tile = self.grid[y][x]
 
                         if tile.resource is None:  # Ensure no other resources overwrite the tile
                             resource_amount = random.randint(50, 200)
                             resource = Resource("Gold", resource_amount, symbol=resource_symbols["Gold"])
                             tile.resource = resource
+                            self.resources["Gold"].append((x, y))  # Store the position of Gold resources
                         break  # Exit the loop once a valid position is found
 
 
@@ -75,7 +79,7 @@ class Map:
 
             # Create an irregular forest by deciding tile placement randomly
             x, y = start_x, start_y
-            tile = self.grid[x][y]
+            tile = self.grid[y][x]
             directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
 
             for _ in range(forest_size):
@@ -87,18 +91,28 @@ class Map:
                 # Ensure the forest fits within the grid boundaries
                 x = max(0, min(x, self.width - 1))
                 y = max(0, min(y, self.height - 1))
-                tile = self.grid[x][y]
+                tile = self.grid[y][x]
 
                 if tile.resource is None:  # Avoid overwriting existing resources
                     resource_amount = random.randint(50, 200)
                     resource = Resource("Wood", resource_amount, symbol=resource_symbols["Wood"])
                     tile.resource = resource
+                    self.resources["Wood"].append((x, y))  # Store Wood resource position
 
 
     def is_tile_free(self, x, y):
         if 0 <= x < self.width and 0 <= y < self.height:
             tile = self.grid[y][x]
-            is_free = tile.resource is None and tile.building is None and tile.unit is None
+            is_free = tile.resource is None and tile.building is None and tile.unit == []
+            if not is_free:
+                pass
+            return is_free
+        return False
+    
+    def is_tile_free_for_unit(self, x, y):
+        if 0 <= x < self.width and 0 <= y < self.height:
+            tile = self.grid[y][x]
+            is_free = tile.resource is None and tile.building is None
             if not is_free:
                 pass
             return is_free
@@ -122,20 +136,18 @@ class Map:
     def place_unit(self, x, y, unit):
         if 0 <= x < self.width and 0 <= y < self.height:
             tile = self.grid[y][x]
-            tile.unit = unit  # Place the unit on the tile
+            tile.unit.append(unit)  # Place the unit on the tile
 
-    def remove_unit(self, x, y):
+    def remove_unit(self, x, y, unit):
         tile = self.grid[y][x]
         if tile.unit is not None:
-            tile.unit = None  # Remove the unit from the tile
+            tile.unit.remove(unit)  # Remove the unit from the tile
         else:
             print(f"No unit on tile ({x}, {y})")
 
     def move_unit(self, unit, target_x, target_y, start_x, start_y):
-        current_x, current_y = unit.position
-
         if 0 <= target_x < self.width and 0 <= target_y < self.height:
-            self.remove_unit(start_x, start_y)
+            self.remove_unit(start_x, start_y, unit)
             self.place_unit(target_x, target_y, unit)
         else:
             print(f"Target ({target_x}, {target_y}) is out of bounds.")
@@ -145,7 +157,7 @@ class Map:
         for y in range(top_left_y, min(top_left_y + viewport_height, self.height)):
             row = []
             for x in range(top_left_x, min(top_left_x + viewport_width, self.width)):
-                row.append(self.grid[x][y])
+                row.append(self.grid[y][x])
             viewport.append(row)
         return viewport
 
@@ -179,17 +191,18 @@ class Map:
                             stdscr.addstr(y, x * 2, str(tile.building), color_pair)  # Display building with color
                         elif tile.unit:
                             # Determine the color based on the unit's owner
-                            player = tile.unit.player.name
-                            if player == "Player 1":
-                                color_pair = curses.color_pair(1)  # Blue
-                            elif player == "Player 2":
-                                color_pair = curses.color_pair(2)  # Red
-                            elif player == "Player 3":
-                                color_pair = curses.color_pair(3)  # Purple
-                            else:
-                                color_pair = curses.color_pair(0)  # Default
+                            for unit in tile.unit:
+                                player = unit.player.name
+                                if player == "Player 1":
+                                    color_pair = curses.color_pair(1)  # Blue
+                                elif player == "Player 2":
+                                    color_pair = curses.color_pair(2)  # Red
+                                elif player == "Player 3":
+                                    color_pair = curses.color_pair(3)  # Purple
+                                else:
+                                    color_pair = curses.color_pair(0)  # Default
 
-                            stdscr.addstr(y, x * 2, str(tile.unit), color_pair)  # Display unit with color
+                                stdscr.addstr(y, x * 2, str(unit), color_pair)  # Display unit with color
                         else:
                             stdscr.addstr(y, x * 2, str(tile))  # Display regular tile content
 
@@ -202,6 +215,19 @@ class Map:
         curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)    # Player 2 (red)
         curses.init_pair(3, curses.COLOR_MAGENTA, curses.COLOR_BLACK)  # Player 3 (purple)
 
+    def find_nearest_resource(self, start_position, resource_type):
+        min_distance = float('inf')
+        nearest_resource = None
+
+        # Iterate through each resource position for the specified type
+        for resource_x, resource_y in self.resources[resource_type]:
+            distance = abs(start_position[0] - resource_x) + abs(start_position[1] - resource_y)
+
+            if distance < min_distance:
+                min_distance = distance
+                nearest_resource = (resource_x, resource_y)
+
+        return nearest_resource  # Returns coordinates (x, y) of nearest resource
 
 class Tile:
     def __init__(self, x, y):
@@ -209,7 +235,7 @@ class Tile:
         self.y = y
         self.resource = None
         self.building = None
-        self.unit = None
+        self.unit = []
 
     def __str__(self):
         if self.unit:
