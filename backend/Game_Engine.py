@@ -53,6 +53,8 @@ class GameEngine:
                     continue  # Skip the rest of the loop to reinitialize game engine state
                 elif key == ord('h'):  # When 'h' is pressed, test for the functions
                     action = Action(self.map)  # Create an Action instance
+                    #for unit in self.players[2].units:             #Takes time to calculates all paths but is perfectly smooth after that
+                        #action.move_unit(unit, 50, 60, current_time)
                     action.move_unit(self.players[2].units[0], 2, 2, current_time) # Move the first unit to (0, 0)
                 elif key == ord('g'):  # When 'g' is pressed, test for the functions
                     Unit.kill_unit(self.players[2], self.players[2].units[1], self.map)
@@ -62,7 +64,7 @@ class GameEngine:
                     Building.spawn_building(self.players[2], 1, 1, Barracks, self.map)
                 elif key == ord('k'):
                     action = Action(self.map)  # Create an Action instance
-                    action.gather_resources(self.players[2].units[2], "Gold", current_time)
+                    action.gather_resources(self.players[2].units[0], "Gold", current_time)
                 elif key == ord('l'):
                     print(self.map.find_nearest_resource(self.players[2].units[2].position, "Gold"))
 
