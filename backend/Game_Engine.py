@@ -64,9 +64,22 @@ class GameEngine:
                     Building.spawn_building(self.players[2], 1, 1, Barracks, self.map)
                 elif key == ord('k'):
                     action = Action(self.map)  # Create an Action instance
-                    action.gather_resources(self.players[2].units[0], "Gold", current_time)
+                    action.gather_resources(self.players[2].units[2], "Gold", current_time)
+                elif key == ord('o'):
+                    print(self.map.grid[0][0].resource.amount)
+                    print(f"Map has {len([tile for row in self.map.grid for tile in row if tile.resource and tile.resource.type == 'Gold'])} gold tiles")
+                elif key == ord('p'):
+                    print(self.map.grid[0][1].resource.amount)
+                    print(f"Map has {len([tile for row in self.map.grid for tile in row if tile.resource and tile.resource.type == 'Gold'])} gold tiles")
                 elif key == ord('l'):
-                    print(self.map.find_nearest_resource(self.players[2].units[2].position, "Gold"))
+                    print(self.map.grid[1][0].resource.amount)
+                    print(f"Map has {len([tile for row in self.map.grid for tile in row if tile.resource and tile.resource.type == 'Gold'])} gold tiles")
+                elif key == ord('m'):
+                    print(self.map.grid[1][1].resource.amount)
+                    print(f"Map has {len([tile for row in self.map.grid for tile in row if tile.resource and tile.resource.type == 'Gold'])} gold tiles")
+                if key == ord('r'):
+                    print(self.players[2].units[2].carrying)
+
 
                 # Move units toward their target position
                 action = Action(self.map)

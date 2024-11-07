@@ -182,32 +182,47 @@ class Action:
             self._gather(unit, resource_type, current_time_called)
 
     def _gather(self, unit, resource_type, current_time_called):
-        if unit.carrying[resource_type] < unit.carry_capacity:
-            # Initialize the last gather time
-            if not hasattr(unit, 'last_gather_time'):
-                unit.last_gather_time = current_time_called
+        # Locate the nearest resource of the specified type
+        target_x, target_y = Map.find_nearest_resource(self.map, unit.position, resource_type)
+        tile = self.map.grid[target_y][target_x] if target_x is not None and target_y is not None else None
 
-            # Calculate time since last gather action
-            time_since_last_gather = current_time_called - unit.last_gather_time
-            gatherable_amount = unit.gather_rate * time_since_last_gather
+        # Check if there is a resource on the target tile and it's the correct type
+        if tile and tile.resource and tile.resource.type == resource_type:
+            # Ensure the unit has capacity to gather more of this resource
+            if unit.carrying[resource_type] < unit.carry_capacity and tile.resource.amount > 0:
+                # Initialize last gather time if it hasn't been set
+                if not hasattr(unit, 'last_gather_time'):
+                    unit.last_gather_time = current_time_called
 
-            # Calculate the actual amount the unit can carry
-            space_left = unit.carry_capacity - unit.carrying[resource_type]
-            amount_to_gather = min(gatherable_amount, space_left)
+                # Calculate time since last gather action
+                time_since_last_gather = current_time_called - unit.last_gather_time
+                gatherable_amount = unit.gather_rate * time_since_last_gather
 
-            # Update the unit's inventory and last gather time if there is space left
-            if amount_to_gather > 0:
-                unit.carrying[resource_type] += amount_to_gather
-                unit.last_gather_time = current_time_called
+                # Calculate the actual amount the unit can carry
+                space_left = unit.carry_capacity - unit.carrying[resource_type]
+                amount_to_gather = min(gatherable_amount, space_left)
 
-        # Check if unit is full and ready to return resources
-        if unit.carrying[resource_type] >= unit.carry_capacity:
-            unit.task = "returning"
-            
-            # Initialize returning_position as None
+                # Update unit's carrying load and the resource amount on the tile
+                if amount_to_gather > 0:
+                    unit.carrying[resource_type] += amount_to_gather
+                    tile.resource.amount -= amount_to_gather
+
+                    # If resource is depleted, remove it from the map
+                    if tile.resource.amount <= 0:
+                        tile.resource = None
+
+                    # Update the last gather time
+                    unit.last_gather_time = current_time_called
+        else:
+            # No resource found; start returning resources if carrying any
+            if unit.carrying[resource_type] > 0:
+                unit.task = "returning"
+                print("No resource found, returning to deposit resources.")
+        
+        # Check if unit's carrying capacity is full or if it needs to return due to lack of resource
+        if unit.carrying[resource_type] >= unit.carry_capacity or unit.task == "returning":
+            # Locate the nearest drop-off location (Town Center or Camp)
             returning_position = None
-
-            # Find the closest "TownCenter" or "Camp"
             for building in unit.player.buildings:
                 if building.name in ["Town Center", "Camp"]:
                     returning_position = building.position
@@ -216,11 +231,16 @@ class Action:
             # Move the unit to the returning position if found
             if returning_position:
                 self.move_unit(unit, returning_position[0] - 1, returning_position[1] - 1, current_time_called)
+
+                # Check if unit has reached the drop-off destination to deposit resources
                 if abs(unit.position[0] - (returning_position[0] - 1)) < 0.1 and abs(unit.position[1] - (returning_position[1] - 1)) < 0.1:
+                    # Deposit resources and reset carrying load
                     unit.player.owned_resources[resource_type] += int(unit.carrying[resource_type])
                     unit.carrying[resource_type] = 0
                     unit.task = None
             else:
                 print("No valid building found for resource return.")
+
+
 
 
