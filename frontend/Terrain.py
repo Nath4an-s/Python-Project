@@ -33,7 +33,7 @@ class Map:
 
                 if tile.resource is None:  # Ensure no other resources overwrite the tile
                     resource_amount = random.randint(50, 200)
-                    resource = Resource("Gold", resource_amount, symbol=resource_symbols["Gold"])
+                    resource = Gold()
                     tile.resource = resource
                     self.resources["Gold"].append((x, y))  # Store the position of Gold resources
 
@@ -63,7 +63,7 @@ class Map:
 
                         if tile.resource is None:  # Ensure no other resources overwrite the tile
                             resource_amount = random.randint(50, 200)
-                            resource = Resource("Gold", resource_amount, symbol=resource_symbols["Gold"])
+                            resource = Gold()
                             tile.resource = resource
                             self.resources["Gold"].append((x, y))  # Store the position of Gold resources
                         break  # Exit the loop once a valid position is found
@@ -95,7 +95,7 @@ class Map:
 
                 if tile.resource is None:  # Avoid overwriting existing resources
                     resource_amount = random.randint(50, 200)
-                    resource = Resource("Wood", resource_amount, symbol=resource_symbols["Wood"])
+                    resource = Wood()
                     tile.resource = resource
                     self.resources["Wood"].append((x, y))  # Store Wood resource position
 
