@@ -1,5 +1,8 @@
 import curses
 import time
+import subprocess
+import os
+import threading
 
 from Units import *
 from Building import *
@@ -19,6 +22,24 @@ class GameEngine:
         self.changed_tiles = set()  # Set to track changed tiles
         Building.place_starting_buildings(self.map)  # Place town centers on the map
         Unit.place_starting_units(self.players, self.map)  # Pass players and map
+
+        # Path for the log file
+        self.log_file_path = os.path.join(os.getenv('TEMP'), 'game_logs.txt')
+        
+        # Initialize the log file
+        with open(self.log_file_path, 'w') as f:
+            f.write("Game Logs:\n")
+
+        # Start the logging thread
+        self.log_thread = threading.Thread(target=self.display_logs)
+        self.log_thread.daemon = True
+        self.log_thread.start()
+
+    def display_logs(self):
+        cmd_command = f'start cmd /k "mode con: cols=40 lines=30 && powershell -command Get-Content -Path \'{self.log_file_path}\' -Wait"'
+        subprocess.Popen(cmd_command, shell=True)
+
+
 
     def run(self, stdscr):
         # Initialize the starting view position
@@ -53,33 +74,31 @@ class GameEngine:
                     continue  # Skip the rest of the loop to reinitialize game engine state
                 elif key == ord('h'):  # When 'h' is pressed, test for the functions
                     action = Action(self.map)  # Create an Action instance
-                    #for unit in self.players[2].units:             #Takes time to calculates all paths but is perfectly smooth after that
-                        #action.move_unit(unit, 50, 60, current_time)
-                    action.move_unit(self.players[2].units[0], 2, 2, current_time) # Move the first unit to (0, 0)
+                    action.move_unit(self.players[2].units[0], 2, 2, current_time)  # Move the first unit to (2, 2)
+                    self.log_to_terminal(f"Unit moved to (2, 2) at turn {self.turn}")
                 elif key == ord('g'):  # When 'g' is pressed, test for the functions
                     Unit.kill_unit(self.players[2], self.players[2].units[1], self.map)
+                    self.log_to_terminal(f"Unit {self.players[2].units[1]} killed")
                 elif key == ord('\t'):  # TAB key
                     generate_html_report(self.players)
+                    self.log_to_terminal(f"HTML report generated at turn {self.turn}")
                 elif key == ord('j'):
                     Building.spawn_building(self.players[2], 1, 1, Barracks, self.map)
+                    self.log_to_terminal(f"Barracks spawned at (1, 1)")
                 elif key == ord('k'):
                     action = Action(self.map)  # Create an Action instance
                     action.gather_resources(self.players[2].units[2], "Gold", current_time)
+                    self.log_to_terminal(f"Gathering gold by unit {self.players[2].units[2]} at turn {self.turn}")
                 elif key == ord('o'):
-                    print(self.map.grid[0][0].resource.amount)
-                    print(f"Map has {len([tile for row in self.map.grid for tile in row if tile.resource and tile.resource.type == 'Gold'])} gold tiles")
+                    self.log_to_terminal(f"Gold at (0, 0): {self.map.grid[0][0].resource.amount}")
                 elif key == ord('p'):
-                    print(self.map.grid[0][1].resource.amount)
-                    print(f"Map has {len([tile for row in self.map.grid for tile in row if tile.resource and tile.resource.type == 'Gold'])} gold tiles")
+                    self.log_to_terminal(f"Gold at (0, 1): {self.map.grid[0][1].resource.amount}")
                 elif key == ord('l'):
-                    print(self.map.grid[1][0].resource.amount)
-                    print(f"Map has {len([tile for row in self.map.grid for tile in row if tile.resource and tile.resource.type == 'Gold'])} gold tiles")
+                    self.log_to_terminal(f"Gold at (1, 0): {self.map.grid[1][0].resource.amount}")
                 elif key == ord('m'):
-                    print(self.map.grid[1][1].resource.amount)
-                    print(f"Map has {len([tile for row in self.map.grid for tile in row if tile.resource and tile.resource.type == 'Gold'])} gold tiles")
+                    self.log_to_terminal(f"Gold at (1, 1): {self.map.grid[1][1].resource.amount}")
                 if key == ord('r'):
-                    print(self.players[2].units[2].carrying)
-
+                    self.log_to_terminal(f"Unit carrying: {self.players[2].units[2].carrying}")
 
                 # Move units toward their target position
                 action = Action(self.map)
@@ -101,7 +120,7 @@ class GameEngine:
                 self.turn += 1
 
         except KeyboardInterrupt:
-            print("Game interrupted. Exiting...")
+            self.log_to_terminal("Game interrupted. Exiting...")
 
     def check_victory(self):
         active_players = [p for p in self.players if p.has_units()]
@@ -117,6 +136,13 @@ class GameEngine:
     def load_game(self, filename):
         game_state = GameState(self)
         game_state.load(filename)
+
+    def log_to_terminal(self, message):
+        """Helper function to write log messages to the separate terminal (CMD)."""
+        with open(self.log_file_path, "a") as log_file:
+            log_file.write(message + "\n")
+            log_file.flush()  # Ensure logs are written immediately
+
 
 # GameState Class
 class GameState:

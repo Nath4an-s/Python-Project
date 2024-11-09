@@ -1,3 +1,5 @@
+#main.py
+
 import curses
 import os
 import sys
