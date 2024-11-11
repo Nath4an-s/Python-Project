@@ -2,7 +2,7 @@ import random
 import math
 import curses
 
-from backend.Starter_File import GameMode, players
+from backend.Starter_File import GameMode
 
 class Map:
     def __init__(self, width, height):
@@ -13,6 +13,7 @@ class Map:
         self.generate_map()
 
     def generate_map(self):
+        
         self.generate_resources()
 
     def generate_resources(self):
