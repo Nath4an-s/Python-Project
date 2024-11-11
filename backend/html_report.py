@@ -2,6 +2,7 @@ import os
 import webbrowser
 from Units import *
 from Building import *
+from logger import debug_print
 
 def generate_html_report(players):
     html_content = """
@@ -168,7 +169,7 @@ def generate_html_report(players):
     with open(report_file, "w") as file:
         file.write(html_content)
 
-    print("HTML report generated: game_units_report.html")
+    debug_print("HTML report generated: game_units_report.html")
 
     # Open the HTML report in the default web browser
     webbrowser.open(f'file://{os.path.realpath(report_file)}')
