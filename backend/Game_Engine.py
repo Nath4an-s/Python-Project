@@ -4,7 +4,6 @@ import subprocess
 import os
 import threading
 
-from logger import debug_print
 from Units import *
 from Building import *
 from frontend.Terrain import Map
@@ -74,7 +73,6 @@ class GameEngine:
                     top_left_x = max(0, top_left_x - 1)
                 elif key == curses.KEY_RIGHT:
                     top_left_x = min(self.map.width - viewport_width, top_left_x + 1)
-                elif key == curses.KEY_F12 and USE_PYCHARM != False:  # Switch to GUI mode
                 elif key == curses.KEY_F12 and USE_PYCHARM != False:  # Switch to GUI mode
                     gui.run_gui_mode(self)
                     stdscr = curses.initscr()  # Reinitialize curses screen
