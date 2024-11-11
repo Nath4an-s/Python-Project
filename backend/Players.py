@@ -1,3 +1,5 @@
+# Player.py
+
 #Civilizations' starting resources
 Means_starting_resources = {"Wood": 200, "Food": 50, "Gold": 50}
 Leans_starting_resources = {"Wood": 2000, "Food": 2000, "Gold": 2000}

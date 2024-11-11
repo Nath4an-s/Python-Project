@@ -1,3 +1,5 @@
+#Config File
+
 from Players import *
 
 # Game Mode
