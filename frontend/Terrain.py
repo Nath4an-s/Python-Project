@@ -13,6 +13,7 @@ class Map:
         self.resources = {"Gold": [], "Wood": []}
         self.generate_map()
         self.debug_print = debug_print
+        self.debug_print = debug_print
 
     def generate_map(self):
         
@@ -147,12 +148,14 @@ class Map:
             tile.unit.remove(unit)  # Remove the unit from the tile
         else:
             self.debug_print(f"No unit on tile ({x}, {y})")
+            self.debug_print(f"No unit on tile ({x}, {y})")
 
     def move_unit(self, unit, target_x, target_y, start_x, start_y):
         if 0 <= target_x < self.width and 0 <= target_y < self.height:
             self.remove_unit(start_x, start_y, unit)
             self.place_unit(target_x, target_y, unit)
         else:
+            self.debug_print(f"Target ({target_x}, {target_y}) is out of bounds.")
             self.debug_print(f"Target ({target_x}, {target_y}) is out of bounds.")
             
     def get_viewport(self, top_left_x, top_left_y, viewport_width, viewport_height):

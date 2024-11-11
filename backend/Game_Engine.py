@@ -1,5 +1,8 @@
 import curses
 import time
+import subprocess
+import os
+import threading
 
 from logger import debug_print
 from Units import *
@@ -54,6 +57,7 @@ class GameEngine:
                 elif key == curses.KEY_RIGHT:
                     top_left_x = min(self.map.width - viewport_width, top_left_x + 1)
                 elif key == curses.KEY_F12 and USE_PYCHARM != False:  # Switch to GUI mode
+                elif key == curses.KEY_F12 and USE_PYCHARM != False:  # Switch to GUI mode
                     gui.run_gui_mode(self)
                     stdscr = curses.initscr()  # Reinitialize curses screen
                     curses.curs_set(0)  # Hide cursor
@@ -66,12 +70,16 @@ class GameEngine:
                     action.move_unit(self.players[2].units[0], 2, 2, current_time) # Move the first unit to (0, 0)
                 elif key == ord('g'):  # When 'g' is pressed, test for the functions
                     Unit.kill_unit(self.players[2], self.players[2].units[1], self.map)
+                    self.log_to_terminal(f"Unit {self.players[2].units[1]} killed")
                 elif key == ord('\t'):  # TAB key
                     generate_html_report(self.players)
+                    self.log_to_terminal(f"HTML report generated at turn {self.turn}")
                 elif key == ord('j'):
                     Building.spawn_building(self.players[2], 1, 1, Barracks, self.map)
+                    self.log_to_terminal(f"Barracks spawned at (1, 1)")
                 elif key == ord('k'):
                     action.gather_resources(self.players[2].units[2], "Gold", current_time)
+                    self.log_to_terminal(f"Gathering gold by unit {self.players[2].units[2]} at turn {self.turn}")
                 elif key == ord('o'):
                     self.debug_print(self.map.grid[0][0].resource.amount)
                     self.debug_print(f"Map has {len([tile for row in self.map.grid for tile in row if tile.resource and tile.resource.type == 'Gold'])} gold tiles")
@@ -133,6 +141,13 @@ class GameEngine:
     def load_game(self, filename):
         game_state = GameState(self)
         game_state.load(filename)
+
+    def log_to_terminal(self, message):
+        """Helper function to write log messages to the separate terminal (CMD)."""
+        with open(self.log_file_path, "a") as log_file:
+            log_file.write(message + "\n")
+            log_file.flush()  # Ensure logs are written immediately
+
 
 # GameState Class
 class GameState:

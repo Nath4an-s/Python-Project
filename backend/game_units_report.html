@@ -19,7 +19,25 @@
                 font-size: 14px;
                 color: #666;
             }
+            body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; margin: 20px; }
+            h1 { color: #444; text-align: center; }
+            h2 { color: #444; }
+            .player-section {
+                background-color: #ffffff;
+                padding: 20px;
+                margin: 20px auto;
+                border-radius: 10px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                max-width: 800px;
+            }
+            .info {
+                margin-bottom: 20px;
+                font-size: 14px;
+                color: #666;
+            }
             .collapsible {
+                background-color: #007BFF;
+                color: white;
                 background-color: #007BFF;
                 color: white;
                 cursor: pointer;
@@ -31,8 +49,12 @@
                 font-size: 16px;
                 border-radius: 5px;
                 margin-top: 10px;
+                font-size: 16px;
+                border-radius: 5px;
+                margin-top: 10px;
             }
             .active, .collapsible:hover {
+                background-color: #0056b3;
                 background-color: #0056b3;
             }
             .content {
@@ -41,7 +63,32 @@
                 overflow: hidden;
                 background-color: #f1f1f1;
                 border-left: 3px solid #007BFF;
+                background-color: #f1f1f1;
+                border-left: 3px solid #007BFF;
                 margin-bottom: 10px;
+                border-radius: 0 0 5px 5px;
+            }
+            .unit-info, .building-info {
+                padding: 10px;
+                border-bottom: 1px solid #ddd;
+            }
+            .unit-info:last-child, .building-info:last-child {
+                border-bottom: none;
+            }
+            .progress-bar {
+                background-color: #e0e0e0;
+                border-radius: 5px;
+                overflow: hidden;
+                width: 100%;
+                height: 15px;
+                margin-top: 5px;
+            }
+            .progress {
+                height: 100%;
+                background-color: #28a745;
+                border-radius: 5px;
+                width: 0%;
+                transition: width 0.5s;
                 border-radius: 0 0 5px 5px;
             }
             .unit-info, .building-info {
@@ -264,6 +311,13 @@
             <div class="content">
             <p>No units available</p></div></div><button class='collapsible'>Show Buildings</button><div class='content'><button class='collapsible'>Town Center (3)</button><div class='content'><div class='building-info'><h3>Town Center (HP: 1000)</h3><p>Position: (33, 14)</p></div><div class='building-info'><h3>Town Center (HP: 1000)</h3><p>Position: (38, 14)</p></div><div class='building-info'><h3>Town Center (HP: 1000)</h3><p>Position: (28, 14)</p></div></div><button class='collapsible'>House (0)</button><div class='content'><p>No buildings available</p></div><button class='collapsible'>Camp (0)</button><div class='content'><p>No buildings available</p></div><button class='collapsible'>Farm (0)</button><div class='content'><p>No buildings available</p></div><button class='collapsible'>Barracks (2)</button><div class='content'><div class='building-info'><h3>Barracks (HP: 500)</h3><p>Position: (43, 18)</p></div><div class='building-info'><h3>Barracks (HP: 500)</h3><p>Position: (24, 10)</p></div></div><button class='collapsible'>Stable (2)</button><div class='content'><div class='building-info'><h3>Stable (HP: 500)</h3><p>Position: (43, 10)</p></div><div class='building-info'><h3>Stable (HP: 500)</h3><p>Position: (23, 16)</p></div></div><button class='collapsible'>Archery Range (2)</button><div class='content'><div class='building-info'><h3>Archery Range (HP: 500)</h3><p>Position: (46, 14)</p></div><div class='building-info'><h3>Archery Range (HP: 500)</h3><p>Position: (20, 15)</p></div></div><button class='collapsible'>Keep (0)</button><div class='content'><p>No buildings available</p></div></div></div>
         <script>
+            document.querySelectorAll('.collapsible').forEach((coll) => {
+                coll.addEventListener('click', () => {
+                    coll.classList.toggle('active');
+                    const content = coll.nextElementSibling;
+                    content.style.display = content.style.display === 'block' ? 'none' : 'block';
+                });
+            });
             document.querySelectorAll('.collapsible').forEach((coll) => {
                 coll.addEventListener('click', () => {
                     coll.classList.toggle('active');
