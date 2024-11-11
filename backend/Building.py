@@ -4,6 +4,7 @@ from Units import *
 import random
 import math
 from Starter_File import players as players_list
+from logger import debug_print
 
 # Building Class
 class Building:
@@ -67,11 +68,11 @@ class Building:
                         # Spawn the building with the map passed in
                         building_instance.spawn_building(player, new_x, new_y, building, game_map)
 
-                    print(f"Placed additional buildings for {player.name} (Marines) around ({town_center_x}, {town_center_y})")
+                    debug_print(f"Placed additional buildings for {player.name} (Marines) around ({town_center_x}, {town_center_y})")
                 else:
-                    print(f"{player.civilization} civilization does not have additional starting buildings.")
+                    debug_print(f"{player.civilization} civilization does not have additional starting buildings.")
             else:
-                print(f"Failed to place starting town center at ({town_center_x}, {town_center_y})")
+                debug_print(f"Failed to place starting town center at ({town_center_x}, {town_center_y})")
 
     @classmethod
     def spawn_building(self, player, x, y, building_class, game_map):

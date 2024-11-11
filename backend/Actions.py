@@ -2,12 +2,14 @@
 
 import heapq
 
+
 from frontend.Terrain import *
 from Units import *
 
 class Action:
     def __init__(self, game_map):
         self.map = game_map
+        self.debug_print = debug_print
 
     def move_unit(self, unit, target_x, target_y, current_time_called):
         # Check if the target destination is valid
@@ -70,8 +72,8 @@ class Action:
                     unit.path = None
                     unit.target_position = None
                     Map.move_unit(self.map, unit, int(unit.position[0]), int(unit.position[1]), int(start_x), int(start_y))
-                    print("Reached target!")
-                    print(unit.position)
+                    self.debug_print("Reached target!")
+                    self.debug_print(unit.position)
                     return True
                 else:
                     unit.position = new_position
@@ -180,7 +182,7 @@ class Action:
                 self.move_unit(unit, free_tile[0], free_tile[1], current_time_called)
                 unit.task = "marching"
             else:
-                print("No free tile found around the resource.")
+                self.debug_print("No free tile found around the resource.")
                 return False
 
         if any(abs(unit.position[0] - tile[0]) < 0.1 and abs(unit.position[1] - tile[1]) < 0.1 for tile in adjacent_tiles):
@@ -222,7 +224,7 @@ class Action:
             # No resource found; start returning resources if carrying any
             if unit.carrying[resource_type] > 0:
                 unit.task = "returning"
-                print("No resource found, returning to deposit resources.")
+                self.debug_print("No resource found, returning to deposit resources.")
         
         # Check if unit's carrying capacity is full or if it needs to return due to lack of resource
         if unit.carrying[resource_type] >= unit.carry_capacity or unit.task == "returning":
@@ -244,7 +246,7 @@ class Action:
                     unit.carrying[resource_type] = 0
                     unit.task = None
             else:
-                print("No valid building found for resource return.")
+                self.debug_print("No valid building found for resource return.")
 
     def go_battle(self, unit, enemy_unit,current_time_called):
         unit.task = "going_to_battle"

@@ -4,6 +4,7 @@ import subprocess
 import os
 import threading
 
+from logger import debug_print
 from Units import *
 from Building import *
 from frontend.Terrain import Map
@@ -64,6 +65,7 @@ class GameEngine:
                 stdscr.nodelay(True)  # Make getch() non-blocking
                 key = stdscr.getch()  # Get the key pressed by the user
                 action = Action(self.map)
+                action = Action(self.map)
                 if key == curses.KEY_UP:
                     top_left_y = max(0, top_left_y - 1)
                 elif key == curses.KEY_DOWN:
@@ -72,6 +74,7 @@ class GameEngine:
                     top_left_x = max(0, top_left_x - 1)
                 elif key == curses.KEY_RIGHT:
                     top_left_x = min(self.map.width - viewport_width, top_left_x + 1)
+                elif key == curses.KEY_F12 and USE_PYCHARM != False:  # Switch to GUI mode
                 elif key == curses.KEY_F12 and USE_PYCHARM != False:  # Switch to GUI mode
                     gui.run_gui_mode(self)
                     stdscr = curses.initscr()  # Reinitialize curses screen
@@ -134,6 +137,10 @@ class GameEngine:
                             action._attack(unit, unit.target_attack, current_time)
                         if unit.task == "going_to_battle":
                             action.go_battle(unit, unit.target_attack, current_time)
+                        if unit.task == "attacking":
+                            action._attack(unit, unit.target_attack, current_time)
+                        if unit.task == "going_to_battle":
+                            action.go_battle(unit, unit.target_attack, current_time)
 
                 # Clear the screen and display the new part of the map after moving
                 stdscr.clear()
@@ -143,7 +150,7 @@ class GameEngine:
                 self.turn += 1
 
         except KeyboardInterrupt:
-            self.log_to_terminal("Game interrupted. Exiting...")
+            print("Game interrupted. Exiting...")
 
     def check_victory(self):
         active_players = [p for p in self.players if p.has_units()]

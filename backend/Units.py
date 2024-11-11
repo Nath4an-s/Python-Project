@@ -3,6 +3,7 @@
 import random
 import math
 from Building import TownCenter
+from logger import debug_print
 
 # Unit Class
 class Unit:
@@ -34,7 +35,7 @@ class Unit:
             town_centers = [building for building in player.buildings if isinstance(building, TownCenter)]
             
             if not town_centers:
-                print(f"No town centers found for {player.name}. Skipping unit placement.")
+                debug_print(f"No town centers found for {player.name}. Skipping unit placement.")
                 continue
                 
             town_center = town_centers[0]  # Use the first town center
@@ -47,7 +48,7 @@ class Unit:
             else:
                 num_villagers = 3
                 
-            print(f"Attempting to spawn {num_villagers} villagers for {player.name} around ({center_x}, {center_y})")
+            debug_print(f"Attempting to spawn {num_villagers} villagers for {player.name} around ({center_x}, {center_y})")
 
             for _ in range(num_villagers):
                 placed = False
@@ -69,7 +70,7 @@ class Unit:
                             pass  # Try again if tile is not free
                     else:
                         pass  # Try again if out of bounds
-            print(f"Spawned {num_villagers} villagers for {player.name} near the Town Center at ({center_x}, {center_y})")
+            debug_print(f"Spawned {num_villagers} villagers for {player.name} near the Town Center at ({center_x}, {center_y})")
 
 
     @classmethod
@@ -102,9 +103,9 @@ class Unit:
             player.population -= 1  # Decrease the player's population
             x, y = unit_to_kill.position
             game_map.remove_unit(x, y, unit_to_kill)  # Assuming game_map is a property of the player
-            print(f"Unit {unit_to_kill} belonging to {player.name} at ({x}, {y}) killed.")
+            debug_print(f"Unit {unit_to_kill} belonging to {player.name} at ({x}, {y}) killed.")
         else:
-            print(f"Unit {unit_to_kill} does not belong to {player.name}.")
+            debug_print(f"Unit {unit_to_kill} does not belong to {player.name}.")
 
     @classmethod
     def get_all_units(cls, players):
