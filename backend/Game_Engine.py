@@ -1,10 +1,17 @@
 import curses
 import time
 
+from logger import debug_print
 from Units import *
 from Building import *
 from frontend.Terrain import Map
-from frontend import gui
+try:
+    from frontend import gui
+    USE_PYCHARM = True
+except ImportError:
+    USE_PYCHARM = False
+    debug_print("Pycharm not installed; running without Pycharm features such as 2.5D map view.")
+
 from html_report import generate_html_report
 from Actions import Action
 from Building import Building
@@ -19,6 +26,7 @@ class GameEngine:
         self.changed_tiles = set()  # Set to track changed tiles
         Building.place_starting_buildings(self.map)  # Place town centers on the map
         Unit.place_starting_units(self.players, self.map)  # Pass players and map
+        self.debug_print = debug_print
 
     def run(self, stdscr):
         # Initialize the starting view position
@@ -36,6 +44,7 @@ class GameEngine:
                 # Handle input
                 stdscr.nodelay(True)  # Make getch() non-blocking
                 key = stdscr.getch()  # Get the key pressed by the user
+                action = Action(self.map)
                 if key == curses.KEY_UP:
                     top_left_y = max(0, top_left_y - 1)
                 elif key == curses.KEY_DOWN:
@@ -44,7 +53,7 @@ class GameEngine:
                     top_left_x = max(0, top_left_x - 1)
                 elif key == curses.KEY_RIGHT:
                     top_left_x = min(self.map.width - viewport_width, top_left_x + 1)
-                elif key == curses.KEY_F12:  # Switch to GUI mode
+                elif key == curses.KEY_F12 and USE_PYCHARM != False:  # Switch to GUI mode
                     gui.run_gui_mode(self)
                     stdscr = curses.initscr()  # Reinitialize curses screen
                     curses.curs_set(0)  # Hide cursor
@@ -52,7 +61,6 @@ class GameEngine:
                     self.map.display_viewport(stdscr, top_left_x, top_left_y, viewport_width, viewport_height)
                     continue  # Skip the rest of the loop to reinitialize game engine state
                 elif key == ord('h'):  # When 'h' is pressed, test for the functions
-                    action = Action(self.map)  # Create an Action instance
                     #for unit in self.players[2].units:             #Takes time to calculates all paths but is perfectly smooth after that
                         #action.move_unit(unit, 50, 60, current_time)
                     action.move_unit(self.players[2].units[0], 2, 2, current_time) # Move the first unit to (0, 0)
@@ -63,22 +71,26 @@ class GameEngine:
                 elif key == ord('j'):
                     Building.spawn_building(self.players[2], 1, 1, Barracks, self.map)
                 elif key == ord('k'):
-                    action = Action(self.map)  # Create an Action instance
                     action.gather_resources(self.players[2].units[2], "Gold", current_time)
                 elif key == ord('o'):
-                    print(self.map.grid[0][0].resource.amount)
-                    print(f"Map has {len([tile for row in self.map.grid for tile in row if tile.resource and tile.resource.type == 'Gold'])} gold tiles")
+                    self.debug_print(self.map.grid[0][0].resource.amount)
+                    self.debug_print(f"Map has {len([tile for row in self.map.grid for tile in row if tile.resource and tile.resource.type == 'Gold'])} gold tiles")
                 elif key == ord('p'):
-                    print(self.map.grid[0][1].resource.amount)
-                    print(f"Map has {len([tile for row in self.map.grid for tile in row if tile.resource and tile.resource.type == 'Gold'])} gold tiles")
+                    self.debug_print(self.map.grid[0][1].resource.amount)
+                    self.debug_print(f"Map has {len([tile for row in self.map.grid for tile in row if tile.resource and tile.resource.type == 'Gold'])} gold tiles")
                 elif key == ord('l'):
-                    print(self.map.grid[1][0].resource.amount)
-                    print(f"Map has {len([tile for row in self.map.grid for tile in row if tile.resource and tile.resource.type == 'Gold'])} gold tiles")
+                    self.debug_print(self.map.grid[1][0].resource.amount)
+                    self.debug_print(f"Map has {len([tile for row in self.map.grid for tile in row if tile.resource and tile.resource.type == 'Gold'])} gold tiles")
                 elif key == ord('m'):
-                    print(self.map.grid[1][1].resource.amount)
-                    print(f"Map has {len([tile for row in self.map.grid for tile in row if tile.resource and tile.resource.type == 'Gold'])} gold tiles")
-                if key == ord('r'):
-                    print(self.players[2].units[2].carrying)
+                    self.debug_print(self.map.grid[1][1].resource.amount)
+                    self.debug_print(f"Map has {len([tile for row in self.map.grid for tile in row if tile.resource and tile.resource.type == 'Gold'])} gold tiles")
+                elif key == ord('r'):
+                    self.debug_print("Testing new PowerShell window for debug output.")
+                elif key == ord('a'):
+                    action.go_battle(self.players[2].units[0], self.players[1].units[1], current_time)
+                elif key == ord('e'):
+                    action.move_unit(self.players[1].units[1], self.players[1].units[1].position[0] - 1, self.players[1].units[1].position[1] - 1, current_time)
+                
 
 
                 # Move units toward their target position
@@ -92,6 +104,10 @@ class GameEngine:
                             action._gather(unit, unit.last_gathered, current_time)
                         if unit.task == "marching":
                             action.gather_resources(unit, unit.last_gathered, current_time)
+                        if unit.task == "attacking":
+                            action._attack(unit, unit.target_attack, current_time)
+                        if unit.task == "going_to_battle":
+                            action.go_battle(unit, unit.target_attack, current_time)
 
                 # Clear the screen and display the new part of the map after moving
                 stdscr.clear()
@@ -101,7 +117,7 @@ class GameEngine:
                 self.turn += 1
 
         except KeyboardInterrupt:
-            print("Game interrupted. Exiting...")
+            self.debug_print("Game interrupted. Exiting...")
 
     def check_victory(self):
         active_players = [p for p in self.players if p.has_units()]
