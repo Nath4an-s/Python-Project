@@ -13,10 +13,6 @@ log_file_path = os.path.join(os.getenv('TEMP'), 'gamelogs.txt')
 
 header_printed = False
 
-import subprocess
-import os
-from datetime import datetime
-
 debug_ps = subprocess.Popen(
     ["powershell.exe", "-NoExit", "-Command", "-"],
     stdin=subprocess.PIPE,
