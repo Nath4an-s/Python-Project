@@ -115,6 +115,8 @@ class GameEngine:
                             action._attack(unit, unit.target_attack, current_time)
                         if unit.task == "going_to_battle":
                             action.go_battle(unit, unit.target_attack, current_time)
+                        if unit.task == "is_attacked":
+                            action._attack(unit, unit.is_attacked_by, current_time)
 
                 # Clear the screen and display the new part of the map after moving
                 stdscr.clear()

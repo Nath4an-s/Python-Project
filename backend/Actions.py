@@ -75,8 +75,6 @@ class Action:
                     Map.move_unit(self.map, unit, int(unit.position[0]), int(unit.position[1]), int(start_x), int(start_y))
                     self.debug_print("Reached target!")
                     self.debug_print(unit.position)
-                    self.debug_print("Reached target!")
-                    self.debug_print(unit.position)
                     return True
                 else:
                     unit.position = new_position
@@ -262,10 +260,15 @@ class Action:
         if not isinstance(unit, Archer):
             if abs(unit.position[0] - enemy_unit.position[0]) < 0.1 and abs(unit.position[1] - enemy_unit.position[1]) < 0.1:
                 unit.task = "attacking"
+                enemy_unit.is_attacked_by = unit
+                enemy_unit.task = "is_attacked"
+
                 self._attack(unit, enemy_unit, current_time_called)
         else: #for archers
             if abs(unit.position[0] - enemy_unit.position[0]) < unit.range and abs(unit.position[1] - enemy_unit.position[1]) < unit.range:
                 unit.task = "attacking"
+                enemy_unit.is_attacked_by = unit
+                enemy_unit.task = "is_attacked"
                 self._attack(unit, enemy_unit, current_time_called)
     
     def _attack(self, unit, enemy_unit, current_time_called):
@@ -309,6 +312,3 @@ class Action:
             else:
                 self.debug_print("Enemy unit not in range, moving closer...")
                 self.go_battle(unit, enemy_unit, current_time_called)
-
-
-

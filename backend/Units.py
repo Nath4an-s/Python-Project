@@ -19,6 +19,7 @@ class Unit:
         self.position = position
         self.target_position = None
         self.target_attack = None
+        self.is_attacked_by = None
 
     def __str__(self):
         return self.symbol  # Ensure the building is represented by just the symbol
@@ -118,7 +119,7 @@ class Unit:
 # Villager Class
 class Villager(Unit):
     def __init__(self, player, name="Villager"):
-        super().__init__(player, hp=25, cost={"Food": 50}, attack=2, speed=0.8, symbol="v", training_time=25)
+        super().__init__(player, hp=25, cost={"Food": 50}, attack=2, speed=3, symbol="v", training_time=25)
         self.carrying = {"Wood": 0, "Food": 0, "Gold": 0}
         self.carry_capacity = 20  # Can carry up to 20 of any resource
         self.gather_rate = 25 / 60  # 25 resources per minute (in resources per second)
