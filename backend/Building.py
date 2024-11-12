@@ -3,6 +3,7 @@
 from Units import *
 import random
 import math
+
 from Starter_File import players as players_list
 from logger import debug_print
 
@@ -80,6 +81,17 @@ class Building:
         building.position = (x, y)
         game_map.place_building(x, y, building)  # Use the passed map instead of cls.map
         player.buildings.append(building)  # Add the building to the player's list of buildings
+        debug_print(f"Building {building} belonging to {player.name} at ({x}, {y}) spawned.")
+
+    @classmethod
+    def kill_building(cls, player, building_to_kill, game_map):
+        if building_to_kill in player.buildings:
+            player.buildings.remove(building_to_kill)  # Remove the building from the player's list of buildings
+            x, y = building_to_kill.position
+            game_map.remove_building(int(x), int(y), building_to_kill)  # Assuming game_map is a property of the player
+            debug_print(f"Building {building_to_kill} belonging to {player.name} at ({x}, {y}) killed.")
+        else:
+            debug_print(f"Building {building_to_kill} does not belong to {player.name}.")
 
 
 # TownCenter Class
@@ -131,20 +143,6 @@ class Farm(Building):
 
     def is_walkable(self):
         return True
-
-    def extract_food(self, amount):
-        if self.food >= amount:
-            self.food -= amount
-            return amount
-        else:
-            food_left = self.food
-            self.food = 0
-            return food_left
-
-    def is_depleted(self):
-        return self.food == 0
-
-
 
 # Barracks Class
 class Barracks(Building):

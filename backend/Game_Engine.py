@@ -74,11 +74,9 @@ class GameEngine:
                     generate_html_report(self.players)
                     self.debug_print(f"HTML report generated at turn {self.turn}")
                 elif key == ord('j'):
-                    Building.spawn_building(self.players[2], 1, 1, Barracks, self.map)
-                    self.debug_print(f"Barracks spawned at (1, 1)")
+                    Building.spawn_building(self.players[2], 1, 1, Farm, self.map)
                 elif key == ord('k'):
-                    action.gather_resources(self.players[2].units[2], "Gold", current_time)
-                    self.debug_print(f"Gathering gold by unit {self.players[2].units[2]} at turn {self.turn}")
+                    action.gather_resources(self.players[2].units[2], "Food", current_time)
                 elif key == ord('o'):
                     self.debug_print(self.map.grid[0][0].resource.amount)
                     self.debug_print(f"Map has {len([tile for row in self.map.grid for tile in row if tile.resource and tile.resource.type == 'Gold'])} gold tiles")
@@ -99,6 +97,8 @@ class GameEngine:
                     action.go_battle(self.players[1].units[1], self.players[2].units[0], current_time)
                 elif key == ord('e'):
                     action.move_unit(self.players[1].units[1],2,2, current_time)
+                elif key == ord('f'):
+                    Building.kill_building(self.players[2], self.players[2].buildings[-1], self.map)
                 
 
 

@@ -2,7 +2,6 @@ import random
 import math
 import curses
 
-from backend.logger import debug_print
 from backend.Starter_File import GameMode, players
 
 class Map:
@@ -11,17 +10,15 @@ class Map:
         self.height = height
         self.grid = [[Tile(x, y) for y in range(height)] for x in range(width)]  # Ensure this is correct
         self.resources = {"Gold": [], "Wood": []}
+        self.buildings = []
         self.generate_map()
-        self.debug_print = debug_print
-        self.debug_print = debug_print
 
     def generate_map(self):
         
         self.generate_resources()
 
     def generate_resources(self):
-        resource_symbols = {"Wood": "W", "Gold": "G"}
-
+        
         num_resources = int(self.width * self.height * 0.03)  # 3% of the map as resource tiles
 
         # Gold Generation
@@ -107,7 +104,7 @@ class Map:
     def is_tile_free(self, x, y):
         if 0 <= x < self.width and 0 <= y < self.height:
             tile = self.grid[y][x]
-            is_free = tile.resource is None and tile.building is None and tile.unit == []
+            is_free = tile.resource is None and (tile.building is None or tile.building.is_walkable() == True) and tile.unit == []
             if not is_free:
                 pass
             return is_free
@@ -116,7 +113,7 @@ class Map:
     def is_tile_free_for_unit(self, x, y):
         if 0 <= x < self.width and 0 <= y < self.height:
             tile = self.grid[y][x]
-            is_free = tile.resource is None and tile.building is None
+            is_free = tile.resource is None and (tile.building is None or tile.building.is_walkable() == True)
             if not is_free:
                 pass
             return is_free
@@ -137,6 +134,11 @@ class Map:
                 for j in range(building.size):
                     self.grid[y + j][x + i].building = building
 
+    def remove_building(self, x, y, building):
+        for i in range(building.size):
+            for j in range(building.size):
+                self.grid[y + j][x + i].building = None
+    
     def place_unit(self, x, y, unit):
         if 0 <= x < self.width and 0 <= y < self.height:
             tile = self.grid[y][x]
@@ -147,16 +149,14 @@ class Map:
         if tile.unit is not None:
             tile.unit.remove(unit)  # Remove the unit from the tile
         else:
-            self.debug_print(f"No unit on tile ({x}, {y})")
-            self.debug_print(f"No unit on tile ({x}, {y})")
+            print(f"No unit on tile ({x}, {y})")
 
     def move_unit(self, unit, target_x, target_y, start_x, start_y):
         if 0 <= target_x < self.width and 0 <= target_y < self.height:
             self.remove_unit(start_x, start_y, unit)
             self.place_unit(target_x, target_y, unit)
         else:
-            self.debug_print(f"Target ({target_x}, {target_y}) is out of bounds.")
-            self.debug_print(f"Target ({target_x}, {target_y}) is out of bounds.")
+            print(f"Target ({target_x}, {target_y}) is out of bounds.")
             
     def get_viewport(self, top_left_x, top_left_y, viewport_width, viewport_height):
         viewport = []
@@ -221,19 +221,33 @@ class Map:
         curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)    # Player 2 (red)
         curses.init_pair(3, curses.COLOR_MAGENTA, curses.COLOR_BLACK)  # Player 3 (purple)
 
-    def find_nearest_resource(self, start_position, resource_type):
+    def find_nearest_resource(self, start_position, resource_type, player):
         min_distance = float('inf')
         nearest_resource = None
 
-        # Iterate through each resource position for the specified type
-        for resource_x, resource_y in self.resources[resource_type]:
-            distance = abs(start_position[0] - resource_x) + abs(start_position[1] - resource_y)
+        if resource_type in ("Wood", "Gold"):
+            # Iterate through each resource position for the specified type
+            for resource_x, resource_y in self.resources[resource_type]:
+                distance = abs(start_position[0] - resource_x) + abs(start_position[1] - resource_y)
 
-            if distance < min_distance:
-                min_distance = distance
-                nearest_resource = (resource_x, resource_y)
+                if distance < min_distance:
+                    min_distance = distance
+                    nearest_resource = (resource_x, resource_y)
 
-        return nearest_resource  # Returns coordinates (x, y) of nearest resource
+        elif resource_type == "Food":
+            # Iterate through each building position for the specified type
+            for building in player.buildings:
+                if building.name == "Farm" :
+                    distance = abs(start_position[0] - building.position[0]) + abs(start_position[1] - building.position[1])
+                    if distance < min_distance:
+                        min_distance = distance
+                        nearest_resource = building.position
+        else:
+            print(f"Invalid resource type: {resource_type}")
+        if nearest_resource is None:
+            print(f"No {resource_type} resources found.")
+        return nearest_resource
+    
 
 class Tile:
     def __init__(self, x, y):
@@ -273,11 +287,10 @@ class Wood(Resource):
         super().__init__(resource_type="Wood", amount=100, symbol="W")  # 100 per tile (tree)
 
 
-"""# Food Resource Class
+# Food Resource Class
 class Food(Resource):
     def __init__(self):
         super().__init__(resource_type="Food", amount=300, symbol="F")  # 300 per farm
-""" # Not used, food is in the farm building
 
 # Gold Resource Class
 class Gold(Resource):

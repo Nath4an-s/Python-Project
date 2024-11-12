@@ -16,6 +16,11 @@ class Action:
         # Check if the target destination is valid
         if not self._is_within_bounds(target_x, target_y) or not self.map.is_tile_free_for_unit(int(target_x), int(target_y)):
             self.debug_print("Invalid target destination.")
+            self.debug_print(self.map.is_tile_free_for_unit(int(target_x), int(target_y)))
+            self.debug_print(self._is_within_bounds(target_x, target_y))
+            self.debug_print(self.map.grid[int(target_y)][int(target_x)].building)
+            self.debug_print(self.map.grid[int(target_y)][int(target_x)].building.is_walkable())
+
             return False
 
         # Get current/starting position of the unit
@@ -162,43 +167,70 @@ class Action:
         return path
     
     def gather_resources(self, unit, resource_type, current_time_called):
-        unit.last_gathered = resource_type
-        # Find the coordinates of the nearest resource of the specified type
-        target_x, target_y = Map.find_nearest_resource(self.map, unit.position, resource_type)
-        # Find a free tile around the target resource
-        adjacent_tiles = self._get_neighbors((target_x, target_y))
-        free_tile = None
+        if resource_type == "Gold" or resource_type == "Wood":
+            unit.last_gathered = resource_type
+            # Find the coordinates of the nearest resource of the specified type
+            target = Map.find_nearest_resource(self.map, unit.position, resource_type, unit.player)
+            if target is not None:
+                unit.target_position = target
+            else:
+                self.debug_print(f"No {resource_type} resources found.")
+                return False
+            # Find a free tile around the target resource
+            adjacent_tiles = self._get_neighbors((unit.target_position[0], unit.target_position[1]))
+            free_tile = None
 
-        # Check if unit is already adjacent to the resource (within a small threshold)
-        if not any(abs(unit.position[0] - tile[0]) < 0.1 and abs(unit.position[1] - tile[1]) < 0.1 for tile in adjacent_tiles):
-            # Move to an adjacent tile if not already there
-            for tile in adjacent_tiles:
-                if self.map.is_tile_free_for_unit(tile[0], tile[1]):
-                    free_tile = tile
-                    break
+            # Check if unit is already adjacent to the resource (within a small threshold)
+            if not any(abs(unit.position[0] - tile[0]) < 0.1 and abs(unit.position[1] - tile[1]) < 0.1 for tile in adjacent_tiles):
+                # Move to an adjacent tile if not already there
+                for tile in adjacent_tiles:
+                    if self.map.is_tile_free_for_unit(tile[0], tile[1]):
+                        free_tile = tile
+                        break
 
-            # If a free tile was found, move the unit towards it
-            if free_tile:
+                # If a free tile was found, move the unit towards it
+                if free_tile:
+                    # Update unit's position by calling move_unit
+                    self.move_unit(unit, free_tile[0], free_tile[1], current_time_called)
+                    unit.task = "marching"
+                else:
+                    self.debug_print("No free tile found around the resource.")
+                    return False
+
+            if any(abs(unit.position[0] - tile[0]) < 0.1 and abs(unit.position[1] - tile[1]) < 0.1 for tile in adjacent_tiles):
+                unit.task = "gathering"
+                self._gather(unit, resource_type, current_time_called)
+
+        elif resource_type == "Food" : #should be FOod
+            unit.last_gathered = resource_type
+            # Find the coordinates of the nearest resource of the specified type
+            target = Map.find_nearest_resource(self.map, unit.position, resource_type, unit.player)
+            if target is not None:
+                unit.target_position = target
+            else:
+                self.debug_print(f"No {resource_type} resources found.")
+                unit.task = None
+                unit.target_position = None
+                return False
+            # Move to the target tile if not already there
+            if not (abs(unit.position[0] - unit.target_position[0]) < 0.1 and abs(unit.position[1] - unit.target_position[1]) < 0.1):
                 # Update unit's position by calling move_unit
-                self.move_unit(unit, free_tile[0], free_tile[1], current_time_called)
+                self.move_unit(unit, unit.target_position[0], unit.target_position[1], current_time_called)
                 unit.task = "marching"
             else:
-                self.debug_print("No free tile found around the resource.")
-                self.debug_print("No free tile found around the resource.")
-                return False
+                unit.task = "gathering"
+                self._gather(unit, resource_type, current_time_called)
 
-        if any(abs(unit.position[0] - tile[0]) < 0.1 and abs(unit.position[1] - tile[1]) < 0.1 for tile in adjacent_tiles):
-            unit.task = "gathering"
-            self._gather(unit, resource_type, current_time_called)
+        else:
+            self.debug_print("Invalid resource type.")
+            return False
 
     def _gather(self, unit, resource_type, current_time_called):
-        # Locate the nearest resource of the specified type
-        target_x, target_y = Map.find_nearest_resource(self.map, unit.position, resource_type)
-        tile = self.map.grid[target_y][target_x] if target_x is not None and target_y is not None else None
+        tile = self.map.grid[unit.target_position[1]][unit.target_position[0]] if unit.target_position is not None else None
         # Check if there is a resource on the target tile and it's the correct type
-        if tile and tile.resource and tile.resource.type == resource_type:
+        if (tile and tile.resource and tile.resource.type == resource_type) or (resource_type == "Food" and tile.building and tile.building.name == "Farm"):
             # Ensure the unit has capacity to gather more of this resource
-            if unit.carrying[resource_type] < unit.carry_capacity and tile.resource.amount > 0:
+            if unit.carrying[resource_type] < unit.carry_capacity and (tile.resource and tile.resource.amount > 0 or (tile.building and tile.building.name == "Farm" and tile.building.food > 0)):
                 # Initialize last gather time if it hasn't been set
                 if not hasattr(unit, 'last_gather_time'):
                     unit.last_gather_time = current_time_called
@@ -214,11 +246,15 @@ class Action:
                 # Update unit's carrying load and the resource amount on the tile
                 if amount_to_gather > 0:
                     unit.carrying[resource_type] += amount_to_gather
-                    tile.resource.amount -= amount_to_gather
-
-                    # If resource is depleted, remove it from the map
-                    if tile.resource.amount <= 0:
-                        tile.resource = None
+                    if resource_type == "Gold" or resource_type == "Wood":
+                        tile.resource.amount -= amount_to_gather
+                        # If resource is depleted, remove it from the map
+                        if tile.resource.amount <= 0:
+                            tile.resource = None
+                    elif resource_type == "Food" and tile.building.name == "Farm":
+                        tile.building.food -= amount_to_gather
+                        if tile.building.food <= 0:
+                            tile.building = None
 
                     # Update the last gather time
                     unit.last_gather_time = current_time_called
@@ -226,7 +262,6 @@ class Action:
             # No resource found; start returning resources if carrying any
             if unit.carrying[resource_type] > 0:
                 unit.task = "returning"
-                self.debug_print("No resource found, returning to deposit resources.")
                 self.debug_print("No resource found, returning to deposit resources.")
         
         # Check if unit's carrying capacity is full or if it needs to return due to lack of resource
@@ -250,7 +285,6 @@ class Action:
                     unit.task = None
             else:
                 self.debug_print("No valid building found for resource return.")
-                self.debug_print("No valid building found for resource return.")
 
     def go_battle(self, unit, enemy_unit, current_time_called):
         unit.task = "going_to_battle"
@@ -261,7 +295,7 @@ class Action:
 
         # Check if the target position has changed
         if unit.target_position != (target_x, target_y):
-            unit.path = None
+            unit.path = None #reset path --> works but not sure if it's the best way to do it --> calcul is becoming too complex
 
         # Move the unit toward the enemy's current position
         self.move_unit(unit, int(target_x), int(target_y), current_time_called)
