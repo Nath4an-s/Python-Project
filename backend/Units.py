@@ -103,7 +103,7 @@ class Unit:
             player.units.remove(unit_to_kill)  # Remove the unit from the player's list of units
             player.population -= 1  # Decrease the player's population
             x, y = unit_to_kill.position
-            game_map.remove_unit(x, y, unit_to_kill)  # Assuming game_map is a property of the player
+            game_map.remove_unit(int(x), int(y), unit_to_kill)  # Assuming game_map is a property of the player
             debug_print(f"Unit {unit_to_kill} belonging to {player.name} at ({x}, {y}) killed.")
         else:
             debug_print(f"Unit {unit_to_kill} does not belong to {player.name}.")
@@ -127,17 +127,20 @@ class Villager(Unit):
         self.task = None
         self.position = (0, 0)  # Initial position should be set appropriately
         self.last_gathered = None
+        self.range = 0.99
 
 # Swordsman Class
 class Swordsman(Unit):
     def __init__(self, player):
         super().__init__(player, hp=40, cost={"Food": 50, "Gold": 20}, attack=4, speed=0.9, symbol="s", training_time=20)
+        self.range = 0.99
 
 
 # Horseman Class
 class Horseman(Unit):
     def __init__(self, player):
         super().__init__(player, hp=45, cost={"Food": 80, "Gold": 20}, attack=4, speed=1.2, symbol="h", training_time=30)
+        self.range = 0.99
 
 
 # Archer Class

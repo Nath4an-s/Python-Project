@@ -10,10 +10,10 @@ from Building import *
 from frontend.Terrain import Map
 try:
     from frontend import gui
-    USE_PYCHARM = True
+    USE_PYGAME = True
 except ImportError:
-    USE_PYCHARM = False
-    debug_print("Pycharm not installed; running without Pycharm features such as 2.5D map view.")
+    USE_PYGAME = False
+    debug_print("Pygame not installed; running without Pygame features such as 2.5D map view.")
 
 from html_report import generate_html_report
 from Actions import Action
@@ -56,7 +56,7 @@ class GameEngine:
                     top_left_x = max(0, top_left_x - 1)
                 elif key == curses.KEY_RIGHT:
                     top_left_x = min(self.map.width - viewport_width, top_left_x + 1)
-                elif key == curses.KEY_F12 and USE_PYCHARM != False:  # Switch to GUI mode
+                elif key == curses.KEY_F12 and USE_PYGAME != False:  # Switch to GUI mode
                     gui.run_gui_mode(self)
                     stdscr = curses.initscr()  # Reinitialize curses screen
                     curses.curs_set(0)  # Hide cursor
@@ -95,13 +95,14 @@ class GameEngine:
                     self.debug_print("Testing new PowerShell window for debug output.")
                 elif key == ord('a'):
                     action.go_battle(self.players[2].units[0], self.players[1].units[1], current_time)
+                elif key == ord('b'):
+                    action.go_battle(self.players[1].units[1], self.players[2].units[0], current_time)
                 elif key == ord('e'):
-                    action.move_unit(self.players[1].units[1], self.players[1].units[1].position[0] - 1, self.players[1].units[1].position[1] - 1, current_time)
+                    action.move_unit(self.players[1].units[1],2,2, current_time)
                 
 
 
                 # Move units toward their target position
-                action = Action(self.map)
                 for player in self.players:
                     for unit in player.units:
                         if unit.target_position:

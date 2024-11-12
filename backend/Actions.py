@@ -14,17 +14,17 @@ class Action:
 
     def move_unit(self, unit, target_x, target_y, current_time_called):
         # Check if the target destination is valid
-        if not self._is_within_bounds(target_x, target_y) or not self.map.is_tile_free_for_unit(target_x, target_y):
+        if not self._is_within_bounds(target_x, target_y) or not self.map.is_tile_free_for_unit(int(target_x), int(target_y)):
             self.debug_print("Invalid target destination.")
             return False
 
         # Get current/starting position of the unit
-        start_x, start_y = unit.position[0], unit.position[1]
+        start_x, start_y = int(unit.position[0]), int(unit.position[1])
         unit.target_position = (target_x, target_y)
 
         # If path is not already constructed, construct it using Dijkstra algorithm
         if not hasattr(unit, 'path') or not unit.path:
-            unit.path = self.dijkstra_pathfinding((start_x, start_y), (target_x, target_y))
+            unit.path = self.dijkstra_pathfinding((int(start_x), int(start_y)), (target_x, target_y))
 
         # Assuming 'unit' has a position attribute as a tuple of floats
         if not hasattr(unit, 'last_move_time'):
@@ -252,63 +252,46 @@ class Action:
                 self.debug_print("No valid building found for resource return.")
                 self.debug_print("No valid building found for resource return.")
 
-    def go_battle(self, unit, enemy_unit,current_time_called):
+    def go_battle(self, unit, enemy_unit, current_time_called):
         unit.task = "going_to_battle"
         unit.target_attack = enemy_unit
-        self.move_unit(unit, enemy_unit.position[0], enemy_unit.position[1], current_time_called)
+        
+        # Get the current position of the enemy
+        target_x, target_y = enemy_unit.position
 
-        if not isinstance(unit, Archer):
-            if abs(unit.position[0] - enemy_unit.position[0]) < 0.1 and abs(unit.position[1] - enemy_unit.position[1]) < 0.1:
-                unit.task = "attacking"
-                enemy_unit.is_attacked_by = unit
-                enemy_unit.task = "is_attacked"
+        # Check if the target position has changed
+        if unit.target_position != (target_x, target_y):
+            unit.path = None
 
-                self._attack(unit, enemy_unit, current_time_called)
-        else: #for archers
-            if abs(unit.position[0] - enemy_unit.position[0]) < unit.range and abs(unit.position[1] - enemy_unit.position[1]) < unit.range:
-                unit.task = "attacking"
-                enemy_unit.is_attacked_by = unit
-                enemy_unit.task = "is_attacked"
-                self._attack(unit, enemy_unit, current_time_called)
+        # Move the unit toward the enemy's current position
+        self.move_unit(unit, int(target_x), int(target_y), current_time_called)
+        
+        # Check if the unit is within range to attack
+        if abs(unit.position[0] - target_x) < unit.range and abs(unit.position[1] - target_y) < unit.range:
+            unit.task = "attacking"
+            enemy_unit.is_attacked_by = unit
+            enemy_unit.task = "is_attacked"
+            self._attack(unit, enemy_unit, current_time_called)
+
+
     
     def _attack(self, unit, enemy_unit, current_time_called):
-        if not isinstance(unit, Archer):    
-            if abs(unit.position[0] - enemy_unit.position[0]) < 0.1 and abs(unit.position[1] - enemy_unit.position[1]) < 0.1:
-                if not hasattr(unit, 'last_hit_time'):
-                    unit.last_hit_time = 0
+        if abs(unit.position[0] - enemy_unit.position[0]) < unit.range and abs(unit.position[1] - enemy_unit.position[1]) < unit.range:
+            if not hasattr(unit, 'last_hit_time'):
+                unit.last_hit_time = 0
 
-                time_since_last_hit = current_time_called - unit.last_hit_time
-                if time_since_last_hit >= 1.0:  # Ensure at least 1 second between attacks
-                    if unit.attack > enemy_unit.hp:
-                        enemy_unit.hp = 0
-                        self.debug_print("Enemy unit killed!")
-                        Unit.kill_unit(enemy_unit.player, enemy_unit, self.map)
-                        unit.task = None
-                    else:
-                        self.debug_print("Attacking enemy unit...")
-                        enemy_unit.hp -= unit.attack
+            time_since_last_hit = current_time_called - unit.last_hit_time
+            if time_since_last_hit >= 1.0:  # Ensure at least 1 second between attacks
+                if unit.attack > enemy_unit.hp:
+                    enemy_unit.hp = 0
+                    self.debug_print("Enemy unit killed!")
+                    Unit.kill_unit(enemy_unit.player, enemy_unit, self.map)
+                    unit.task = None
+                else:
+                    self.debug_print("Attacking enemy unit...")
+                    enemy_unit.hp -= unit.attack
 
-                    unit.last_hit_time = current_time_called
-            else:
-                self.debug_print("Enemy unit not in range, moving closer...")
-                self.go_battle(unit, enemy_unit, current_time_called)
-        else: #for archers
-            if abs(unit.position[0] - enemy_unit.position[0]) < unit.range and abs(unit.position[1] - enemy_unit.position[1]) < unit.range:
-                if not hasattr(unit, 'last_hit_time'):
-                    unit.last_hit_time = 0
-
-                time_since_last_hit = current_time_called - unit.last_hit_time
-                if time_since_last_hit >= 1.0:  # Ensure at least 1 second between attacks
-                    if unit.attack > enemy_unit.hp:
-                        enemy_unit.hp = 0
-                        self.debug_print("Enemy unit killed!")
-                        Unit.kill_unit(enemy_unit.player, enemy_unit, self.map)
-                        unit.task = None
-                    else:
-                        self.debug_print("Attacking enemy unit...")
-                        enemy_unit.hp -= unit.attack
-
-                    unit.last_hit_time = current_time_called
-            else:
-                self.debug_print("Enemy unit not in range, moving closer...")
-                self.go_battle(unit, enemy_unit, current_time_called)
+                unit.last_hit_time = current_time_called
+        else:
+            self.debug_print("Enemy unit not in range, moving closer...")
+            self.go_battle(unit, enemy_unit, current_time_called)
