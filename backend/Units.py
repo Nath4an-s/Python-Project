@@ -1,5 +1,3 @@
-#Unit
-
 import random
 import math
 from Building import TownCenter
@@ -104,9 +102,9 @@ class Unit:
             player.population -= 1  # Decrease the player's population
             x, y = unit_to_kill.position
             game_map.remove_unit(int(x), int(y), unit_to_kill)  # Assuming game_map is a property of the player
-            debug_print(f"Unit {unit_to_kill} belonging to {player.name} at ({x}, {y}) killed.")
+            debug_print(f"Unit {unit_to_kill.name} belonging to {player.name} at ({x}, {y}) killed.")
         else:
-            debug_print(f"Unit {unit_to_kill} does not belong to {player.name}.")
+            debug_print(f"Unit {unit_to_kill.name} does not belong to {player.name}.")
 
     @classmethod
     def get_all_units(cls, players):
@@ -115,10 +113,22 @@ class Unit:
             units.extend(player.units)
         return units
 
-
-# Villager Class
 class Villager(Unit):
-    def __init__(self, player, name="Villager"):
+    @staticmethod
+    def lire_noms_fichier(fichier="noms_villageois.txt"):
+        try:
+            with open(fichier, "r") as f:
+                noms = [ligne.strip() for ligne in f if ligne.strip()]
+            return noms
+        except FileNotFoundError:
+            debug_print(f"Le fichier {fichier} n'a pas été trouvé.")
+            return ["Villager"]  # in case file not found
+
+    def __init__(self, player, name=None):
+        if name is None:
+            noms_disponibles = self.lire_noms_fichier()
+            name = random.choice(noms_disponibles)
+
         super().__init__(player, hp=25, cost={"Food": 50}, attack=2, speed=3, symbol="v", training_time=25)
         self.carrying = {"Wood": 0, "Food": 0, "Gold": 0}
         self.carry_capacity = 20  # Can carry up to 20 of any resource
@@ -128,6 +138,7 @@ class Villager(Unit):
         self.position = (0, 0)  # Initial position should be set appropriately
         self.last_gathered = None
         self.range = 0.99
+
 
 # Swordsman Class
 class Swordsman(Unit):
