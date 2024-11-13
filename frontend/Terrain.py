@@ -2,7 +2,7 @@ import random
 import math
 import curses
 
-from backend.Starter_File import GameMode, players
+from backend.Starter_File import GameMode
 
 class Map:
     def __init__(self, width, height):
@@ -33,7 +33,6 @@ class Map:
                 tile = self.grid[y][x]
 
                 if tile.resource is None:  # Ensure no other resources overwrite the tile
-                    resource_amount = random.randint(50, 200)
                     resource = Gold()
                     tile.resource = resource
                     self.resources["Gold"].append((x, y))  # Store the position of Gold resources
@@ -63,7 +62,6 @@ class Map:
                         tile = self.grid[y][x]
 
                         if tile.resource is None:  # Ensure no other resources overwrite the tile
-                            resource_amount = random.randint(50, 200)
                             resource = Gold()
                             tile.resource = resource
                             self.resources["Gold"].append((x, y))  # Store the position of Gold resources

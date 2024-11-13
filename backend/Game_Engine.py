@@ -42,7 +42,8 @@ class GameEngine:
 
         try:
             while not self.check_victory():
-                current_time = time.time()
+                if not self.is_paused:
+                    current_time = time.time()
 
                 # Handle input
                 stdscr.nodelay(True)  # Make getch() non-blocking
@@ -73,15 +74,14 @@ class GameEngine:
                 elif key == ord('\t'):  # TAB key
                     generate_html_report(self.players)
                     self.debug_print(f"HTML report generated at turn {self.turn}")
+                    self.is_paused = True
+                    self.debug_print("Game paused.")
                 elif key == ord('j'):
                     Building.spawn_building(self.players[2], 1, 1, Farm, self.map)
                 elif key == ord('k'):
-                    action.gather_resources(self.players[2].units[2], "Food", current_time)
+                    action.gather_resources(self.players[2].units[2], "Gold", current_time)
                 elif key == ord('o'):
                     self.debug_print(self.map.grid[0][0].resource.amount)
-                    self.debug_print(f"Map has {len([tile for row in self.map.grid for tile in row if tile.resource and tile.resource.type == 'Gold'])} gold tiles")
-                elif key == ord('p'):
-                    self.debug_print(self.map.grid[0][1].resource.amount)
                     self.debug_print(f"Map has {len([tile for row in self.map.grid for tile in row if tile.resource and tile.resource.type == 'Gold'])} gold tiles")
                 elif key == ord('l'):
                     self.debug_print(self.map.grid[1][0].resource.amount)
@@ -99,25 +99,32 @@ class GameEngine:
                     action.move_unit(self.players[1].units[1],2,2, current_time)
                 elif key == ord('f'):
                     Building.kill_building(self.players[2], self.players[2].buildings[-1], self.map)
+                elif key == ord('p'):
+                    self.is_paused = not self.is_paused
+
+                    if self.is_paused: 
+                        self.debug_print("Game paused.")
+                    else:
+                        self.debug_print("Game resumed.")
                 
 
-
-                # Move units toward their target position
-                for player in self.players:
-                    for unit in player.units:
-                        if unit.target_position:
-                            target_x, target_y = unit.target_position
-                            action.move_unit(unit, target_x, target_y, current_time)
-                        if unit.task == "gathering" or unit.task == "returning":
-                            action._gather(unit, unit.last_gathered, current_time)
-                        if unit.task == "marching":
-                            action.gather_resources(unit, unit.last_gathered, current_time)
-                        if unit.task == "attacking":
-                            action._attack(unit, unit.target_attack, current_time)
-                        if unit.task == "going_to_battle":
-                            action.go_battle(unit, unit.target_attack, current_time)
-                        if unit.task == "is_attacked":
-                            action._attack(unit, unit.is_attacked_by, current_time)
+                if not self.is_paused:
+                    # Move units toward their target position
+                    for player in self.players:
+                        for unit in player.units:
+                            if unit.target_position:
+                                target_x, target_y = unit.target_position
+                                action.move_unit(unit, target_x, target_y, current_time)
+                            if unit.task == "gathering" or unit.task == "returning":
+                                action._gather(unit, unit.last_gathered, current_time)
+                            if unit.task == "marching":
+                                action.gather_resources(unit, unit.last_gathered, current_time)
+                            if unit.task == "attacking":
+                                action._attack(unit, unit.target_attack, current_time)
+                            if unit.task == "going_to_battle":
+                                action.go_battle(unit, unit.target_attack, current_time)
+                            if unit.task == "is_attacked":
+                                action._attack(unit, unit.is_attacked_by, current_time)
 
                 # Clear the screen and display the new part of the map after moving
                 stdscr.clear()
@@ -131,7 +138,7 @@ class GameEngine:
 
     def check_victory(self):
         active_players = [p for p in self.players if p.has_units()]
-        return len(active_players) == 1 and self.is_paused
+        return len(active_players) == 1 # Check if there is only one player left
 
     def pause_game(self):
         self.is_paused = not self.is_paused

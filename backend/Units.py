@@ -102,7 +102,7 @@ class Unit:
             player.population -= 1  # Decrease the player's population
             x, y = unit_to_kill.position
             game_map.remove_unit(int(x), int(y), unit_to_kill)  # Assuming game_map is a property of the player
-            debug_print(f"Unit {unit_to_kill.name} belonging to {player.name} at ({x}, {y}) killed.")
+            debug_print(f"Unit {unit_to_kill.name} belonging to {player.name} at ({x}, {y}) killed. (RIP)")
         else:
             debug_print(f"Unit {unit_to_kill.name} does not belong to {player.name}.")
 

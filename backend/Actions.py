@@ -318,11 +318,10 @@ class Action:
             if time_since_last_hit >= 1.0:  # Ensure at least 1 second between attacks
                 if unit.attack > enemy_unit.hp:
                     enemy_unit.hp = 0
-                    self.debug_print("Enemy unit killed!")
                     Unit.kill_unit(enemy_unit.player, enemy_unit, self.map)
                     unit.task = None
                 else:
-                    self.debug_print("Attacking enemy unit...")
+                    self.debug_print(f"{unit.name} is attacking {enemy_unit.name}...")
                     enemy_unit.hp -= unit.attack
 
                 unit.last_hit_time = current_time_called
