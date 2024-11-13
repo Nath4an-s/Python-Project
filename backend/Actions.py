@@ -16,11 +16,6 @@ class Action:
         # Check if the target destination is valid
         if not self._is_within_bounds(target_x, target_y) or not self.map.is_tile_free_for_unit(int(target_x), int(target_y)):
             self.debug_print("Invalid target destination.")
-            self.debug_print(self.map.is_tile_free_for_unit(int(target_x), int(target_y)))
-            self.debug_print(self._is_within_bounds(target_x, target_y))
-            self.debug_print(self.map.grid[int(target_y)][int(target_x)].building)
-            self.debug_print(self.map.grid[int(target_y)][int(target_x)].building.is_walkable())
-
             return False
 
         # Get current/starting position of the unit

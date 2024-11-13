@@ -38,7 +38,7 @@ class GameEngine:
 
         # Display the initial viewport
         stdscr.clear()  # Clear the screen
-        self.map.display_viewport(stdscr, top_left_x, top_left_y, viewport_width, viewport_height)  # Display the initial viewport
+        self.map.display_viewport(stdscr, top_left_x, top_left_y, viewport_width, viewport_height, Map_is_paused=self.is_paused)  # Display the initial viewport
 
         try:
             while not self.check_victory():
@@ -46,23 +46,20 @@ class GameEngine:
                     current_time = time.time()
 
                 # Handle input
+                curses.curs_set(0)  # Hide cursor
                 stdscr.nodelay(True)  # Make getch() non-blocking
                 key = stdscr.getch()  # Get the key pressed by the user
                 action = Action(self.map)
-                if key == curses.KEY_UP:
+                if key == curses.KEY_UP or key == ord('z'):
                     top_left_y = max(0, top_left_y - 1)
-                elif key == curses.KEY_DOWN:
+                elif key == curses.KEY_DOWN or key == ord('s'):
                     top_left_y = min(self.map.height - viewport_height, top_left_y + 1)
-                elif key == curses.KEY_LEFT:
+                elif key == curses.KEY_LEFT or key == ord('q'):
                     top_left_x = max(0, top_left_x - 1)
-                elif key == curses.KEY_RIGHT:
+                elif key == curses.KEY_RIGHT or key == ord('d'):
                     top_left_x = min(self.map.width - viewport_width, top_left_x + 1)
                 elif key == curses.KEY_F12 and USE_PYGAME != False:  # Switch to GUI mode
                     gui.run_gui_mode(self)
-                    stdscr = curses.initscr()  # Reinitialize curses screen
-                    curses.curs_set(0)  # Hide cursor
-                    stdscr.clear()
-                    self.map.display_viewport(stdscr, top_left_x, top_left_y, viewport_width, viewport_height)
                     continue  # Skip the rest of the loop to reinitialize game engine state
                 elif key == ord('h'):  # When 'h' is pressed, test for the functions
                     #for unit in self.players[2].units:             #Takes time to calculates all paths but is perfectly smooth after that
@@ -101,7 +98,6 @@ class GameEngine:
                     Building.kill_building(self.players[2], self.players[2].buildings[-1], self.map)
                 elif key == ord('p'):
                     self.is_paused = not self.is_paused
-
                     if self.is_paused: 
                         self.debug_print("Game paused.")
                     else:
@@ -128,7 +124,7 @@ class GameEngine:
 
                 # Clear the screen and display the new part of the map after moving
                 stdscr.clear()
-                self.map.display_viewport(stdscr, top_left_x, top_left_y, viewport_width, viewport_height)
+                self.map.display_viewport(stdscr, top_left_x, top_left_y, viewport_width, viewport_height, Map_is_paused=self.is_paused)
                 stdscr.refresh()
 
                 self.turn += 1

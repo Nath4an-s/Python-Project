@@ -165,18 +165,17 @@ class Map:
             viewport.append(row)
         return viewport
 
-    def display_viewport(self, stdscr, top_left_x, top_left_y, viewport_width, viewport_height, changed_tiles=None):
+    def display_viewport(self, stdscr, top_left_x, top_left_y, viewport_width, viewport_height, Map_is_paused=False, changed_tiles=None):
         if changed_tiles is None:
             changed_tiles = set()
-
-        # Initialize colors inside display_viewport (no need to change main)
+        # Initialize colors inside display_viewport
         self.setup_colors()
-
+        
+        # Draw the viewport content
         for y in range(viewport_height):
             for x in range(viewport_width):
                 map_x = top_left_x + x
                 map_y = top_left_y + y
-
                 if 0 <= map_x < self.width and 0 <= map_y < self.height:
                     tile = self.grid[map_y][map_x]
                     if (map_x, map_y) in changed_tiles or not changed_tiles:
@@ -191,8 +190,7 @@ class Map:
                                 color_pair = curses.color_pair(3)  # Purple
                             else:
                                 color_pair = curses.color_pair(0)  # Default
-
-                            stdscr.addstr(y, x * 2, str(tile.building), color_pair)  # Display building with color
+                            stdscr.addstr(y, x * 2, str(tile.building), color_pair)
                         elif tile.unit:
                             # Determine the color based on the unit's owner
                             for unit in tile.unit:
@@ -205,20 +203,38 @@ class Map:
                                     color_pair = curses.color_pair(3)  # Purple
                                 else:
                                     color_pair = curses.color_pair(0)  # Default
-
-                                stdscr.addstr(y, x * 2, str(unit), color_pair)  # Display unit with color
+                                stdscr.addstr(y, x * 2, str(unit), color_pair)
                         else:
-                            stdscr.addstr(y, x * 2, str(tile))  # Display regular tile content
+                            stdscr.addstr(y, x * 2, str(tile))
+
+        # Draw red borders if game is paused
+        if Map_is_paused:
+            border_color = curses.color_pair(4)  # Red border color pair
+            # Draw horizontal borders
+            for x in range(viewport_width * 2):
+                stdscr.addstr(0, x, "─", border_color)  # Top border
+                stdscr.addstr(viewport_height - 1, x, "─", border_color)  # Bottom border
+            
+            # Draw vertical borders
+            for y in range(viewport_height):
+                stdscr.addstr(y, 0, "│", border_color)  # Left border
+                stdscr.addstr(y, viewport_width * 2 - 1, "│", border_color)  # Right border
+            
+            # Draw corners
+            stdscr.addstr(0, 0, "┌", border_color)  # Top-left corner
+            stdscr.addstr(0, viewport_width * 2 - 1, "┐", border_color)  # Top-right corner
+            stdscr.addstr(viewport_height - 1, 0, "└", border_color)  # Bottom-left corner
+            stdscr.addstr(viewport_height - 1, viewport_width * 2 - 1, "┘", border_color)  # Bottom-right corner
 
         stdscr.refresh()
 
     def setup_colors(self):
         curses.start_color()
         # Define color pairs: pair number, foreground color, background color
-        curses.init_pair(1, curses.COLOR_BLUE, curses.COLOR_BLACK)   # Player 1 (blue)
-        curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)    # Player 2 (red)
-        curses.init_pair(3, curses.COLOR_MAGENTA, curses.COLOR_BLACK)  # Player 3 (purple)
-
+        curses.init_pair(1, curses.COLOR_BLUE, curses.COLOR_BLACK)    # Player 1 (blue)
+        curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)     # Player 2 (red)
+        curses.init_pair(3, curses.COLOR_MAGENTA, curses.COLOR_BLACK) # Player 3 (purple)
+        curses.init_pair(4, curses.COLOR_RED, curses.COLOR_BLACK)     # Pause border (red)
     def find_nearest_resource(self, start_position, resource_type, player):
         min_distance = float('inf')
         nearest_resource = None
