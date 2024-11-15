@@ -63,7 +63,7 @@ class Unit:
                         0 <= spawn_y < game_map.height):
                         
                         if game_map.is_tile_free_for_unit(spawn_x, spawn_y):  # Check if tile is free
-                            cls.spawn_unit(Villager, spawn_x, spawn_y, player, game_map)  # Pass game_map
+                            cls.spawn_unit(Villager, spawn_x, spawn_y, player, game_map)  # Place the villager --> IA should spawn them next to the appropriate building
                             placed = True
                         else:
                             pass  # Try again if tile is not free
@@ -74,7 +74,11 @@ class Unit:
 
     @classmethod
     def spawn_unit(cls, unit_class, x, y, player, game_map):
-        unit = unit_class(player)  # Create an instance of the unit
+        if isinstance(unit_class, type):
+            unit = unit_class(player)  # create an  instance
+        else:
+            unit = unit_class
+
         if (0 <= x < game_map.width and 
             0 <= y < game_map.height and 
             not (player.population >= player.max_population or 
@@ -82,17 +86,58 @@ class Unit:
             
             building = game_map.grid[y][x].building
             if not building or building.is_walkable():
-                player.units.append(unit)  # Add the unit to the player's list of units
+                player.units.append(unit)
                 unit.position = (x, y)
                 player.population += 1
-                game_map.place_unit(x, y, unit)  # Place the unit on the map
+                game_map.place_unit(x, y, unit)
                 return unit
             else:
-                # There's a building that isn't walkable
+                debug_print(f"Cannot place unit at ({x}, {y}): tile is not walkable.")
                 return None
         else:
-            # Too much population
+            debug_print(f"Cannot place unit at ({x}, {y}): invalid position or population limit reached.")
             return None
+
+        
+    @classmethod
+    def train_unit(cls, unit_to_train, x, y, player, game_map, current_time_called):
+        if isinstance(unit_to_train, type):
+            unit_to_train = unit_to_train(player)
+        
+        # Vérification des ressources et de la population
+        if player.population < min(player.max_population, sum(building.population_increase for building in player.buildings)):
+            
+            # Si la première unité dans la queue n'a pas encore de temps de début de formation, on l'initialise
+            if (not hasattr(unit_to_train, 'training_start') or unit_to_train.training_start is None):
+                unit_to_train.training_start = current_time_called
+                # Déduction des ressources nécessaires pour former l'unité
+                for resource_type, amount in unit_to_train.cost.items():
+                    player.owned_resources[resource_type] -= amount
+                    debug_print(f"{player.name} spent {amount} {resource_type} to train {unit_to_train.name}.")
+
+                # Ajout de l'unité à la queue de formation
+                player.training_queue.append(unit_to_train)
+
+            # Vérification si l'unité est prête à être formée (en fonction du temps de formation)
+            if current_time_called - unit_to_train.training_start >= unit_to_train.training_time:
+                debug_print(current_time_called - unit_to_train.training_start)
+                cls.spawn_unit(unit_to_train, x, y, unit_to_train.player, game_map)
+                player.training_queue.remove(unit_to_train)
+                debug_print(f"Should have spawned {unit_to_train.name} at ({x}, {y})")
+                
+                # Si la queue de formation a encore des unités, on initialise le `training_start` pour la prochaine unité
+                if player.training_queue:
+                    next_unit = player.training_queue[0]
+                    next_unit.training_start = current_time_called
+                    debug_print(f"Starting training for {next_unit.name}")
+        else:
+            debug_print(f"Too much population or not enough resources to train {unit_to_train.name}.")
+            if player.training_queue:
+                player.training_queue.remove(unit_to_train)
+                if player.training_queue:
+                    next_unit = player.training_queue[0]
+                    next_unit.training_start = current_time_called
+
 
         
     @classmethod
@@ -129,13 +174,12 @@ class Villager(Unit):
             noms_disponibles = self.lire_noms_fichier()
             name = random.choice(noms_disponibles)
 
-        super().__init__(player, hp=25, cost={"Food": 50}, attack=2, speed=3, symbol="v", training_time=25)
+        super().__init__(player, hp=25, cost={"Food": 50}, attack=2, speed=3, symbol="v", training_time=25) #TODO : speed 0.8
         self.carrying = {"Wood": 0, "Food": 0, "Gold": 0}
         self.carry_capacity = 20  # Can carry up to 20 of any resource
         self.gather_rate = 25 / 60  # 25 resources per minute (in resources per second)
         self.name = name
         self.task = None
-        self.position = (0, 0)  # Initial position should be set appropriately
         self.last_gathered = None
         self.range = 0.99
 
@@ -145,6 +189,8 @@ class Swordsman(Unit):
     def __init__(self, player):
         super().__init__(player, hp=40, cost={"Food": 50, "Gold": 20}, attack=4, speed=0.9, symbol="s", training_time=20)
         self.range = 0.99
+        self.task = None
+        self.name = "Swordsman"
 
 
 # Horseman Class
@@ -152,6 +198,8 @@ class Horseman(Unit):
     def __init__(self, player):
         super().__init__(player, hp=45, cost={"Food": 80, "Gold": 20}, attack=4, speed=1.2, symbol="h", training_time=30)
         self.range = 0.99
+        self.task = None
+        self.name = "Horseman"
 
 
 # Archer Class
@@ -159,3 +207,5 @@ class Archer(Unit):
     def __init__(self, player):
         super().__init__(player, hp=30, cost={"Wood": 25, "Gold": 45}, attack=4, speed=1, symbol="a", training_time=35)
         self.range = 4  # Archers have a range of 4 tiles
+        self.task = None
+        self.name = "Archer"

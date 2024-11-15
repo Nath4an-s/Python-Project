@@ -10,7 +10,6 @@ class Action:
     def __init__(self, game_map):
         self.map = game_map
         self.debug_print = debug_print
-        self.debug_print = debug_print
 
     def move_unit(self, unit, target_x, target_y, current_time_called):
         # Check if the target destination is valid

@@ -175,9 +175,9 @@ Baudoin
 Benaicha 
 Benjamin 
 Benjamine 
-Benoît-David 
-Benoît-Paul 
-Benoît 
+Benoit-David 
+Benoit-Paul 
+Benoit 
 Bernadette 
 Bernard-Eric 
 Bernard 
@@ -567,10 +567,10 @@ Isidore
 Issam 
 Ivan 
 J-François/Jean-François
-J.M. 
-J.M/J.M.
-J.P. 
-J.P/J.P.
+J M  
+J M/J M 
+J P  
+J P/J P 
 JM 
 JP 
 Jack 
@@ -747,7 +747,7 @@ Laure
 Laureline 
 Laurence 
 Laurencia 
-Laurent-Benoît 
+Laurent-Benoit 
 Laurent 
 Lauretta 
 Lauriane 

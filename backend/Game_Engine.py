@@ -27,8 +27,8 @@ class GameEngine:
         self.turn = 0
         self.is_paused = False  # Flag to track if the game is paused
         self.changed_tiles = set()  # Set to track changed tiles
-        Building.place_starting_buildings(self.map)  # Place town centers on the map
-        Unit.place_starting_units(self.players, self.map)  # Pass players and map
+        Building.place_starting_buildings(self.map)  # Place starting town centers on the map
+        Unit.place_starting_units(self.players, self.map)  # Place starting units on the map
         self.debug_print = debug_print
 
     def run(self, stdscr):
@@ -67,12 +67,12 @@ class GameEngine:
                     action.move_unit(self.players[2].units[0], 2, 2, current_time) # Move the first unit to (0, 0)
                 elif key == ord('g'):  # When 'g' is pressed, test for the functions
                     Unit.kill_unit(self.players[2], self.players[2].units[1], self.map)
-                    self.debug_print(f"Unit {self.players[2].units[1]} killed")
                 elif key == ord('\t'):  # TAB key
                     generate_html_report(self.players)
                     self.debug_print(f"HTML report generated at turn {self.turn}")
-                    self.is_paused = True
-                    self.debug_print("Game paused.")
+                    if self.is_paused == False:
+                        self.is_paused = True
+                        self.debug_print("Game paused.")
                 elif key == ord('j'):
                     Building.spawn_building(self.players[2], 1, 1, Farm, self.map)
                 elif key == ord('k'):
@@ -98,10 +98,14 @@ class GameEngine:
                     Building.kill_building(self.players[2], self.players[2].buildings[-1], self.map)
                 elif key == ord('p'):
                     self.is_paused = not self.is_paused
-                    if self.is_paused: 
+                    if self.is_paused:
                         self.debug_print("Game paused.")
                     else:
                         self.debug_print("Game resumed.")
+                elif key == ord('c'):
+                    Unit.train_unit(Swordsman, 2, 2, self.players[2], self.map, current_time)
+                elif key == ord('u'):
+                    self.players[2].owned_resources["Food"] -= 19950
                 
 
                 if not self.is_paused:
@@ -121,6 +125,10 @@ class GameEngine:
                                 action.go_battle(unit, unit.target_attack, current_time)
                             if unit.task == "is_attacked":
                                 action._attack(unit, unit.is_attacked_by, current_time)
+                        if player.training_queue != []:
+                            unit = player.training_queue[0]
+                            Unit.train_unit(unit, 2, 2, player, self.map, current_time)
+                
 
                 # Clear the screen and display the new part of the map after moving
                 stdscr.clear()
