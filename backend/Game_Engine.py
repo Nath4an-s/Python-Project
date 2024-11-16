@@ -3,6 +3,7 @@ import time
 import subprocess
 import os
 import threading
+import pickle
 
 from logger import debug_print
 from Units import *
@@ -106,6 +107,10 @@ class GameEngine:
                     Unit.train_unit(Swordsman, 2, 2, self.players[2], self.map, current_time) #coordinates should be next to the right building
                 elif key == ord('u'):
                     self.players[2].owned_resources["Food"] -= 19950
+                elif key == ord('v'):  
+                    self.save_game("../assets/annex/game_save.dat")
+                elif key == ord('x'):  
+                    self.load_game("../assets/annex/game_save.dat")
                 
 
                 if not self.is_paused:
@@ -148,20 +153,41 @@ class GameEngine:
         self.is_paused = not self.is_paused
 
     def save_game(self, filename):
-        game_state = GameState(self)
-        game_state.save(filename)
+        if self.is_paused == False:
+            self.is_paused = True
+            self.debug_print("Game paused.")
+        """
+        Saves the current game state to a file using pickle.
+        """
+        try:
+            with open(filename, 'wb') as f:
+                game_state = {
+                    'players': self.players,
+                    'map': self.map,
+                    'turn': self.turn,
+                    'is_paused': self.is_paused,
+                    'changed_tiles': self.changed_tiles,
+                }
+                pickle.dump(game_state, f)
+            self.debug_print(f"Game saved to {filename}.")
+        except Exception as e:
+            self.debug_print(f"Error saving game: {e}")
 
     def load_game(self, filename):
-        game_state = GameState(self)
-        game_state.load(filename)
-
-# GameState Class
-class GameState:
-    def __init__(self, game_engine):
-        self.game_engine = game_engine
-
-    def save(self, filename):
-        pass
-
-    def load(self, filename):
-        pass
+        if self.is_paused == False:
+            self.is_paused = True
+            self.debug_print("Game paused.")
+        """
+        Loads a saved game state from a file.
+        """
+        try:
+            with open(filename, 'rb') as f:
+                game_state = pickle.load(f)
+                self.players = game_state['players']
+                self.map = game_state['map']
+                self.turn = game_state['turn']
+                self.is_paused = game_state['is_paused']
+                self.changed_tiles = game_state['changed_tiles']
+            self.debug_print(f"Game loaded from {filename}.")
+        except Exception as e:
+            self.debug_print(f"Error loading game: {e}")

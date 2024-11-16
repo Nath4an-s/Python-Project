@@ -154,7 +154,7 @@ class Unit:
 
 class Villager(Unit):
     @staticmethod
-    def lire_noms_fichier(fichier="noms_villageois.txt"):
+    def lire_noms_fichier(fichier="../assets/annex/noms_villageois.txt"):
         try:
             with open(fichier, "r") as f:
                 noms = [ligne.strip() for ligne in f if ligne.strip()]
