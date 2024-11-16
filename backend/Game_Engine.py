@@ -103,7 +103,7 @@ class GameEngine:
                     else:
                         self.debug_print("Game resumed.")
                 elif key == ord('c'):
-                    Unit.train_unit(Swordsman, 2, 2, self.players[2], self.map, current_time)
+                    Unit.train_unit(Swordsman, 2, 2, self.players[2], self.map, current_time) #coordinates should be next to the right building
                 elif key == ord('u'):
                     self.players[2].owned_resources["Food"] -= 19950
                 

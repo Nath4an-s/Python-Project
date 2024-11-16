@@ -104,28 +104,22 @@ class Unit:
         if isinstance(unit_to_train, type):
             unit_to_train = unit_to_train(player)
         
-        # Vérification des ressources et de la population
         if player.population < min(player.max_population, sum(building.population_increase for building in player.buildings)):
             
-            # Si la première unité dans la queue n'a pas encore de temps de début de formation, on l'initialise
             if (not hasattr(unit_to_train, 'training_start') or unit_to_train.training_start is None):
                 unit_to_train.training_start = current_time_called
-                # Déduction des ressources nécessaires pour former l'unité
                 for resource_type, amount in unit_to_train.cost.items():
                     player.owned_resources[resource_type] -= amount
                     debug_print(f"{player.name} spent {amount} {resource_type} to train {unit_to_train.name}.")
 
-                # Ajout de l'unité à la queue de formation
                 player.training_queue.append(unit_to_train)
 
-            # Vérification si l'unité est prête à être formée (en fonction du temps de formation)
             if current_time_called - unit_to_train.training_start >= unit_to_train.training_time:
                 debug_print(current_time_called - unit_to_train.training_start)
                 cls.spawn_unit(unit_to_train, x, y, unit_to_train.player, game_map)
                 player.training_queue.remove(unit_to_train)
                 debug_print(f"Should have spawned {unit_to_train.name} at ({x}, {y})")
                 
-                # Si la queue de formation a encore des unités, on initialise le `training_start` pour la prochaine unité
                 if player.training_queue:
                     next_unit = player.training_queue[0]
                     next_unit.training_start = current_time_called
