@@ -5,6 +5,7 @@ import os
 import threading
 import pickle
 
+from pynput.keyboard import Key, Listener
 from logger import debug_print
 from Units import *
 from Building import *
@@ -19,6 +20,43 @@ except ImportError:
 from html_report import generate_html_report
 from Actions import Action
 from Building import Building
+
+#Partit Gestion de Touche en Simultanée
+
+allowedKeys = [
+    Key.up,
+    Key.down,
+    Key.left,
+    Key.right
+]
+
+key_buffer = []
+
+def press(key):
+    global key_buffer
+    if key in allowedKeys and key not in key_buffer and len(key_buffer) < 3:
+        key_buffer.append(key)
+
+def release(key):
+    global key_buffer
+    if key in key_buffer:
+        key_buffer.remove(key)
+
+def check_diagonal_movement():
+    up = Key.up in key_buffer
+    down = Key.down in key_buffer
+    left = Key.left in key_buffer
+    right = Key.right in key_buffer
+    
+    if up and left:
+        return -1, -1
+    elif up and right:
+        return 1, -1
+    elif down and left:
+        return -1, 1
+    elif down and right:
+        return 1, 1
+    return 0, 0
 
 # GameEngine Class
 class GameEngine:
@@ -36,10 +74,13 @@ class GameEngine:
         # Initialize the starting view position
         top_left_x, top_left_y = 0, 0
         viewport_width, viewport_height = 30, 30
-        key_buffer = set()  # Set to store pressed keys
         # Display the initial viewport
         stdscr.clear()  # Clear the screen
         self.map.display_viewport(stdscr, top_left_x, top_left_y, viewport_width, viewport_height, Map_is_paused=self.is_paused)  # Display the initial viewport
+        
+        #Thread pour la gestion de touche
+        listener = Listener(on_press=press, on_release=release)
+        listener.start()
 
         try:
             while not self.check_victory():
@@ -51,23 +92,32 @@ class GameEngine:
                 stdscr.nodelay(True)  # Make getch() non-blocking
                 key = stdscr.getch()  # Get the key pressed by the user
                 action = Action(self.map)
-                if key == curses.KEY_UP or key == ord('z'):
-                    top_left_y = max(0, top_left_y - 1)
-                elif key == curses.KEY_DOWN or key == ord('s'):
-                    top_left_y = min(self.map.height - viewport_height, top_left_y + 1)
-                elif key == curses.KEY_LEFT or key == ord('q'):
-                    top_left_x = max(0, top_left_x - 1)
-                elif key == curses.KEY_RIGHT or key == ord('d'):
-                    top_left_x = min(self.map.width - viewport_width, top_left_x + 1)
-                elif key == ord('Z'):
-                    top_left_y = max(0, top_left_y - 5)
-                elif key == ord('S'):
-                    top_left_y = min(self.map.height - viewport_height, top_left_y + 5)
-                elif key == ord('Q'):
-                    top_left_x = max(0, top_left_x - 5)
-                elif key == ord('D'):   
-                    top_left_x = min(self.map.width - viewport_width, top_left_x + 5)
-                elif key == curses.KEY_F12 and USE_PYGAME != False:  # Switch to GUI mode
+
+                dx, dy = check_diagonal_movement()
+
+                if dx == 0 and dy == 0:
+                    if key == curses.KEY_UP or key == ord('z'):
+                        top_left_y = max(0, top_left_y - 1)
+                    elif key == curses.KEY_DOWN or key == ord('s'):
+                        top_left_y = min(self.map.height - viewport_height, top_left_y + 1)
+                    elif key == curses.KEY_LEFT or key == ord('q'):
+                        top_left_x = max(0, top_left_x - 1)
+                    elif key == curses.KEY_RIGHT or key == ord('d'):
+                        top_left_x = min(self.map.width - viewport_width, top_left_x + 1)
+                    elif key == ord('Z'):
+                        top_left_y = max(0, top_left_y - 5)
+                    elif key == ord('S'):
+                        top_left_y = min(self.map.height - viewport_height, top_left_y + 5)
+                    elif key == ord('Q'):
+                        top_left_x = max(0, top_left_x - 5)
+                    elif key == ord('D'):   
+                        top_left_x = min(self.map.width - viewport_width, top_left_x + 5)
+                    
+                # Apply diagonal movement
+                top_left_x = max(0, min(self.map.width - viewport_width, top_left_x + dx))
+                top_left_y = max(0, min(self.map.height - viewport_height, top_left_y + dy))
+                
+                if key == curses.KEY_F12 and USE_PYGAME != False:  # Switch to GUI mode
                     gui.run_gui_mode(self)
                     continue  # Skip the rest of the loop to reinitialize game engine state
                 elif key == ord('h'):  # When 'h' is pressed, test for the functions
