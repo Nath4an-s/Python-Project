@@ -149,6 +149,28 @@ class Action:
 
         return neighbors
 
+    def get_adjacent_positions(self, x, y, size):
+        adjacent_positions = []
+        
+        for i in range(size):
+            adjacent_positions.append((x - 1, y + i))  # left side
+            adjacent_positions.append((x + size, y + i))  # right side
+            adjacent_positions.append((x + i, y - 1))  # top row
+            adjacent_positions.append((x + i, y + size))  # bottom row
+
+        adjacent_positions.extend([
+            (x - 1, y - 1),  # corners
+            (x - 1, y + size),
+            (x + size, y - 1),
+            (x + size, y + size)
+        ])
+
+        adjacent_positions = [
+            (px, py) for px, py in adjacent_positions
+            if 0 <= px < self.map.width and 0 <= py < self.map.height
+        ]
+        
+        return adjacent_positions
 
     def _move_cost(self, current, neighbor):
         return 1 if abs(current[0] - neighbor[0]) + abs(current[1] - neighbor[1]) == 1 else 1.414
@@ -341,7 +363,11 @@ class Action:
         if unit.task != "going_to_construction_site":
             unit.task = "going_to_construction_site"
             
-            self.move_unit(unit, x-1, y, current_time_called) #TODO: change the x-1 that is hard coded
+            adjacent_positions = self.get_adjacent_positions(x, y, building_type(player).size)
+            for pos in adjacent_positions:
+                if self.map.is_tile_free_for_unit(pos[0], pos[1]):
+                    self.move_unit(unit, pos[0], pos[1], current_time_called)
+                    break
 
         if unit.target_position == None:
             unit.task = "constructing"
