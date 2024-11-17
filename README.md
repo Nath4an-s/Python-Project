@@ -14,7 +14,7 @@ g : Tue la deuxième unité du joueur 2.
 
 TAB : Génère un rapport HTML du jeu et met en pause le jeu si ce n'est pas déjà fait.
 
-j : Fait apparaître un bâtiment de type "Farm" pour le joueur 2 à la position (1, 1).
+j : Construis un bâtiment de type "Farm" pour le joueur 2 à la position (1, 1).
 
 k : Fait rassembler des ressources (Or) par la troisième unité du joueur 2.
 
