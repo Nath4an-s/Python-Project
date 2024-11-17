@@ -36,7 +36,7 @@ class GameEngine:
         # Initialize the starting view position
         top_left_x, top_left_y = 0, 0
         viewport_width, viewport_height = 30, 30
-
+        key_buffer = set()  # Set to store pressed keys
         # Display the initial viewport
         stdscr.clear()  # Clear the screen
         self.map.display_viewport(stdscr, top_left_x, top_left_y, viewport_width, viewport_height, Map_is_paused=self.is_paused)  # Display the initial viewport
@@ -59,6 +59,14 @@ class GameEngine:
                     top_left_x = max(0, top_left_x - 1)
                 elif key == curses.KEY_RIGHT or key == ord('d'):
                     top_left_x = min(self.map.width - viewport_width, top_left_x + 1)
+                elif key == ord('Z'):
+                    top_left_y = max(0, top_left_y - 5)
+                elif key == ord('S'):
+                    top_left_y = min(self.map.height - viewport_height, top_left_y + 5)
+                elif key == ord('Q'):
+                    top_left_x = max(0, top_left_x - 5)
+                elif key == ord('D'):   
+                    top_left_x = min(self.map.width - viewport_width, top_left_x + 5)
                 elif key == curses.KEY_F12 and USE_PYGAME != False:  # Switch to GUI mode
                     gui.run_gui_mode(self)
                     continue  # Skip the rest of the loop to reinitialize game engine state
@@ -75,7 +83,7 @@ class GameEngine:
                         self.is_paused = True
                         self.debug_print("Game paused.")
                 elif key == ord('j'):
-                    Building.spawn_building(self.players[2], 1, 1, Farm, self.map)
+                    action.construct_building(self.players[2].units[2], Farm, 1, 1, self.players[2], current_time)
                 elif key == ord('k'):
                     action.gather_resources(self.players[2].units[2], "Gold", current_time)
                 elif key == ord('o'):
@@ -130,6 +138,10 @@ class GameEngine:
                                 action.go_battle(unit, unit.target_attack, current_time)
                             if unit.task == "is_attacked":
                                 action._attack(unit, unit.is_attacked_by, current_time)
+                            if unit.task == "going_to_construction_site":
+                                action.construct_building(unit, unit.construction_type, unit.target_building[0], unit.target_building[1], player, current_time)
+                            if unit.task == "constructing":
+                                action._construct(unit, unit.construction_type, unit.target_building[0], unit.target_building[1], player, current_time)
                         if player.training_queue != []:
                             unit = player.training_queue[0]
                             Unit.train_unit(unit, 2, 2, player, self.map, current_time)

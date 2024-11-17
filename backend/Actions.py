@@ -5,6 +5,7 @@ import heapq
 from frontend.Terrain import *
 from logger import debug_print
 from Units import *
+from Building import *
 
 class Action:
     def __init__(self, game_map):
@@ -277,6 +278,7 @@ class Action:
                     unit.player.owned_resources[resource_type] += int(unit.carrying[resource_type])
                     unit.carrying[resource_type] = 0
                     unit.task = None
+                    del unit.last_gather_time
             else:
                 self.debug_print("No valid building found for resource return.")
 
@@ -314,6 +316,8 @@ class Action:
                     enemy_unit.hp = 0
                     Unit.kill_unit(enemy_unit.player, enemy_unit, self.map)
                     unit.task = None
+                    del unit.last_hit_time
+                    unit.target_attack = None
                 else:
                     self.debug_print(f"{unit.name} is attacking {enemy_unit.name}...")
                     enemy_unit.hp -= unit.attack
@@ -322,3 +326,35 @@ class Action:
         else:
             self.debug_print("Enemy unit not in range, moving closer...")
             self.go_battle(unit, enemy_unit, current_time_called)
+
+    def construct_building(self, unit, building_type, x, y, player, current_time_called):
+
+        if not self.map.is_area_free(x, y, building_type(player).size):
+            if unit.task != "going_to_construction_site": 
+                self.debug_print(f"Cannot construct building at ({x}, {y}): area is not free.")
+            return
+        if not hasattr(unit, 'construction_type'):
+            unit.construction_type = building_type
+        if not hasattr(unit, 'target_building'):
+            unit.target_building = (x, y)
+
+        if unit.task != "going_to_construction_site":
+            unit.task = "going_to_construction_site"
+            
+            self.move_unit(unit, x-1, y, current_time_called) #TODO: change the x-1 that is hard coded
+
+        if unit.target_position == None:
+            unit.task = "constructing"
+            self._construct(unit, building_type, x, y, player, current_time_called)
+
+    def _construct(self, unit, building_type, x, y, player, current_time_called):
+
+        if not hasattr(unit, 'start_building'):
+            unit.start_building = current_time_called
+            self.debug_print(f"{unit} started constructing {building_type.__name__} at ({x}, {y}).")
+
+        elif current_time_called - unit.start_building >= building_type(player).build_time:
+            Building.spawn_building(player, x, y, building_type, self.map)
+            self.debug_print(f"{building_type.__name__} constructed at ({x}, {y}) by {unit}.")
+            unit.task = None
+            del unit.start_building 
