@@ -170,6 +170,9 @@ class GameEngine:
                     self.save_game("../assets/annex/game_save.dat")
                 elif key == ord('x'):  
                     self.load_game("../assets/annex/game_save.dat")
+                elif key == ord('i'):
+                    for unit in self.players[2].units:
+                        action.go_battle(unit, self.players[1].units[1], current_time)
                 
 
                 if not self.is_paused:
