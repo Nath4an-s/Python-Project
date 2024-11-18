@@ -113,9 +113,10 @@ class GameEngine:
                     elif key == ord('D'):   
                         top_left_x = min(self.map.width - viewport_width, top_left_x + 5)
                     
-                # Apply diagonal movement
-                top_left_x = max(0, min(self.map.width - viewport_width, top_left_x + dx))
-                top_left_y = max(0, min(self.map.height - viewport_height, top_left_y + dy))
+                else :
+                    # Apply diagonal movement
+                    top_left_x = max(0, min(self.map.width - viewport_width, top_left_x + dx))
+                    top_left_y = max(0, min(self.map.height - viewport_height, top_left_y + dy))
                 
                 if key == curses.KEY_F12 and USE_PYGAME != False:  # Switch to GUI mode
                     gui.run_gui_mode(self)

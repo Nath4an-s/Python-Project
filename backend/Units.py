@@ -11,7 +11,6 @@ class Unit:
         self.cost = cost
         self.attack = attack
         self.speed = speed
-        self.position = None
         self.symbol = symbol
         self.training_time = training_time
         self.position = position
