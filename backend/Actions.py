@@ -15,7 +15,6 @@ class Action:
     def move_unit(self, unit, target_x, target_y, current_time_called):
         # Check if the target destination is valid
         if not self._is_within_bounds(target_x, target_y) or not self.map.is_tile_free_for_unit(int(target_x), int(target_y)):
-            self.debug_print("Invalid target destination.")
             return False
 
         # Get current/starting position of the unit
@@ -26,72 +25,67 @@ class Action:
         if not hasattr(unit, 'path') or not unit.path:
             unit.path = self.dijkstra_pathfinding((int(start_x), int(start_y)), (target_x, target_y))
 
-        # Assuming 'unit' has a position attribute as a tuple of floats
+        # Initialize last move time if not already set
         if not hasattr(unit, 'last_move_time'):
             unit.last_move_time = current_time_called
 
-        # Calculate time passed since last move of the unit
+        # Calculate time passed since the last move
         current_time = current_time_called
         time_since_last_move = current_time - unit.last_move_time
 
-        # Calculate the distance the unit can move based on its speed
+        # Calculate the maximum distance the unit can move
         distance_to_move = unit.speed * time_since_last_move
-        # Make unit move if enough time has passed
+
+        # Ensure there’s a path to follow and the unit can move
         if unit.path and distance_to_move > 0:
             # Get the next target position in the path
             next_step = unit.path[0]
 
-            # Check if the next step is still free (dynamic obstacle detection)
+            # Check if the next step is free (dynamic obstacle detection)
             if not self.map.is_tile_free_for_unit(next_step[0], next_step[1]):
                 # Recalculate path if the next step is blocked
                 unit.path = self.dijkstra_pathfinding((int(start_x), int(start_y)), (target_x, target_y))
                 if not unit.path:
                     self.debug_print("Path not found or obstructed")
-                    return False # No valid path found
+                    return False  # No valid path found
 
-            # Calculate direction vector to the next step
+            # Calculate the direction vector to the next step
             direction_x = next_step[0] - unit.position[0]
             direction_y = next_step[1] - unit.position[1]
+            distance_to_next_step = (direction_x**2 + direction_y**2) ** 0.5
 
-            # Calculate the length of the direction vector
-            length = (direction_x**2 + direction_y**2) ** 0.5
+            # If within reach of the next step, move directly there
+            if distance_to_move >= distance_to_next_step:
+                unit.position = next_step
+                unit.path.pop(0)  # Remove the step from the path
 
-            if length > 0:
-                # Normalize the direction vector
-                normalized_x = direction_x / length
-                normalized_y = direction_y / length
-
-                # Move the unit a fraction of the distance based on its speed
-                new_position = (
-                    unit.position[0] + normalized_x * distance_to_move,
-                    unit.position[1] + normalized_y * distance_to_move
-                )
-
-                # Snap to the target if within a small threshold
-                if abs(new_position[0] - target_x) <= 1 and abs(new_position[1] - target_y) <= 1: #maybe we'll try to improve this
+                # Snap to the tile if it's the last step before the target
+                if not unit.path:  # No more steps in the path
                     unit.position = (target_x, target_y)
                     unit.path = None
                     unit.target_position = None
                     Map.move_unit(self.map, unit, int(unit.position[0]), int(unit.position[1]), int(start_x), int(start_y))
                     self.debug_print("Reached target!")
-                    self.debug_print(unit.position)
                     return True
-                else:
-                    unit.position = new_position
+            else:
+                # Otherwise, move partway towards the next step
+                normalized_x = direction_x / distance_to_next_step
+                normalized_y = direction_y / distance_to_next_step
 
-                # Check if the unit has reached the next step
-                if ((unit.position[0] - next_step[0]) ** 2 + 
-                    (unit.position[1] - next_step[1]) ** 2) < (distance_to_move ** 2):
-                    # The unit has reached the next step, so remove it from the path
-                    unit.position = next_step
-                    unit.path.pop(0)
+                # Calculate the new position based on the unit's speed
+                unit.position = (
+                    unit.position[0] + normalized_x * distance_to_move,
+                    unit.position[1] + normalized_y * distance_to_move,
+                )
 
             # Update the last move time
             unit.last_move_time = current_time
             Map.move_unit(self.map, unit, int(unit.position[0]), int(unit.position[1]), int(start_x), int(start_y))
 
             return True
+
         return False
+
 
 
     def dijkstra_pathfinding(self, start, goal):
@@ -192,6 +186,8 @@ class Action:
                 unit.target_position = target
             else:
                 self.debug_print(f"No {resource_type} resources found.")
+                unit.task = None
+                unit.target_position = None
                 return False
             # Find a free tile around the target resource
             adjacent_tiles = self._get_neighbors((unit.target_position[0], unit.target_position[1]))
@@ -214,7 +210,7 @@ class Action:
                     self.debug_print("No free tile found around the resource.")
                     return False
 
-            if any(abs(unit.position[0] - tile[0]) < 0.1 and abs(unit.position[1] - tile[1]) < 0.1 for tile in adjacent_tiles):
+            else:
                 unit.task = "gathering"
                 self._gather(unit, resource_type, current_time_called)
 
@@ -245,7 +241,7 @@ class Action:
     def _gather(self, unit, resource_type, current_time_called):
         tile = self.map.grid[unit.target_position[1]][unit.target_position[0]] if unit.target_position is not None else None
         # Check if there is a resource on the target tile and it's the correct type
-        if (tile and tile.resource and tile.resource.type == resource_type) or (resource_type == "Food" and tile.building and tile.building.name == "Farm"):
+        if (tile and tile.resource and tile.resource.type == resource_type) or (tile and resource_type == "Food" and tile.building and tile.building.name == "Farm"):
             # Ensure the unit has capacity to gather more of this resource
             if unit.carrying[resource_type] < unit.carry_capacity and (tile.resource and tile.resource.amount > 0 or (tile.building and tile.building.name == "Farm" and tile.building.food > 0)):
                 # Initialize last gather time if it hasn't been set
@@ -279,8 +275,8 @@ class Action:
             # No resource found; start returning resources if carrying any
             if unit.carrying[resource_type] > 0:
                 unit.task = "returning"
-                self.debug_print("No resource found, returning to deposit resources.")
-        
+                #returning to deposit
+                        
         # Check if unit's carrying capacity is full or if it needs to return due to lack of resource
         if unit.carrying[resource_type] >= unit.carry_capacity or unit.task == "returning":
             # Locate the nearest drop-off location (Town Center or Camp)
@@ -292,7 +288,7 @@ class Action:
 
             # Move the unit to the returning position if found
             if returning_position:
-                self.move_unit(unit, returning_position[0] - 1, returning_position[1] - 1, current_time_called)
+                self.move_unit(unit, returning_position[0] - 1, returning_position[1] - 1, current_time_called) #TODO : replace that hardcoded value
 
                 # Check if unit has reached the drop-off destination to deposit resources
                 if abs(unit.position[0] - (returning_position[0] - 1)) < 0.1 and abs(unit.position[1] - (returning_position[1] - 1)) < 0.1:
