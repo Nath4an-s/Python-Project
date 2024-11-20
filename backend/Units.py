@@ -170,10 +170,11 @@ class Villager(Unit):
         super().__init__(player, hp=25, cost={"Food": 50}, attack=2, speed=3, symbol="v", training_time=25) #TODO : speed 0.8
         self.carrying = {"Wood": 0, "Food": 0, "Gold": 0}
         self.carry_capacity = 20  # Can carry up to 20 of any resource
-        self.gather_rate = 25 / 60  # 25 resources per minute (in resources per second)
+        self.gather_rate = 3  # 25 resources per minute (in resources per second) #TODO : 25 / 60
         self.name = name
         self.task = None
         self.last_gathered = None
+        self.target_resource = None
         self.range = 0.99
 
 
