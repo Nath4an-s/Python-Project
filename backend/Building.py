@@ -214,5 +214,3 @@ class Keep(Building):
 
     def is_walkable(self):
         return False
-
-
