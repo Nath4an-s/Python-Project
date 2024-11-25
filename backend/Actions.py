@@ -280,6 +280,7 @@ class Action:
                     self.debug_print("No free tile found to return to around a town center.")
 
                 # Check if unit has reached the drop-off destination to deposit resources
+                #test
                 if abs(unit.position[0] - returning_position[0]) < 0.1 and abs(unit.position[1] - returning_position[1]) < 0.1:
                     # Deposit resources and reset carrying load
                     unit.player.owned_resources[resource_type] += int(unit.carrying[resource_type])
