@@ -297,7 +297,9 @@ class Action:
                 # Check if unit has reached the drop-off destination to deposit resources
                 if abs(unit.position[0] - (returning_position[0] - 1)) < 0.1 and abs(unit.position[1] - (returning_position[1] - 1)) < 0.1:
                     # Deposit resources and reset carrying load
-                    unit.player.owned_resources[resource_type] += int(unit.carrying[resource_type])
+                    building = next(b for b in unit.player.buildings if b.position == returning_position)
+                    if isinstance(building, Building):
+                        building.drop_point(unit, resource_type)
                     unit.carrying[resource_type] = 0
                     unit.task = None
                     del unit.last_gather_time

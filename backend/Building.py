@@ -108,9 +108,16 @@ class TownCenter(Building):
         if self.built:
             return Villager(self.player)
 
-    def drop_point(self):
+    def drop_point(self, unit, resource_type):
         # Town Center acts as a drop point for resources
-        pass
+        # Add the gathered resources to the player's inventory
+        if resource_type in unit.carrying:
+            amount = unit.carrying[resource_type]
+            unit.player.owned_resources[resource_type] += amount
+            self.debug_print(f"Town Center: {unit.player.name} dropped {amount} {resource_type}.")
+        else:
+            self.debug_print("No valid resource to drop.")
+        
 
     def is_walkable(self):
         return False
@@ -133,9 +140,15 @@ class Camp(Building):
         super().__init__(player, "Camp", hp=200, build_time=25, cost={"Wood": 100}, size=2)
         self.symbol = 'C'
 
-    def drop_point(self):
+    def drop_point(self, unit, resource_type):
         # Camp acts as a drop point for resources
-        pass
+        # Add the gathered resources to the player's inventory
+        if resource_type in unit.carrying:
+            amount = unit.carrying[resource_type]
+            unit.player.owned_resources[resource_type] += amount
+            self.debug_print(f"Camp: {unit.player.name} dropped {amount} {resource_type}.")
+        else:
+            self.debug_print("No valid resource to drop.")
 
 
 class Farm(Building):
