@@ -112,11 +112,11 @@ class TownCenter(Building):
         # Town Center acts as a drop point for resources
         # Add the gathered resources to the player's inventory
         if resource_type in unit.carrying:
-            amount = unit.carrying[resource_type]
+            amount = int(unit.carrying[resource_type])
             unit.player.owned_resources[resource_type] += amount
-            self.debug_print(f"Town Center: {unit.player.name} dropped {amount} {resource_type}.")
+            debug_print(f"Town Center: {unit.player.name} dropped {amount} {resource_type}.")
         else:
-            self.debug_print("No valid resource to drop.")
+            debug_print("No valid resource to drop.")
         
 
     def is_walkable(self):

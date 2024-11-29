@@ -136,7 +136,7 @@ class GameEngine:
                 elif key == ord('j'):
                     action.construct_building(self.players[2].units[2], Farm, 1, 1, self.players[2], current_time)
                 elif key == ord('k'):
-                    action.gather_resources(self.players[2].units[2], "Food", current_time)
+                    action.gather_resources(self.players[2].units[2], "Gold", current_time)
                 elif key == ord('o'):
                     self.debug_print(self.map.grid[0][0].resource.amount)
                     self.debug_print(f"Map has {len([tile for row in self.map.grid for tile in row if tile.resource and tile.resource.type == 'Gold'])} gold tiles")
