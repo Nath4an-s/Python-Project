@@ -17,6 +17,8 @@ class Unit:
         self.target_position = None
         self.target_attack = None
         self.is_attacked_by = None
+        self.spawn_building = None
+        self.spawn_position = None
 
     def __str__(self):
         return self.symbol  # Ensure the building is represented by just the symbol
@@ -99,36 +101,37 @@ class Unit:
 
         
     @classmethod
-    def train_unit(cls, unit_to_train, x, y, player, game_map, current_time_called):
+    def train_unit(cls, unit_to_train, x, y, player, building, game_map, current_time_called):
         if isinstance(unit_to_train, type):
             unit_to_train = unit_to_train(player)
         
         if player.population < min(player.max_population, sum(building.population_increase for building in player.buildings)):
-            
+            unit_to_train.spawn_position = (x, y)
+            unit_to_train.spawn_building = building
             if (not hasattr(unit_to_train, 'training_start') or unit_to_train.training_start is None):
                 unit_to_train.training_start = current_time_called
                 for resource_type, amount in unit_to_train.cost.items():
                     player.owned_resources[resource_type] -= amount
                     debug_print(f"{player.name} spent {amount} {resource_type} to train {unit_to_train.name}.")
 
-                player.training_queue.append(unit_to_train)
+                building.training_queue.append(unit_to_train)
 
             if current_time_called - unit_to_train.training_start >= unit_to_train.training_time:
-                debug_print(current_time_called - unit_to_train.training_start)
+                #debug_print(current_time_called - unit_to_train.training_start)
                 cls.spawn_unit(unit_to_train, x, y, unit_to_train.player, game_map)
-                player.training_queue.remove(unit_to_train)
+                building.training_queue.remove(unit_to_train)
                 debug_print(f"Should have spawned {unit_to_train.name} at ({x}, {y})")
                 
-                if player.training_queue:
-                    next_unit = player.training_queue[0]
+                if building.training_queue:
+                    next_unit = building.training_queue[0]
                     next_unit.training_start = current_time_called
                     debug_print(f"Starting training for {next_unit.name}")
         else:
             debug_print(f"Too much population or not enough resources to train {unit_to_train.name}.")
-            if player.training_queue:
-                player.training_queue.remove(unit_to_train)
-                if player.training_queue:
-                    next_unit = player.training_queue[0]
+            if building.training_queue:
+                building.training_queue.remove(unit_to_train)
+                if building.training_queue:
+                    next_unit = building.training_queue[0]
                     next_unit.training_start = current_time_called
 
 

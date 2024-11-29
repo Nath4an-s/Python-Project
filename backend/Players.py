@@ -10,7 +10,6 @@ class Player:
     def __init__(self, name, civilization, ai_profile, player_id):
         self.name = name
         self.civilization = civilization
-        self.training_queue = []
         self.units = []  # Initialize the units list
         self.buildings = []
         self.ai_profile = ai_profile

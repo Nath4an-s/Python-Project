@@ -20,6 +20,7 @@ class Building:
         self.population_increase = 0
         self.position = position  # Store the position of the TownCenter
         self.symbol = 'B'
+        self.nb_workers = None # Number of workers for the building --> impact building time
 
     def __str__(self):
         return self.symbol  # Ensure the building is represented by just the symbol
@@ -103,6 +104,7 @@ class TownCenter(Building):
         super().__init__(player, "Town Center", hp=1000, build_time=150, cost={"Wood": 350}, size=4)
         self.symbol = 'T'
         self.population_increase = 5
+        self.training_queue = []
 
     def spawn_villager(self):
         if self.built:
@@ -166,6 +168,7 @@ class Barracks(Building):
     def __init__(self, player):
         super().__init__(player, "Barracks", hp=500, build_time=50, cost={"Wood": 175}, size=3)
         self.symbol = 'B'
+        self.training_queue = []
 
     def spawn_swordsman(self):
         if self.built:
@@ -180,6 +183,7 @@ class Stable(Building):
     def __init__(self, player):
         super().__init__(player, "Stable", hp=500, build_time=50, cost={"Wood": 175}, size=3)
         self.symbol = 'S'
+        self.training_queue = []
 
     def spawn_horseman(self):
         if self.built:
@@ -194,6 +198,7 @@ class ArcheryRange(Building):
     def __init__(self, player):
         super().__init__(player, "Archery Range", hp=500, build_time=50, cost={"Wood": 175}, size=3)
         self.symbol = 'A'
+        self.training_queue = []
 
     def spawn_archer(self):
         if self.built:

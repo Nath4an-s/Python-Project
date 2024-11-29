@@ -160,7 +160,10 @@ class GameEngine:
                     else:
                         self.debug_print("Game resumed.")
                 elif key == ord('c'):
-                    Unit.train_unit(Swordsman, 2, 2, self.players[2], self.map, current_time) #coordinates should be next to the right building
+                    Unit.train_unit(Villager, 2, 2, self.players[2], self.players[2].buildings[0], self.map, current_time) #TODO:coordinates should be next to the right building
+                    Unit.train_unit(Villager, 3, 2, self.players[2], self.players[2].buildings[0], self.map, current_time) #same building so after first one
+                    Unit.train_unit(Swordsman, 2, 3, self.players[2], self.players[2].buildings[1], self.map, current_time) #other buidling so same time as first one
+                
                 elif key == ord('u'):
                     self.players[2].owned_resources["Food"] -= 19950
                 elif key == ord('v'):  
@@ -193,10 +196,10 @@ class GameEngine:
                                 action.construct_building(unit, unit.construction_type, unit.target_building[0], unit.target_building[1], player, current_time)
                             if unit.task == "constructing":
                                 action._construct(unit, unit.construction_type, unit.target_building[0], unit.target_building[1], player, current_time)
-                        if player.training_queue != []:
-                            unit = player.training_queue[0]
-                            Unit.train_unit(unit, 2, 2, player, self.map, current_time)
-                
+                        for building in player.buildings:
+                            if building.training_queue != []:
+                                unit = building.training_queue[0]
+                                Unit.train_unit(unit, unit.spawn_position[0], unit.spawn_position[1], player, unit.spawn_building, self.map, current_time) #TODO: (2,2) are hardcoded
 
                 # Clear the screen and display the new part of the map after moving
                 stdscr.clear()
