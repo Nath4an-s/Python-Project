@@ -3,6 +3,7 @@ import math
 import curses
 
 from backend.Starter_File import GameMode
+from backend.logger import debug_print
 
 class Map:
     def __init__(self, width, height):
@@ -12,6 +13,7 @@ class Map:
         self.resources = {"Gold": [], "Wood": []}
         self.buildings = []
         self.generate_map()
+        self.debug_print = debug_print
 
     def generate_map(self):
         
@@ -147,14 +149,14 @@ class Map:
         if tile.unit is not None:
             tile.unit.remove(unit)  # Remove the unit from the tile
         else:
-            print(f"No unit on tile ({x}, {y})")
+            self.debug_print(f"No unit on tile ({x}, {y})")
 
     def move_unit(self, unit, target_x, target_y, start_x, start_y):
         if 0 <= target_x < self.width and 0 <= target_y < self.height:
             self.remove_unit(start_x, start_y, unit)
             self.place_unit(target_x, target_y, unit)
         else:
-            print(f"Target ({target_x}, {target_y}) is out of bounds.")
+            self.debug_print(f"Target ({target_x}, {target_y}) is out of bounds.")
             
     def get_viewport(self, top_left_x, top_left_y, viewport_width, viewport_height):
         viewport = []
@@ -251,15 +253,15 @@ class Map:
         elif resource_type == "Food":
             # Iterate through each building position for the specified type
             for building in player.buildings:
-                if building.name == "Farm" :
+                if building.name == "Farm" and building.is_farmed == False:
                     distance = abs(start_position[0] - building.position[0]) + abs(start_position[1] - building.position[1])
                     if distance < min_distance:
                         min_distance = distance
                         nearest_resource = building.position
         else:
-            print(f"Invalid resource type: {resource_type}")
+            self.debug_print(f"Invalid resource type: {resource_type}")
         if nearest_resource is None:
-            print(f"No {resource_type} resources found.")
+            self.debug_print(f"No available {resource_type} resources found.")
         return nearest_resource
     
 

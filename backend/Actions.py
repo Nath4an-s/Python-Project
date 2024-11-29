@@ -245,6 +245,8 @@ class Action:
         tile = self.map.grid[unit.target_resource[1]][unit.target_resource[0]] if unit.target_resource is not None else None
         # Check if there is a resource on the target tile and it's the correct type
         if (tile and tile.resource and tile.resource.type == resource_type) or (resource_type == "Food" and tile.building and tile.building.name == "Farm"):
+            if resource_type == "Food":
+                tile.building.is_farmed = True
             # Ensure the unit has capacity to gather more of this resource
             if unit.carrying[resource_type] < unit.carry_capacity and (tile.resource and tile.resource.amount > 0 or (tile.building and tile.building.name == "Farm" and tile.building.food > 0)):
                 # Initialize last gather time if it hasn't been set
@@ -282,6 +284,8 @@ class Action:
         # Check if unit's carrying capacity is full or if it needs to return due to lack of resource
         if unit.carrying[resource_type] >= unit.carry_capacity or unit.task == "returning":
             # Locate the nearest drop-off location (Town Center or Camp)
+            if resource_type == "Food":
+                tile.building.is_farmed = False
             returning_position = None
             for building in unit.player.buildings:
                 if building.name in ["Town Center", "Camp"]:
@@ -300,6 +304,7 @@ class Action:
                         building.drop_point(unit, resource_type)
                     unit.carrying[resource_type] = 0
                     unit.task = None
+                    unit.target_resource = None
                     del unit.last_gather_time
             else:
                 self.debug_print("No valid building found for resource return.")

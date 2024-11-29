@@ -1,8 +1,5 @@
 import curses
 import time
-import subprocess
-import os
-import threading
 import pickle
 
 from pynput.keyboard import Key, Listener
@@ -136,7 +133,7 @@ class GameEngine:
                 elif key == ord('j'):
                     action.construct_building(self.players[2].units[2], Farm, 1, 1, self.players[2], current_time)
                 elif key == ord('k'):
-                    action.gather_resources(self.players[2].units[2], "Gold", current_time)
+                    action.gather_resources(self.players[2].units[2], "Food", current_time)
                 elif key == ord('o'):
                     self.debug_print(self.map.grid[0][0].resource.amount)
                     self.debug_print(f"Map has {len([tile for row in self.map.grid for tile in row if tile.resource and tile.resource.type == 'Gold'])} gold tiles")
@@ -147,7 +144,7 @@ class GameEngine:
                     self.debug_print(self.map.grid[1][1].resource.amount)
                     self.debug_print(f"Map has {len([tile for row in self.map.grid for tile in row if tile.resource and tile.resource.type == 'Gold'])} gold tiles")
                 elif key == ord('r'):
-                    self.debug_print(self.players[2].units[0].carrying["Gold"])
+                    action.gather_resources(self.players[2].units[1], "Food", current_time)
                 elif key == ord('a'):
                     action.go_battle(self.players[2].units[0], self.players[1].units[1], current_time)
                 elif key == ord('b'):
@@ -222,9 +219,6 @@ class GameEngine:
         if self.is_paused == False:
             self.is_paused = True
             self.debug_print("Game paused.")
-        """
-        Saves the current game state to a file using pickle.
-        """
         try:
             with open(filename, 'wb') as f:
                 game_state = {
@@ -243,9 +237,6 @@ class GameEngine:
         if self.is_paused == False:
             self.is_paused = True
             self.debug_print("Game paused.")
-        """
-        Loads a saved game state from a file.
-        """
         try:
             with open(filename, 'rb') as f:
                 game_state = pickle.load(f)
