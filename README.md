@@ -16,7 +16,11 @@ TAB : Génère un rapport HTML du jeu et met en pause le jeu si ce n'est pas dé
 
 j : Construis un bâtiment de type "Farm" pour le joueur 2 à la position (1, 1).
 
-k : Fait rassembler des ressources (Or) par la troisième unité du joueur 2.
+r : Fait rassembler des ressources (Food) par la troisième unité du joueur 2.
+
+e : Déplace la deuxième unité du joueur 1 à la position (4, 2).
+
+k : Fait rassembler des ressources (Wood) par la troisième unité du joueur 2.
 
 o : Affiche la quantité de ressources présentes sur la tuile (0, 0) et le nombre de tuiles avec de l'Or.
 
@@ -24,13 +28,9 @@ l : Affiche la quantité de ressources présentes sur la tuile (1, 0) et le nomb
 
 m : Affiche la quantité de ressources présentes sur la tuile (1, 1) et le nombre de tuiles avec de l'Or.
 
-r : Affiche un message de test pour une fenêtre PowerShell.
-
 a : Déclenche un combat entre la première unité du joueur 2 et la deuxième unité du joueur 1.
 
 b : Déclenche un combat entre la deuxième unité du joueur 1 et la première unité du joueur 2.
-
-e : Déplace la deuxième unité du joueur 1 à la position (2, 2).
 
 f : Supprime le dernier bâtiment du joueur 2.
 

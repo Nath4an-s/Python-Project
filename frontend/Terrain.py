@@ -93,7 +93,7 @@ class Map:
                 tile = self.grid[y][x]
 
                 if tile.resource is None:  # Avoid overwriting existing resources
-                    resource_amount = random.randint(50, 200)
+                    resource.amount = random.randint(50, 200)
                     resource = Wood()
                     tile.resource = resource
                     self.resources["Wood"].append((x, y))  # Store Wood resource position
@@ -103,8 +103,6 @@ class Map:
         if 0 <= x < self.width and 0 <= y < self.height:
             tile = self.grid[y][x]
             is_free = tile.resource is None and (tile.building is None or tile.building.is_walkable() == True) and tile.unit == []
-            if not is_free:
-                pass
             return is_free
         return False
     
@@ -112,8 +110,6 @@ class Map:
         if 0 <= x < self.width and 0 <= y < self.height:
             tile = self.grid[y][x]
             is_free = tile.resource is None and (tile.building is None or tile.building.is_walkable() == True)
-            if not is_free:
-                pass
             return is_free
         return False
     

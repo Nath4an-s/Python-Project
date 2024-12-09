@@ -269,10 +269,12 @@ class Action:
                         # If resource is depleted, remove it from the map
                         if tile.resource.amount <= 0:
                             tile.resource = None
+                            self.map.resources[resource_type].remove(unit.target_resource)
                     elif resource_type == "Food" and tile.building.name == "Farm":
                         tile.building.food -= amount_to_gather
                         if tile.building.food <= 0:
                             tile.building = None
+                            #self.map.remove_building(self, unit.target_resource[0], unit.target_resource[1], tile.building)                           
 
                     # Update the last gather time
                     unit.last_gather_time = current_time_called

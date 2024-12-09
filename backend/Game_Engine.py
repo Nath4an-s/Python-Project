@@ -132,8 +132,6 @@ class GameEngine:
                         self.debug_print("Game paused.")
                 elif key == ord('j'):
                     action.construct_building(self.players[2].units[2], Farm, 1, 1, self.players[2], current_time)
-                elif key == ord('k'):
-                    action.gather_resources(self.players[2].units[2], "Food", current_time)
                 elif key == ord('o'):
                     self.debug_print(self.map.grid[0][0].resource.amount)
                 elif key == ord('l'):
@@ -147,7 +145,11 @@ class GameEngine:
                 elif key == ord('b'):
                     action.go_battle(self.players[1].units[1], self.players[2].units[0], current_time)
                 elif key == ord('e'):
-                    action.move_unit(self.players[1].units[1],2,2, current_time)
+                    action.move_unit(self.players[2].units[2],4,2, current_time)
+                elif key == ord('k'):
+                    action.gather_resources(self.players[2].units[1], "Wood", current_time)
+                    action.gather_resources(self.players[2].units[2], "Wood", current_time)
+                    action.gather_resources(self.players[2].units[3], "Wood", current_time)
                 elif key == ord('f'):
                     Building.kill_building(self.players[2], self.players[2].buildings[-1], self.map)
                 elif key == ord('p'):
