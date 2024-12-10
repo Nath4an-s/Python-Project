@@ -43,3 +43,8 @@ u : Réduit les ressources de type "Food" du joueur 2 de 19950.
 v : Sauvegarde la partie dans le fichier spécifié (par défaut : game_save.dat).
 
 x : Charge la partie à partir du fichier spécifié (par défaut : game_save.dat).
+
+
+Video utile : 
+
+https://preview.redd.it/hc4xiqx9xma51.gif?width=1600&format=mp4s=1eda81b4c69634a4c15641a7d02a93b9932f1dda
