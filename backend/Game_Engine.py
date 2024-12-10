@@ -1,6 +1,7 @@
 import curses
 import time
 import pickle
+import os
 
 from pynput.keyboard import Key, Listener
 from logger import debug_print
@@ -163,9 +164,8 @@ class GameEngine:
                 elif key == ord('u'):
                     self.players[2].owned_resources["Food"] -= 19950
                 elif key == ord('v'):  
-                    self.save_game("../assets/annex/game_save.dat")
-                elif key == ord('x'):
-                    self.load_game("../assets/annex/game_save.dat")
+                    a = (x for x in range(10))
+                    self.save_game()
                 elif key == ord('i'):
                     for unit in self.players[2].units:
                         action.go_battle(unit, self.players[1].units[1], current_time)
@@ -214,10 +214,31 @@ class GameEngine:
     def pause_game(self):
         self.is_paused = not self.is_paused
 
-    def save_game(self, filename):
-        if self.is_paused == False:
+
+
+    def save_game(self, filename=None):
+        if not self.is_paused:
             self.is_paused = True
             self.debug_print("Game paused.")
+        
+        # Générer un nom de fichier si aucun n'est fourni
+        if filename is None:
+            for i in range(10):  # Limite à 10 sauvegardes automatiques
+                filename = f"../assets/annex/game_save{i}.dat"
+                if not os.path.exists(filename):  # Vérifie si le fichier existe
+                    break
+            else:
+                self.debug_print("No available slots to save the game.")
+                return
+        else:
+            # Si un nom est fourni, ajoute un suffixe unique si nécessaire
+            base, ext = os.path.splitext(filename)
+            counter = 1
+            while os.path.exists(filename):
+                filename = f"{base}_{counter}{ext}"
+                counter += 1
+
+        # Sauvegarde de l'état du jeu
         try:
             with open(filename, 'wb') as f:
                 game_state = {
@@ -231,6 +252,7 @@ class GameEngine:
             self.debug_print(f"Game saved to {filename}.")
         except Exception as e:
             self.debug_print(f"Error saving game: {e}")
+
 
     def load_game(self, filename):
         if self.is_paused == False:

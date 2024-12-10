@@ -23,7 +23,7 @@ class Action:
 
         # If path is not already constructed, construct it using Dijkstra algorithm
         if not hasattr(unit, 'path') or not unit.path:
-            unit.path = self.dijkstra_pathfinding((int(start_x), int(start_y)), (target_x, target_y))
+            unit.path = self.astar_pathfinding((int(start_x), int(start_y)), (target_x, target_y))
 
         # Initialize last move time if not already set
         if not hasattr(unit, 'last_move_time'):
@@ -44,7 +44,7 @@ class Action:
             # Check if the next step is free (dynamic obstacle detection)
             if not self.map.is_tile_free_for_unit(next_step[0], next_step[1]):
                 # Recalculate path if the next step is blocked
-                unit.path = self.dijkstra_pathfinding((int(start_x), int(start_y)), (target_x, target_y))
+                unit.path = self.astar_pathfinding((int(start_x), int(start_y)), (target_x, target_y))
                 if not unit.path:
                     self.debug_print("Path not found or obstructed")
                     return False  # No valid path found
@@ -88,38 +88,46 @@ class Action:
         return False
 
 
-    def dijkstra_pathfinding(self, start, goal):
+    def astar_pathfinding(self, start, goal):
         open_list = []
-        heapq.heappush(open_list, (0, start))  # add a starting node to the open list
+        heapq.heappush(open_list, (0, start))  # Initialisation avec le point de départ
 
-        came_from = {}  # stock where each node came from
-        cost_so_far = {start: 0}  # stock costs for each node
+        came_from = {}  # Stocker les nœuds explorés
+        g_cost = {start: 0}  # Coût actuel pour atteindre chaque nœud
+        closed_set = set()  # Ensemble des nœuds déjà visités
 
-        closed_list = set()  # already processed nodes
+        def heuristic(a, b):
+            """Fonction heuristique pour estimer la distance."""
+            return abs(a[0] - b[0]) + abs(a[1] - b[1])  # Distance Manhattan
 
         while open_list:
-            _, current = heapq.heappop(open_list)  # Get lowest cost node from open list
+            _, current = heapq.heappop(open_list)
 
-            # If destination reached, reconstruct path
+            # Si nous atteignons l'objectif
             if current == goal:
                 return self._reconstruct_path(came_from, current)
 
-            closed_list.add(current)
+            closed_set.add(current)
 
-            neighbors = self._get_neighbors(current)
-            for neighbor in neighbors:
-                if neighbor in closed_list:
+            for neighbor in self._get_neighbors(current):
+                if neighbor in closed_set:
                     continue
 
-                new_cost = cost_so_far[current] + self._move_cost(current, neighbor)
+                # Vérifier si le voisin est bloqué
+                if not self.map.is_tile_free_for_unit(neighbor[0], neighbor[1]):
+                    continue
 
-                if neighbor not in cost_so_far or new_cost < cost_so_far[neighbor]:
-                    cost_so_far[neighbor] = new_cost
-                    priority = new_cost
+                # Coût du chemin jusqu'au voisin
+                tentative_g_cost = g_cost[current] + self._move_cost(current, neighbor)
+
+                if neighbor not in g_cost or tentative_g_cost < g_cost[neighbor]:
+                    g_cost[neighbor] = tentative_g_cost
+                    priority = tentative_g_cost + heuristic(neighbor, goal)
                     heapq.heappush(open_list, (priority, neighbor))
                     came_from[neighbor] = current
 
-        return None # no path found
+        # Aucun chemin trouvé
+        return None
 
     def _is_within_bounds(self, x, y):
         return 0 <= x < self.map.width and 0 <= y < self.map.height
