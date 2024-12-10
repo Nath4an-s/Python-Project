@@ -101,7 +101,7 @@ class Building:
 # TownCenter Class
 class TownCenter(Building):
     def __init__(self, player):
-        super().__init__(player, "Town Center", hp=1000, build_time=150, cost={"Wood": 350}, size=4)
+        super().__init__(player, "Town Center", hp=1000, build_time=15, cost={"Wood": 350}, size=4)
         self.symbol = 'T'
         self.population_increase = 5
         self.training_queue = []
@@ -151,6 +151,9 @@ class Camp(Building):
             self.debug_print(f"Camp: {unit.player.name} dropped {amount} {resource_type}.")
         else:
             self.debug_print("No valid resource to drop.")
+    
+    def is_walkable(self):
+        return False
 
 
 class Farm(Building):
