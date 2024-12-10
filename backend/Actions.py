@@ -273,8 +273,7 @@ class Action:
                     elif resource_type == "Food" and tile.building.name == "Farm":
                         tile.building.food -= amount_to_gather
                         if tile.building.food <= 0:
-                            tile.building = None
-                            #self.map.remove_building(self, unit.target_resource[0], unit.target_resource[1], tile.building)                           
+                            Building.kill_building(unit.player, tile.building, self.map)                           
 
                     # Update the last gather time
                     unit.last_gather_time = current_time_called
@@ -286,7 +285,7 @@ class Action:
         # Check if unit's carrying capacity is full or if it needs to return due to lack of resource
         if unit.carrying[resource_type] >= unit.carry_capacity or unit.task == "returning":
             # Locate the nearest drop-off location (Town Center or Camp)
-            if resource_type == "Food":
+            if resource_type == "Food" and tile.building:
                 tile.building.is_farmed = False
             returning_position = None
             for building in unit.player.buildings:
