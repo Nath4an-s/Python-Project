@@ -97,7 +97,6 @@ class Action:
         closed_set = set()  # Ensemble des nœuds déjà visités
 
         def heuristic(a, b):
-            """Fonction heuristique pour estimer la distance."""
             return abs(a[0] - b[0]) + abs(a[1] - b[1])  # Distance Manhattan
 
         while open_list:
