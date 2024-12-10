@@ -328,9 +328,6 @@ class Action:
         # Check if the target position has changed
         if unit.target_position != (target_x, target_y):
             unit.path = None #reset path --> works but not sure if it's the best way to do it --> calcul is becoming too complex
-
-        # Move the unit toward the enemy's current position
-        self.move_unit(unit, int(target_x), int(target_y), current_time_called)
         
         # Check if the unit is within range to attack
         if abs(unit.position[0] - target_x) < unit.range and abs(unit.position[1] - target_y) < unit.range:
@@ -338,6 +335,8 @@ class Action:
             enemy_unit.is_attacked_by = unit
             enemy_unit.task = "is_attacked"
             self._attack(unit, enemy_unit, current_time_called)
+        else:
+            self.move_unit(unit, int(target_x), int(target_y), current_time_called)
 
 
     
