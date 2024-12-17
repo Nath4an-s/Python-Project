@@ -21,7 +21,7 @@ class Action:
         start_x, start_y = int(unit.position[0]), int(unit.position[1])
         unit.target_position = (target_x, target_y)
 
-        # If path is not already constructed, construct it using Dijkstra algorithm
+        # If path is not already constructed, construct it using A* algorithm
         if not hasattr(unit, 'path') or not unit.path:
             unit.path = self.astar_pathfinding((int(start_x), int(start_y)), (target_x, target_y))
 
@@ -383,16 +383,30 @@ class Action:
 
         if unit.target_position == None:
             unit.task = "constructing"
+            for building in player.constructing_buildings:
+                if building["position"] == (x, y):
+                    building["num_workers"] += 1
+                    break
+            else:  # If no matching building was found
+                player.constructing_buildings.append({
+                    "position": (x, y),
+                    "num_workers": 1
+                })
             self._construct(unit, building_type, x, y, player, current_time_called)
 
     def _construct(self, unit, building_type, x, y, player, current_time_called):
+        if not self.map.is_area_free(x, y, building_type(player).size):
+            if unit.task != "going_to_construction_site": 
+                self.debug_print(f"Cannot construct building at ({x}, {y}): area is not free.")
+            return
+        else:
+            actual_building_time = 3*building_type(player).build_time / (next((num for (pos, num) in player.constructing_buildings if pos == (x, y)), 1) + 2)
+            if not hasattr(unit, 'start_building'):
+                unit.start_building = current_time_called
+                self.debug_print(f"{unit} started constructing {building_type.__name__} at ({x}, {y}).")
 
-        if not hasattr(unit, 'start_building'):
-            unit.start_building = current_time_called
-            self.debug_print(f"{unit} started constructing {building_type.__name__} at ({x}, {y}).")
-
-        elif current_time_called - unit.start_building >= building_type(player).build_time:
-            Building.spawn_building(player, x, y, building_type, self.map)
-            self.debug_print(f"{building_type.__name__} constructed at ({x}, {y}) by {unit}.")
-            unit.task = None
-            del unit.start_building 
+            elif current_time_called - unit.start_building >= actual_building_time:
+                Building.spawn_building(player, x, y, building_type, self.map)
+                self.debug_print(f"{building_type.__name__} constructed at ({x}, {y}) by {unit}.")
+                unit.task = None
+                del unit.start_building 

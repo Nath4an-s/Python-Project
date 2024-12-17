@@ -133,6 +133,8 @@ class GameEngine:
                         self.debug_print("Game paused.")
                 elif key == ord('j'):
                     action.construct_building(self.players[2].units[2], Farm, 1, 1, self.players[2], current_time)
+                    #action.construct_building(self.players[2].units[1], Farm, 1, 1, self.players[2], current_time)
+
                 elif key == ord('k'):
                     action.gather_resources(self.players[2].units[2], "Food", current_time)
                 elif key == ord('o'):

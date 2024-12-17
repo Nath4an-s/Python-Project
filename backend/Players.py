@@ -12,6 +12,7 @@ class Player:
         self.civilization = civilization
         self.units = []  # Initialize the units list
         self.buildings = []
+        self.constructing_buildings = []
         self.ai_profile = ai_profile
         self.population = 0
         self.max_population = 200
