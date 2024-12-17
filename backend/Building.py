@@ -160,7 +160,7 @@ class Farm(Building):
     def __init__(self, player):
         super().__init__(player, "Farm", hp=100, build_time=10, cost={"Wood": 60}, size=2)
         self.symbol = 'F'
-        self.food = 30  # Contains 300 Food
+        self.food = 300  # Contains 300 Food
         self.is_farmed = False
 
     def is_walkable(self):
