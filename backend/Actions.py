@@ -294,11 +294,7 @@ class Action:
             # Locate the nearest drop-off location (Town Center or Camp)
             if resource_type == "Food" and tile.building:
                 tile.building.is_farmed = False
-            returning_position = None
-            for building in unit.player.buildings:
-                if building.name in ["Town Center", "Camp"]:
-                    returning_position = building.position
-                    break
+            returning_position = Map.find_drop_point(self.map, unit.position, unit.player)
 
             # Move the unit to the returning position if found
             if returning_position:
