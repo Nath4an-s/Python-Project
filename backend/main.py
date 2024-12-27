@@ -11,7 +11,7 @@ sys.path.append(project_root)
 
 from Game_Engine import GameEngine
 from Starter_File import players, map_size
-from frontend.gui import run_gui_mode
+#from frontend.gui import run_gui_mode
 
 # Main function to initialize and start the game using curses
 def main(stdscr, save_file=None):
@@ -26,9 +26,8 @@ def main(stdscr, save_file=None):
         print("No save file provided. Starting a new game.")
     
     # Run the game
-    #run_gui_mode(game_engine)
     game_engine.run(stdscr)
-    run_gui_mode(game_engine)
+    #run_gui_mode(game_engine)
 
 if __name__ == "__main__":
     # Configure argparse pour lire les arguments
