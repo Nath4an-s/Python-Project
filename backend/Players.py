@@ -32,21 +32,3 @@ class Player:
 
     def has_units(self):
         return len(self.units) > 0
-
-
-# AIProfile Class
-class AIProfile:
-    def __init__(self, strategy_type):
-        self.strategy_type = strategy_type  # "defensive", "aggressive"
-
-    def make_decision(self, player, game_map):
-        if self.strategy_type == "aggressive":
-            self.attack(player, game_map)
-        elif self.strategy_type == "defensive":
-            self.defend(player, game_map)
-
-    def attack(self, player, game_map):
-        pass
-
-    def defend(self, player, game_map):
-        pass

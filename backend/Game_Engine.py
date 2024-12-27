@@ -18,6 +18,7 @@ except ImportError:
 from html_report import generate_html_report
 from Actions import Action
 from Building import Building
+from IA import IA
 
 #Partit Gestion de Touche en Simultanée
 
@@ -67,6 +68,9 @@ class GameEngine:
         Building.place_starting_buildings(self.map)  # Place starting town centers on the map
         Unit.place_starting_units(self.players, self.map)  # Place starting units on the map
         self.debug_print = debug_print
+        self.ias = [IA(player, player.ai_profile, self.map, time.time()) for player in self.players]  # Instantiate IA for each player
+        self.IA_used = False
+
 
     def run(self, stdscr):
         # Initialize the starting view position
@@ -173,8 +177,15 @@ class GameEngine:
                 elif key == ord('i'):
                     for unit in self.players[2].units:
                         action.go_battle(unit, self.players[1].units[1], current_time)
+                elif key == ord('n'):
+                    self.IA_used = not self.IA_used
                 
-
+                #call the IA
+                if not self.is_paused and self.turn % 5 == 0 and self.IA_used == True: # Call the IA every 5 turns: change 0, 5, 10, 15, ... depending on lag
+                    for ia in self.ias:
+                        ia.current_time_called = current_time  # Update the current time for each IA
+                        ia.run()  # Run the AI logic for each player
+                    
                 if not self.is_paused:
                     # Move units toward their target position
                     for player in self.players:

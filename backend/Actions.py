@@ -309,7 +309,15 @@ class Action:
                     unit.carrying[resource_type] = 0
                     unit.task = None
                     unit.target_resource = None
-                    del unit.last_gather_time
+                    unit.target_position = None
+                    
+                    #clear movement-related attributes
+                    if hasattr(unit, 'last_gather_time'):
+                        del unit.last_gather_time
+                    if hasattr(unit, 'path'):
+                        del unit.path
+                    if hasattr(unit, 'last_move_time'):
+                        del unit.last_move_time
             else:
                 self.debug_print("No valid building found for resource return.")
 
@@ -429,5 +437,4 @@ class Action:
                     break
             
             # Nettoyer la liste des bâtiments en construction
-            player.constructing_buildings = [b for b in player.constructing_buildings if b["position"] != (x, y)]
-
+            player.constructing_buildin

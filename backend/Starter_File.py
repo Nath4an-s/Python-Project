@@ -16,7 +16,7 @@ GUI_size.y = 600
 # Initialize players with both name and AI profile
 #Civilizations are either Leans, Means or Marines
 players = [
-    Player('Player 1', "Means", AIProfile(strategy_type="aggressive"), player_id=1),
-    Player('Player 2', "Leans", AIProfile(strategy_type="defensive"), player_id=2),
-    Player('Player 3', "Marines", AIProfile(strategy_type="defensive"), player_id=3),
+    Player('Player 1', "Means", "aggressive", player_id=1),
+    Player('Player 2', "Leans", "defensive", player_id=2),
+    Player('Player 3', "Marines", "defensive", player_id=3),
 ]
