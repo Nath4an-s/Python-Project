@@ -2,6 +2,8 @@ import pygame
 from backend.Starter_File import GUI_size
 from backend.Building import TownCenter
 from frontend.Terrain import Map
+from pathlib import Path
+import os
 
 # Define isometric tile dimensions
 TILE_WIDTH = 64
@@ -13,6 +15,47 @@ PLAYER_COLORS = {
     2: (255, 0, 0),  # Red for Player 2
     3: (128, 0, 128) # Purple for Player 3
 }
+
+# Initialize pygame
+pygame.init()
+
+# Initialize the display (required before using convert_alpha or convert)
+WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600  # Kích thước cửa sổ
+screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+
+# Define paths using pathlib
+BASE_PATH = Path(__file__).resolve().parent.parent  
+RESOURCES_PATH = BASE_PATH / "assets" / "resources"
+BUILDINGS_PATH = BASE_PATH / "assets" / "buildings"
+
+# Helper function to load images
+def load_image(file_path):
+    return pygame.image.load(file_path).convert_alpha()
+
+# Define resource images
+IMAGES = {
+    "Wood": load_image(RESOURCES_PATH / "tree_0.png"),
+    "Gold": load_image(RESOURCES_PATH / "gold.png"),
+    "Soil": load_image(RESOURCES_PATH / "soil.png"),
+    # Add more resources as needed
+}
+
+# Define building images
+building_images = {
+    "TownCenter": load_image(BUILDINGS_PATH / "tower.png"),
+    "Barracks": load_image(BUILDINGS_PATH / "barrack.png"),
+    "House": load_image(BUILDINGS_PATH / "house.png"),
+    "Rubble": load_image(BUILDINGS_PATH / "rubble.png"),
+    "Stable": load_image(BUILDINGS_PATH / "stable.png"),
+    "ArcheryRange": load_image(BUILDINGS_PATH / "archeryrange.png")
+}
+
+# Resize building images
+for key, image in building_images.items():
+    if 'TownCenter' == key:
+        building_images[key] = pygame.transform.scale(image, (256, 256))  # Exemple pour TownCenter qui occupe 4x4 tuiles
+    else:
+        building_images[key] = pygame.transform.scale(image, (64, 64))  # Taille standard pour les autres bâtiments
 
 # Define colors for different resources
 COLORS = {
@@ -27,34 +70,77 @@ def cart_to_iso(cart_x, cart_y):
     iso_y = (cart_x + cart_y) * (TILE_HEIGHT // 2)
     return iso_x, iso_y
 
-# Draw the isometric map, taking camera offset into account
+# Calculate building dimensions
+barracks_width = TILE_WIDTH * 3
+barracks_height = TILE_HEIGHT * 3 * 2  # La hauteur est doublée pour maintenir l'aspect isométrique
+
+# Resize and assign images for buildings
+building_images['Barracks'] = pygame.transform.scale(
+    load_image(BUILDINGS_PATH / "barrack.png"),
+    (barracks_width, barracks_height)
+)
+
+TownCenter_width = TILE_WIDTH * 4
+TownCenter_height = TILE_HEIGHT * 8  # La hauteur est doublée pour maintenir l'aspect isométrique
+
+building_images['TownCenter'] = pygame.transform.scale(
+     load_image(BUILDINGS_PATH / "towncenter.png"),
+    (TownCenter_width, TownCenter_height)
+)
+
+House_width = TILE_WIDTH * 2
+House_height = TILE_HEIGHT * 4
+
+building_images['House'] = pygame.transform.scale(
+    load_image(BUILDINGS_PATH / "house.png"),
+    (House_width, House_height)
+)
+
+Stable_width = TILE_WIDTH * 3
+Stable_height = TILE_HEIGHT * 6
+
+building_images['Stable'] = pygame.transform.scale(
+    load_image(BUILDINGS_PATH / "stable.png"),
+    (Stable_width, Stable_height)  # Taille ajustée pour couvrir 3x3 tuiles
+)
+
+ArcheryRange_width = TILE_WIDTH * 2
+ArcheryRange_height = TILE_HEIGHT * 4
+
+building_images['ArcheryRange'] = pygame.transform.scale(
+    load_image(BUILDINGS_PATH / "archeryrange.png"),
+    (ArcheryRange_width, ArcheryRange_height)  # Taille ajustée pour couvrir 2x2 tuiles
+)
+
 def draw_isometric_map(screen, game_map, offset_x, offset_y):
     for y in range(game_map.height):
         for x in range(game_map.width):
-            tile = game_map.grid[y][x]  # Correctly refer to the `grid` of the `game_map` instance
-            
-            # Check if there is a building on the tile
-            if tile.building:
-                player = tile.building.player
-                color = PLAYER_COLORS.get(player.id, (255, 255, 255))  # Default to white if no player color
-            else:
-                resource_type = tile.resource.type if tile.resource else "Soil"
-                color = COLORS[resource_type]
+            tile = game_map.grid[y][x]
 
+            # Blit de la texture de sol d'abord
+            soil_image = IMAGES['Soil']
             iso_x, iso_y = cart_to_iso(x, y)
-
             screen_x = (GUI_size.x // 2) + iso_x - offset_x
-            screen_y = (GUI_size.y // 4) + iso_y - offset_y
+            screen_y = (GUI_size.y // 4) + iso_y - offset_y - (soil_image.get_height() - TILE_HEIGHT)
+            screen.blit(soil_image, (screen_x, screen_y))
 
-            if -TILE_WIDTH < screen_x < GUI_size.x + TILE_WIDTH and -TILE_HEIGHT < screen_y < GUI_size.y + TILE_HEIGHT:
-                pygame.draw.polygon(screen, color, [
-                    (screen_x, screen_y),
-                    (screen_x + TILE_WIDTH // 2, screen_y + TILE_HEIGHT // 2),
-                    (screen_x, screen_y + TILE_HEIGHT),
-                    (screen_x - TILE_WIDTH // 2, screen_y + TILE_HEIGHT // 2)
-                ])
-
-
+            # Ensuite, blit de la ressource si présente
+            if tile.resource:
+                resource_type = tile.resource.type
+                image = IMAGES[resource_type]
+                # Ajuster le screen_y pour l'image de la ressource
+                screen_y -= (image.get_height() - TILE_HEIGHT)  # Cette ligne peut être ajustée selon vos besoins
+                screen.blit(image, (screen_x, screen_y))
+            
+            if tile.building and (x, y) == tile.building.position:  # Only draw the image of the construction at the original location to avoid duplicate drawings.
+                building_type = tile.building.name.replace(" ", "")
+                if building_type in building_images:
+                    building_image = building_images[building_type]
+                    # Adjust y coordinates for precise alignment
+                    building_adjusted_y = screen_y - (building_image.get_height() - TILE_HEIGHT)
+                    screen.blit(building_image, (screen_x, building_adjusted_y))
+                else:
+                    print(f"Building type {building_type} not found in building_images dictionary.")
 
 def draw_mini_map(screen, game_map, offset_x, offset_y):
     mini_map_width = 200
@@ -137,4 +223,4 @@ def run_gui_mode(game_engine):
         pygame.display.flip()
         clock.tick(60)
 
-    pygame.quit()
+    pygame.quit()   
