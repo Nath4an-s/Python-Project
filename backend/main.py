@@ -27,7 +27,7 @@ def main(stdscr, save_file=None):
     
     # Run the game
     #run_gui_mode(game_engine)
-    #game_engine.run(stdscr)
+    game_engine.run(stdscr)
     run_gui_mode(game_engine)
 
 if __name__ == "__main__":

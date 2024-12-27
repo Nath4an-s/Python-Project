@@ -20,7 +20,7 @@ PLAYER_COLORS = {
 pygame.init()
 
 # Initialize the display (required before using convert_alpha or convert)
-WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600  # Kích thước cửa sổ
+WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600 
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 
 # Define paths using pathlib
@@ -28,9 +28,16 @@ BASE_PATH = Path(__file__).resolve().parent.parent
 RESOURCES_PATH = BASE_PATH / "assets" / "resources"
 BUILDINGS_PATH = BASE_PATH / "assets" / "buildings"
 
+assert RESOURCES_PATH.exists(), f"Resources directory {RESOURCES_PATH} does not exist."
+assert BUILDINGS_PATH.exists(), f"Buildings directory {BUILDINGS_PATH} does not exist."
+
 # Helper function to load images
 def load_image(file_path):
-    return pygame.image.load(file_path).convert_alpha()
+    try:
+        return pygame.image.load(file_path).convert_alpha()
+    except pygame.error as e:
+        print(f"Error loading image {file_path}: {e}")
+        return pygame.Surface((TILE_WIDTH, TILE_HEIGHT))  # Return a placeholder surface
 
 # Define resource images
 IMAGES = {
@@ -47,7 +54,10 @@ building_images = {
     "House": load_image(BUILDINGS_PATH / "house.png"),
     "Rubble": load_image(BUILDINGS_PATH / "rubble.png"),
     "Stable": load_image(BUILDINGS_PATH / "stable.png"),
-    "ArcheryRange": load_image(BUILDINGS_PATH / "archeryrange.png")
+    "ArcheryRange": load_image(BUILDINGS_PATH / "archeryrange.png"),
+    "Camp": load_image(BUILDINGS_PATH / "camp.png"),
+    "Farm": load_image(BUILDINGS_PATH / "farm.png"),
+    "keep": load_image(BUILDINGS_PATH / "keep.png"),
 }
 
 # Resize building images
@@ -110,6 +120,27 @@ ArcheryRange_height = TILE_HEIGHT * 4
 building_images['ArcheryRange'] = pygame.transform.scale(
     load_image(BUILDINGS_PATH / "archeryrange.png"),
     (ArcheryRange_width, ArcheryRange_height)  # Taille ajustée pour couvrir 2x2 tuiles
+)
+'''
+    "Camp": load_image(BUILDINGS_PATH / "camp.png"),
+    "Farm": load_image(BUILDINGS_PATH / "farm.png"),
+    "keep": load_image(BUILDINGS_PATH / "keep.png"),
+'''
+
+Camp_width = TILE_WIDTH * 2
+Camp_height = TILE_HEIGHT * 4
+
+building_images['Camp'] = pygame.transform.scale(
+    load_image(BUILDINGS_PATH / "camp.png"),
+    (Camp_width, Camp_height)  # Taille ajustée pour couvrir 2x2 tuiles
+)
+
+Farm_width = TILE_WIDTH * 2
+Farm_height = TILE_HEIGHT * 4
+
+building_images['Farm'] = pygame.transform.scale(
+    load_image(BUILDINGS_PATH / "farm.png"),
+    (Farm_width, Farm_height)  # Taille ajustée pour couvrir 2x2 tuiles
 )
 
 def draw_isometric_map(screen, game_map, offset_x, offset_y):
