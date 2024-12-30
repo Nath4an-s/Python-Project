@@ -121,15 +121,15 @@ class IA:
 
     def find_strategic_targets(self):
         targets = []
-        # Get other players from game engine instead of map
-        for building in self.player.buildings:
-            if isinstance(building, (Barracks, ArcheryRange, Stable)):
-                targets.append(building)
-        
-        # Add enemy units if we can see them
-        visible_enemy_units = [unit for unit in self.game_map.get_visible_units() 
-                            if unit.player != self.player]
-        targets.extend(visible_enemy_units)
+        # Get all enemy buildings and units directly
+        for player in self.game_map.players:
+            if player != self.player:
+                # Prioritize military buildings
+                for building in player.buildings:
+                    if isinstance(building, (Barracks, ArcheryRange, Stable)):
+                        targets.append(building)
+                targets.extend(player.buildings)  # Add remaining buildings
+                targets.extend(player.units)      # Add all units
         
         return targets
 
@@ -165,14 +165,18 @@ class IA:
         enemies = []
         base_pos = self.get_base_position()
         
-        # Get all units from map tiles
-        for y in range(self.game_map.height):
-            for x in range(self.game_map.width):
-                tile = self.game_map.tiles[y][x]
-                if tile.unit and tile.unit.player != self.player:
-                    dist = self.calculate_distance(base_pos, (x, y))
+        # Get enemy units directly from all players
+        for player in self.game_map.players:
+            if player != self.player:
+                for unit in player.units:
+                    dist = self.calculate_distance(base_pos, unit.position)
                     if dist <= max_distance:
-                        enemies.append(tile.unit)
+                        enemies.append(unit)
+                # Include enemy buildings in defensive consideration
+                for building in player.buildings:
+                    dist = self.calculate_distance(base_pos, building.position)
+                    if dist <= max_distance:
+                        enemies.append(building)
         
         return enemies
 
@@ -203,51 +207,65 @@ class IA:
                             return
 
     def train_troops(self):
+        unit_building_map = {
+            "Barracks": Swordsman,
+            "ArcheryRange": Archer,
+            "Stable": Horseman
+        }
+        
         for building in self.player.buildings:
-            if type(building).__name__ == "Barracks":
-                if self.player.owned_resources["Wood"] >= 50 and self.player.owned_resources["Gold"] >= 20:
+            building_type = type(building).__name__
+            if building_type in unit_building_map:
+                unit_class = unit_building_map[building_type]
+                # Vérifier si le joueur a assez de ressources
+                if all(self.player.owned_resources[resource] >= amount 
+                      for resource, amount in unit_class.cost.items()):
                     x, y = building.position
                     for dx in range(-1, 2):
                         for dy in range(-1, 2):
                             new_x = x + dx
                             new_y = y + dy
-                            if self.is_position_valid(new_x, new_y, 1):  # Assuming villager size is 1
-                                Unit.train_unit(Swordsman, new_x, new_y, self.player, building, self.game_map, self.current_time_called)
-                                self.debug_print(f"Training swordsman at ({new_x}, {new_y})")
-                                return
-                    break
-            elif type(building).__name__ == "ArcheryRange":
-                if self.player.owned_resources["Wood"] >= 30 and self.player.owned_resources["Gold"] >= 40:
-                    x, y = building.position
-                    for dx in range(-1, 2):
-                        for dy in range(-1, 2):
-                            new_x = x + dx
-                            new_y = y + dy
-                            if self.is_position_valid(new_x, new_y, 1):  # Assuming villager size is 1
-                                Unit.train_unit(Archer, new_x, new_y, self.player, building, self.game_map, self.current_time_called)
-                                self.debug_print(f"Training archer at ({new_x}, {new_y})")
-                                return
-                    break
-            elif type(building).__name__ == "Stable":
-                if self.player.owned_resources["Wood"] >= 80 and self.player.owned_resources["Gold"] >= 60:
-                    x, y = building.position
-                    for dx in range(-1, 2):
-                        for dy in range(-1, 2):
-                            new_x = x + dx
-                            new_y = y + dy
-                            if self.is_position_valid(new_x, new_y, 1):  # Assuming villager size is 1
-                                Unit.train_unit(Horseman, new_x, new_y, self.player, building, self.game_map, self.current_time_called)
-                                self.debug_print(f"Training horseman at ({new_x}, {new_y})")
+                            if self.is_position_valid(new_x, new_y, 1):
+                                Unit.train_unit(unit_class, new_x, new_y, self.player, 
+                                             building, self.game_map, self.current_time_called)
+                                self.debug_print(f"Training {unit_class.__name__} at ({new_x}, {new_y})")
                                 return
                     break
 
     def gather_resources(self, villagers):
-        for villager in villagers:
-            if self.player.owned_resources["Wood"] < self.player.owned_resources["Gold"]:
-                resource_type = "Wood"
-            else:
-                resource_type = "Gold"
-            Action(self.game_map).gather_resources(villager, resource_type, self.current_time_called)
+        if not villagers:
+            return
+
+        # Diviser les villagers en fonction des besoins en ressources
+        wood_need = self.player.owned_resources.get("Wood", 0) < 200
+        food_need = self.player.owned_resources.get("Food", 0) < 200
+        
+        num_villagers = len(villagers)
+        wood_gatherers = []
+        food_gatherers = []
+        gold_gatherers = []
+
+        if wood_need and food_need:
+            # Si on a besoin des deux, répartir équitablement
+            wood_gatherers = villagers[:num_villagers//2]
+            food_gatherers = villagers[num_villagers//2:]
+        elif wood_need:
+            wood_gatherers = villagers
+        elif food_need:
+            food_gatherers = villagers
+        else:
+            # Si pas de besoin urgent en bois ou nourriture, focus sur l'or
+            gold_gatherers = villagers
+
+        # Envoyer les villageois chercher les ressources
+        for villager in wood_gatherers:
+            Action(self.game_map).gather_resources(villager, "Wood", self.current_time_called)
+        
+        for villager in food_gatherers:
+            Action(self.game_map).gather_resources(villager, "Food", self.current_time_called)
+            
+        for villager in gold_gatherers:
+            Action(self.game_map).gather_resources(villager, "Gold", self.current_time_called)
 
     def is_position_valid(self, x, y, building_size):
         # Check map boundaries

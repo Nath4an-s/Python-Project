@@ -117,7 +117,7 @@ class Unit:
                 unit_to_train.training_start = current_time_called
                 for resource_type, amount in unit_to_train.cost.items():
                     if player.owned_resources.get(resource_type, 0) < amount:
-                        debug_print(f"Not enough {resource_type} to train {unit_to_train.name}.")
+                        debug_print(f"Not enough {resource_type} to train {unit_to_train.name} for {player.name}.")
                         return
                     player.owned_resources[resource_type] -= amount
                     
@@ -136,7 +136,7 @@ class Unit:
                     next_unit.training_start = current_time_called
                     debug_print(f"Starting training for {next_unit.name}")
         else:
-            debug_print(f"Too much population or not enough resources to train {unit_to_train.name}.")
+            debug_print(f"Too much population or not enough resources to train {unit_to_train.name} for {player.name}.")
             if building.training_queue:
                 building.training_queue.remove(unit_to_train)
                 if building.training_queue:
@@ -164,6 +164,7 @@ class Unit:
         return units
 
 class Villager(Unit):
+    cost = {"Wood": 50, "Gold": 0}
     @staticmethod
     def lire_noms_fichier(fichier="../assets/annex/noms_villageois.txt"):
         try:
@@ -192,6 +193,7 @@ class Villager(Unit):
 
 # Swordsman Class
 class Swordsman(Unit):
+    cost = {"Wood": 50, "Gold": 20}
     def __init__(self, player):
         super().__init__(player, hp=40, cost={"Food": 50, "Gold": 20}, attack=4, speed=0.9, symbol="s", training_time=20)
         self.range = 0.99
@@ -201,6 +203,7 @@ class Swordsman(Unit):
 
 # Horseman Class
 class Horseman(Unit):
+    cost = {"Wood": 80, "Gold": 60}
     def __init__(self, player):
         super().__init__(player, hp=45, cost={"Food": 80, "Gold": 20}, attack=4, speed=1.2, symbol="h", training_time=30)
         self.range = 0.99
@@ -210,6 +213,7 @@ class Horseman(Unit):
 
 # Archer Class
 class Archer(Unit):
+    cost = {"Wood": 30, "Gold": 40}
     def __init__(self, player):
         super().__init__(player, hp=30, cost={"Wood": 25, "Gold": 45}, attack=4, speed=1, symbol="a", training_time=35)
         self.range = 4  # Archers have a range of 4 tiles
