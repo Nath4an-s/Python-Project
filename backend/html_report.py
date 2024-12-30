@@ -242,7 +242,7 @@ def generate_html_report(players):
     '''
 
     # Write to file and open in browser
-    report_file = "game_units_report.html"
+    report_file = "../assets/annex/game_units_report.html"
     with open(report_file, "w") as file:
         file.write(html_content)
 
