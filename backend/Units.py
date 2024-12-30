@@ -102,6 +102,11 @@ class Unit:
         
     @classmethod
     def train_unit(cls, unit_to_train, x, y, player, building, game_map, current_time_called):
+        # Check if the player has enough resources
+        for resource_type, amount in unit_to_train.cost.items():
+            if player.owned_resources.get(resource_type, 0) < amount:
+                debug_print(f"Not enough {resource_type} to train {unit_to_train.name}.")
+                return
         if isinstance(unit_to_train, type):
             unit_to_train = unit_to_train(player)
         
@@ -111,6 +116,9 @@ class Unit:
             if (not hasattr(unit_to_train, 'training_start') or unit_to_train.training_start is None):
                 unit_to_train.training_start = current_time_called
                 for resource_type, amount in unit_to_train.cost.items():
+                    if player.owned_resources.get(resource_type, 0) < amount:
+                        debug_print(f"Not enough {resource_type} to train {unit_to_train.name}.")
+                        return
                     player.owned_resources[resource_type] -= amount
                     
                     debug_print(f"{player.name} spent {amount} {resource_type} to train {unit_to_train.name}.")
@@ -118,7 +126,6 @@ class Unit:
                 building.training_queue.append(unit_to_train)
 
             if current_time_called - unit_to_train.training_start >= unit_to_train.training_time:
-                #debug_print(current_time_called - unit_to_train.training_start)
                 cls.spawn_unit(unit_to_train, x, y, unit_to_train.player, game_map)
                 building.training_queue.remove(unit_to_train)
                 player.training_units -= 1
