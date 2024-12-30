@@ -136,10 +136,12 @@ class GameEngine:
                         self.is_paused = True
                         self.debug_print("Game paused.")
                 elif key == ord('j'):
-                    action.construct_building(self.players[2].units[2], Farm, 10, 10, self.players[2], current_time)
-                    action.construct_building(self.players[2].units[1], Farm, 10, 10, self.players[2], current_time)
+                    action.construct_building(self.players[2].units[2], House, 10, 10, self.players[2], current_time)
+                    #action.construct_building(self.players[2].units[1], Farm, 10, 10, self.players[2], current_time)
                     #action.construct_building(self.players[2].units[3], Barracks, 1, 1, self.players[2], current_time)
                     #action.construct_building(self.players[2].units[4], Barracks, 1, 1, self.players[2], current_time)
+                elif key == ord('t'):
+                    action.construct_building(self.players[2].units[1], House, 13, 10, self.players[2], current_time)
                 elif key == ord('k'):
                     action.gather_resources(self.players[2].units[2], "Wood", current_time)
                     action.gather_resources(self.players[2].units[3], "Gold", current_time)
@@ -150,7 +152,15 @@ class GameEngine:
                 elif key == ord('m'):
                     self.debug_print(self.map.grid[1][1].resource.amount)
                 elif key == ord('r'):
-                    self.debug_print(player.constructing_buildings)
+                    for ia in self.ias:
+                        self.debug_print(ia.player.name)
+                    for building in self.players[2].buildings:
+                        if hasattr(building, 'training_queue'):
+                            self.debug_print(building.training_queue)
+                    self.debug_print(self.players[2].training_units)
+                    self.debug_print(self.players[2].population)
+                    self.debug_print(self.players[2].max_population)
+                    self.debug_print(self.ias[2].inactive_troops)
                 elif key == ord('a'):
                     action.go_battle(self.players[2].units[0], self.players[1].units[1], current_time)
                 elif key == ord('b'):

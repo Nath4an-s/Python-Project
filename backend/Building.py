@@ -85,7 +85,7 @@ class Building:
         building.position = (x, y)
         game_map.place_building(x, y, building)  # Use the passed map instead of cls.map
         player.buildings.append(building)  # Add the building to the player's list of buildings
-        debug_print(f"Building {building} belonging to {player.name} at ({x}, {y}) spawned.")
+        debug_print(f"Building {building.name} belonging to {player.name} at ({x}, {y}) spawned.")
 
     @classmethod
     def kill_building(cls, player, building_to_kill, game_map):

@@ -66,7 +66,7 @@ class Action:
                     unit.target_position = None
                     Map.move_unit(self.map, unit, int(unit.position[0]), int(unit.position[1]), int(start_x), int(start_y))
                     del unit.last_move_time
-                    self.debug_print("Reached target!")
+                    #self.debug_print("Reached target!")
                     return True
             else:
                 # Otherwise, move partway towards the next step
@@ -368,7 +368,8 @@ class Action:
     def construct_building(self, unit, building_type, x, y, player, current_time_called):
         if not self.map.is_area_free(x, y, building_type(player).size):
             if unit.task != "going_to_construction_site": 
-                self.debug_print(f"Cannot construct building at ({x}, {y}): area is not free.")
+                #self.debug_print(f"Cannot construct building at ({x}, {y}): area is not free.")
+                pass
             return
         
         if not hasattr(unit, 'construction_type'):
@@ -405,7 +406,8 @@ class Action:
     def _construct(self, unit, building_type, x, y, player, current_time_called):
         if not self.map.is_area_free(x, y, building_type(player).size):
             if unit.task != "going_to_construction_site": 
-                self.debug_print(f"Cannot construct building at ({x}, {y}): area is not free.")
+                #self.debug_print(f"Cannot construct building at ({x}, {y}): area is not free.")
+                pass
             return
         
         # Trouver le nombre de travailleurs
@@ -425,7 +427,6 @@ class Action:
         if current_time_called - unit.start_building >= actual_building_time:
             # Construire le bâtiment
             Building.spawn_building(player, x, y, building_type, self.map)
-            self.debug_print(f"{building_type.__name__} constructed at ({x}, {y}) by {unit}.")
 
             # Réinitialiser les tâches de tous les travailleurs associés
             for building in player.constructing_buildings:
@@ -437,4 +438,4 @@ class Action:
                     break
             
             # Nettoyer la liste des bâtiments en construction
-            player.constructing_buildin
+            player.constructing_buildings.remove(next(b for b in player.constructing_buildings if b["position"] == (x, y)))

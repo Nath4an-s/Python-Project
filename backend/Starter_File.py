@@ -18,5 +18,5 @@ GUI_size.y = 600
 players = [
     Player('Player 1', "Means", "aggressive", player_id=1),
     Player('Player 2', "Leans", "defensive", player_id=2),
-    Player('Player 3', "Marines", "defensive", player_id=3),
+    Player('Player 3', "Marines", "aggressive", player_id=3),
 ]
