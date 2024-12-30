@@ -1,4 +1,5 @@
 import pygame
+from pygame.locals import HIDDEN
 from backend.Starter_File import GUI_size
 from backend.Building import TownCenter
 from frontend.Terrain import Map
@@ -21,7 +22,7 @@ pygame.init()
 
 # Initialize the display (required before using convert_alpha or convert)
 WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600 
-screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), HIDDEN)
 
 # Define paths using pathlib
 BASE_PATH = Path(__file__).resolve().parent.parent  
