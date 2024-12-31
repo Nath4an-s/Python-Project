@@ -16,7 +16,7 @@ class Player:
         self.ai_profile = ai_profile
         self.population = 0
         self.max_population = 200
-        self.training_units = 0
+        self.training_units = []
         self.id = player_id  # Add this line to store the player's ID
         if self.civilization == "Means":
             self.owned_resources = Means_starting_resources

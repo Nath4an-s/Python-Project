@@ -160,7 +160,6 @@ class GameEngine:
                     self.debug_print(self.players[2].training_units)
                     self.debug_print(self.players[2].population)
                     self.debug_print(self.players[2].max_population)
-                    self.debug_print(self.ias[2].inactive_troops)
                 elif key == ord('a'):
                     action.go_battle(self.players[2].units[0], self.players[1].units[1], current_time)
                 elif key == ord('b'):

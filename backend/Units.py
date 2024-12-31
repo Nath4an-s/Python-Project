@@ -122,13 +122,13 @@ class Unit:
                     player.owned_resources[resource_type] -= amount
                     
                     debug_print(f"{player.name} spent {amount} {resource_type} to train {unit_to_train.name}.")
-                player.training_units += 1
+                player.training_units.append(unit_to_train)
                 building.training_queue.append(unit_to_train)
 
             if current_time_called - unit_to_train.training_start >= unit_to_train.training_time:
                 cls.spawn_unit(unit_to_train, x, y, unit_to_train.player, game_map)
                 building.training_queue.remove(unit_to_train)
-                player.training_units -= 1
+                player.training_units.remove(unit_to_train)
                 debug_print(f"Should have spawned {unit_to_train.name} at ({x}, {y})")
                 
                 if building.training_queue:
