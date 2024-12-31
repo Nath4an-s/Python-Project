@@ -14,12 +14,20 @@ class Action:
 
     def move_unit(self, unit, target_x, target_y, current_time_called):
         # Check if the target destination is valid
-        if not self._is_within_bounds(target_x, target_y) or not self.map.is_tile_free_for_unit(int(target_x), int(target_y)):
+        if not self._is_within_bounds(target_x, target_y) or (not self.map.is_tile_free_for_unit(int(target_x), int(target_y)) and not isinstance(self.map.grid[target_y][target_x].building, Building)):
             return False
 
         # Get current/starting position of the unit
         start_x, start_y = int(unit.position[0]), int(unit.position[1])
         unit.target_position = (target_x, target_y)
+
+        # If the target is a building, find an adjacent tile
+        if isinstance(self.map.grid[target_y][target_x].building, Building):
+            adjacent_tiles = self.get_adjacent_positions(target_x, target_y, self.map.grid[target_y][target_x].building.size)
+            for tile in adjacent_tiles:
+                if self.map.is_tile_free_for_unit(tile[0], tile[1]):
+                    target_x, target_y = tile
+                    break
 
         # If path is not already constructed, construct it using A* algorithm
         if not hasattr(unit, 'path') or not unit.path:
@@ -327,16 +335,16 @@ class Action:
         
         # Get the current position of the enemy
         target_x, target_y = enemy_unit.position
-
         # Check if the target position has changed
         if unit.target_position != (target_x, target_y):
-            unit.path = None #reset path --> works but not sure if it's the best way to do it --> calcul is becoming too complex
-        
+            unit.path = None  # Reset path if target position has changed
+
         # Check if the unit is within range to attack
-        if abs(unit.position[0] - target_x) < unit.range and abs(unit.position[1] - target_y) < unit.range:
+        if (abs(unit.position[0] - target_x) < unit.range and abs(unit.position[1] - target_y) < unit.range) or (isinstance(enemy_unit, Building) and abs(unit.position[0] - target_x) <= 2 and abs(unit.position[1] - target_y) <= 2):
             unit.task = "attacking"
-            enemy_unit.is_attacked_by = unit
-            enemy_unit.task = "is_attacked"
+            if not isinstance(enemy_unit, Building):
+                enemy_unit.is_attacked_by = unit
+                enemy_unit.task = "is_attacked"
             self._attack(unit, enemy_unit, current_time_called)
         else:
             self.move_unit(unit, int(target_x), int(target_y), current_time_called)
@@ -344,7 +352,7 @@ class Action:
 
     
     def _attack(self, unit, enemy_unit, current_time_called):
-        if abs(unit.position[0] - enemy_unit.position[0]) < unit.range and abs(unit.position[1] - enemy_unit.position[1]) < unit.range:
+        if abs(unit.position[0] - enemy_unit.position[0]) < unit.range and abs(unit.position[1] - enemy_unit.position[1]) < unit.range or isinstance(enemy_unit, Building):
             if not hasattr(unit, 'last_hit_time'):
                 unit.last_hit_time = 0
 
@@ -352,7 +360,10 @@ class Action:
             if time_since_last_hit >= 1.0:  # Ensure at least 1 second between attacks
                 if unit.attack > enemy_unit.hp:
                     enemy_unit.hp = 0
-                    Unit.kill_unit(enemy_unit.player, enemy_unit, self.map)
+                    if isinstance(enemy_unit, Building):
+                        Building.kill_building(enemy_unit.player, enemy_unit, self.map)
+                    else:
+                        Unit.kill_unit(enemy_unit.player, enemy_unit, self.map)
                     unit.task = None
                     del unit.last_hit_time
                     unit.target_attack = None

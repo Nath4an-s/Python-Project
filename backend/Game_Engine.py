@@ -188,7 +188,9 @@ class GameEngine:
                         action.go_battle(unit, self.players[1].units[1], current_time)
                 elif key == ord('n'):
                     self.IA_used = not self.IA_used
-                
+                elif key == ord('x'): #Attaquer un batiment
+                    for unit in self.players[2].units:
+                        action.go_battle(unit, self.players[1].buildings[-1], current_time)
                 #call the IA
                 if not self.is_paused and self.turn % 5 == 0 and self.IA_used == True: # Call the IA every 5 turns: change 0, 5, 10, 15, ... depending on lag
                     for ia in self.ias:
@@ -237,8 +239,6 @@ class GameEngine:
 
     def pause_game(self):
         self.is_paused = not self.is_paused
-
-
 
     def save_game(self, filename=None):
         if not self.is_paused:
