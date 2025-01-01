@@ -68,8 +68,8 @@ class GameEngine:
         Building.place_starting_buildings(self.map)  # Place starting town centers on the map
         Unit.place_starting_units(self.players, self.map)  # Place starting units on the map
         self.debug_print = debug_print
-        #self.ias = [IA(player, player.ai_profile, self.map, time.time()) for player in self.players]  # Instantiate IA for each player
-        self.ias = [IA(players[0], players[0].ai_profile, self.map, time.time())]
+        self.ias = [IA(player, player.ai_profile, self.map, time.time()) for player in self.players]  # Instantiate IA for each player
+        #self.ias = [IA(players[0], players[0].ai_profile, self.map, time.time())]
         self.IA_used = False
 
 
@@ -84,6 +84,9 @@ class GameEngine:
         #Thread pour la gestion de touche
         listener = Listener(on_press=press, on_release=release)
         listener.start()
+
+        for player in self.players:
+            player.ai = self.ias[player.id - 1]  # Assign the corresponding AI to the player
 
         try:
             while not self.check_victory():
@@ -137,13 +140,14 @@ class GameEngine:
                         self.is_paused = True
                         self.debug_print("Game paused.")
                 elif key == ord('j'):
-                    action.construct_building(self.players[2].units[2], House, 10, 10, self.players[2], current_time)
+                    action.construct_building(self.players[2].units[2], Farm, 10, 10, self.players[2], current_time)
                     #action.construct_building(self.players[2].units[1], Farm, 10, 10, self.players[2], current_time)
                     #action.construct_building(self.players[2].units[3], Barracks, 1, 1, self.players[2], current_time)
                     #action.construct_building(self.players[2].units[4], Barracks, 1, 1, self.players[2], current_time)
                 elif key == ord('t'):
                     action.construct_building(self.players[2].units[1], House, 13, 10, self.players[2], current_time)
                 elif key == ord('k'):
+                    action.gather_resources(self.players[2].units[1], "Food", current_time)
                     action.gather_resources(self.players[2].units[2], "Wood", current_time)
                     action.gather_resources(self.players[2].units[3], "Gold", current_time)
                 elif key == ord('o'):
@@ -155,12 +159,7 @@ class GameEngine:
                 elif key == ord('r'):
                     for ia in self.ias:
                         self.debug_print(ia.player.name)
-                    for building in self.players[2].buildings:
-                        if hasattr(building, 'training_queue'):
-                            self.debug_print(building.training_queue)
-                    self.debug_print(self.players[2].training_units)
-                    self.debug_print(self.players[2].population)
-                    self.debug_print(self.players[2].max_population)
+                        self.debug_print(ia.decided_builds)
                 elif key == ord('a'):
                     action.go_battle(self.players[2].units[0], self.players[1].units[1], current_time)
                 elif key == ord('b'):
@@ -189,6 +188,7 @@ class GameEngine:
                         action.go_battle(unit, self.players[1].units[1], current_time)
                 elif key == ord('n'):
                     self.IA_used = not self.IA_used
+                    self.debug_print(f"IA used: {self.IA_used}")
                 elif key == ord('x'): #Attaquer un batiment
                     for unit in self.players[2].units:
                         action.go_battle(unit, self.players[1].buildings[-1], current_time)

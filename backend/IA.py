@@ -2,7 +2,7 @@
 from Actions import *
 from frontend.Terrain import Map
 from logger import debug_print
-from backend.Building import *
+from Building import *
 from Units import *
 from Starter_File import players
 
@@ -17,6 +17,7 @@ class IA:
         self.priorities = self.set_priorities()
         self.attack_cooldown = 30  # Minimum time between strategic attacks
         self.last_attack_time = 0
+        self.decided_builds = [] # Store the decided building positions to avoid overlap --> stored for whole game
 
     def get_inactive_units(self):
         inactive_villagers = []
@@ -163,7 +164,11 @@ class IA:
         if not (0 <= x < self.game_map.width - building_size and 
                 0 <= y < self.game_map.height - building_size):
             return False
-        
+        for build in self.decided_builds:
+            if (abs(build[0] - x) < building_size + 2 and
+                abs(build[1] - y) < building_size + 2):
+                return False
+
         # Check if area is free on map
         if not self.game_map.is_area_free(x, y, building_size):
             return False
@@ -211,7 +216,7 @@ class IA:
             build_position = None
             for existing_building in self.player.buildings:
                 x, y = existing_building.position
-                for radius in range(1, 10):
+                for radius in range(5, 15): # buildings not too close to each other nor too far
                     for dx in range(-radius, radius + 1):
                         for dy in range(-radius, radius + 1):
                             new_x = x + dx
@@ -237,6 +242,7 @@ class IA:
                         self.player,
                         self.current_time_called
                     )
+                    self.decided_builds.append(build_position)
                     return
     
 

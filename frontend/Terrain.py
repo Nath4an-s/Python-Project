@@ -253,9 +253,11 @@ class Map:
                         min_distance = distance
                         nearest_resource = building.position
         else:
-            print(f"Invalid resource type: {resource_type}")
+            #print(f"Invalid resource type: {resource_type}")
+            pass
         if nearest_resource is None:
-            print(f"No available {resource_type} resources found.")
+            #print(f"No available {resource_type} resources found.")
+            pass
         return nearest_resource
 
     def find_drop_point(self, start_position, player):
@@ -270,7 +272,8 @@ class Map:
                     nearest_drop_point = building.position
 
         if nearest_drop_point is None:
-            print("No available drop-off points found.")
+            #print("No available drop-off points found.")
+            pass
         return nearest_drop_point    
 
 class Tile:

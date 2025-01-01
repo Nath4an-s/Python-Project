@@ -22,7 +22,7 @@ class Action:
         unit.target_position = (target_x, target_y)
 
         # If the target is a building, find an adjacent tile
-        if isinstance(self.map.grid[target_y][target_x].building, Building):
+        if isinstance(self.map.grid[target_y][target_x].building, Building) and not type(self.map.grid[target_y][target_x].building).__name__ == "Farm":
             adjacent_tiles = self.get_adjacent_positions(target_x, target_y, self.map.grid[target_y][target_x].building.size)
             for tile in adjacent_tiles:
                 if self.map.is_tile_free_for_unit(tile[0], tile[1]):
@@ -74,6 +74,12 @@ class Action:
                     unit.target_position = None
                     Map.move_unit(self.map, unit, int(unit.position[0]), int(unit.position[1]), int(start_x), int(start_y))
                     del unit.last_move_time
+                    if hasattr(unit, 'last_gather_time'):
+                        del unit.last_gather_time
+                    if hasattr(unit, 'path'):
+                        del unit.path
+                    if hasattr(unit, 'last_move_time'):
+                        del unit.last_move_time
                     #self.debug_print("Reached target!")
                     return True
             else:
@@ -250,6 +256,12 @@ class Action:
                 unit.task = "marching"
             else:
                 unit.task = "gathering"
+                if hasattr(unit, 'last_gather_time'):
+                    del unit.last_gather_time
+                if hasattr(unit, 'path'):
+                    del unit.path
+                if hasattr(unit, 'last_move_time'):
+                    del unit.last_move_time
                 self._gather(unit, resource_type, current_time_called)
 
         else:
@@ -306,10 +318,10 @@ class Action:
 
             # Move the unit to the returning position if found
             if returning_position:
-                self.move_unit(unit, returning_position[0] - 1, returning_position[1] - 1, current_time_called)
+                self.move_unit(unit, returning_position[0], returning_position[1], current_time_called)
 
                 # Check if unit has reached the drop-off destination to deposit resources
-                if abs(unit.position[0] - (returning_position[0] - 1)) < 0.1 and abs(unit.position[1] - (returning_position[1] - 1)) < 0.1:
+                if abs(unit.position[0] - (returning_position[0])) < 1.01 and abs(unit.position[1] - (returning_position[1])) < 1.01:
                     # Deposit resources and reset carrying load
                     building = next(b for b in unit.player.buildings if b.position == returning_position)
                     if isinstance(building, Building):
@@ -409,44 +421,46 @@ class Action:
                 player.constructing_buildings.append({
                     "position": (x, y),
                     "num_workers": 1,
-                    "workers": [unit]
+                    "workers": [unit],
+                    "type": building_type,
+                    "start_time": current_time_called
                 })
             self._construct(unit, building_type, x, y, player, current_time_called)
 
 
     def _construct(self, unit, building_type, x, y, player, current_time_called):
         if not self.map.is_area_free(x, y, building_type(player).size):
-            if unit.task != "going_to_construction_site": 
-                #self.debug_print(f"Cannot construct building at ({x}, {y}): area is not free.")
-                pass
+            self.debug_print(f"Cannot construct building at ({x}, {y}): area is not free anymore.")
+            unit.task = None
             return
-        
-        # Trouver le nombre de travailleurs
+
+        # Find or initialize the number of workers
         num_workers = next((b["num_workers"] for b in player.constructing_buildings if b["position"] == (x, y)), 1)
         actual_building_time = 3 * building_type(player).build_time / (num_workers + 2)
 
-        # Initialiser le temps de début global
+        # Initialize start time
         if not hasattr(unit, 'start_building'):
-            for building in player.constructing_buildings:
-                if building["position"] == (x, y):  # Il ne faut pas lancer à construire deux buildings pas du même type sur la même position
-                    if "start_time" not in building:
-                        building["start_time"] = current_time_called
-                    unit.start_building = building["start_time"]
-                    break
+            unit.start_building = current_time_called
 
-        # Vérifier si le temps est écoulé
+        # Verify if the time has elapsed
         if current_time_called - unit.start_building >= actual_building_time:
-            # Construire le bâtiment
             Building.spawn_building(player, x, y, building_type, self.map)
 
-            # Réinitialiser les tâches de tous les travailleurs associés
+            # Reset tasks for workers
             for building in player.constructing_buildings:
                 if building["position"] == (x, y):
                     for worker in building.get("workers", []):
                         worker.task = None
-                        if hasattr(worker, 'start_building'):
-                            del worker.start_building  # Supprimer la variable 'start_building' pour tous les travailleurs
+                        del worker.target_building
+                        del worker.construction_type
+                        del worker.start_building
                     break
+
+            # Clean up constructing buildings
+            player.constructing_buildings = [
+                b for b in player.constructing_buildings if b["position"] != (x, y)
+            ]
             
-            # Nettoyer la liste des bâtiments en construction
-            player.constructing_buildings.remove(next(b for b in player.constructing_buildings if b["position"] == (x, y)))
+            self.debug_print(f"Building {building_type.__name__} completed at ({x}, {y}).")
+
+            return

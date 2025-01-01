@@ -14,6 +14,7 @@ class Player:
         self.buildings = []
         self.constructing_buildings = []
         self.ai_profile = ai_profile
+        self.ai = None
         self.population = 0
         self.max_population = 200
         self.training_units = []
