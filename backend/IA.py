@@ -71,7 +71,7 @@ class IA:
     def run(self):
         building_villagers, gathering_villagers, inactive_troops = self.get_inactive_units()
         
-        if building_villagers : self.debug_print(f"\nBuild villageois : {[villager.name for villager in building_villagers]}")
+        #if building_villagers : self.debug_print(f"Build villageois : {[villager.name for villager in building_villagers]}")
         self.build_structures(building_villagers)
         
         # Any remaining building villagers who couldn't build (due to lack of resources)
@@ -170,7 +170,7 @@ class IA:
                 break
 
     def gather_resources(self, villagers):
-        if villagers : self.debug_print(f"Farm : {[villager.name for villager in villagers]}")
+        #if villagers : self.debug_print(f"Farm : {[villager.name for villager in villagers]}")
         for villager in villagers:
             # Determine the resource type that the player has the least of
             resource_types = sorted(self.player.owned_resources, key=self.player.owned_resources.get)
@@ -232,7 +232,7 @@ class IA:
         if self.player.owned_resources["Food"] < 50:
             least_constructed_building = "Farm"
         # Check if population limit is reached and prioritize building a House
-        elif self.player.population >= self.player.max_population:
+        elif self.player.population >= self.player.max_population or self.player.population >= sum(building.population_increase for building in self.player.buildings):
             least_constructed_building = "House"
         else:
             # Identify the building type that is least constructed

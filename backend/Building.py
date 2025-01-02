@@ -148,9 +148,9 @@ class Camp(Building):
         if resource_type in unit.carrying:
             amount = unit.carrying[resource_type]
             unit.player.owned_resources[resource_type] += amount
-            self.debug_print(f"Camp: {unit.player.name} dropped {amount} {resource_type}.")
+            debug_print(f"Camp: {unit.player.name} dropped {amount} {resource_type}.")
         else:
-            self.debug_print("No valid resource to drop.")
+            debug_print("No valid resource to drop.")
     
     def is_walkable(self):
         return False
