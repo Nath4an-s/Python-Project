@@ -103,8 +103,8 @@ class Unit:
     @classmethod
     def train_unit(cls, unit_to_train, x, y, player, building, game_map, current_time_called):
         # Check if the player has enough resources
-        for resource_type, amount in unit_to_train.cost.items():
-            if player.owned_resources.get(resource_type, 0) < amount:
+        for resource_type, amount in unit_to_train.cost.items() :
+            if player.owned_resources.get(resource_type, 0) < amount and unit_to_train not in player.training_units :
                 debug_print(f"Not enough {resource_type} to train {unit_to_train.name}.")
                 return
         if isinstance(unit_to_train, type):
@@ -116,7 +116,7 @@ class Unit:
             if (not hasattr(unit_to_train, 'training_start') or unit_to_train.training_start is None):
                 unit_to_train.training_start = current_time_called
                 for resource_type, amount in unit_to_train.cost.items():
-                    if player.owned_resources.get(resource_type, 0) < amount:
+                    if player.owned_resources.get(resource_type, 0) < amount and unit_to_train not in player.training_units:
                         debug_print(f"Not enough {resource_type} to train {unit_to_train.name} for {player.name}.")
                         return
                     player.owned_resources[resource_type] -= amount
@@ -180,7 +180,7 @@ class Villager(Unit):
             noms_disponibles = self.lire_noms_fichier()
             name = random.choice(noms_disponibles)
 
-        super().__init__(player, hp=25, cost={"Food": 50}, attack=2, speed=3, symbol="v", training_time=25) #TODO : speed 0.8
+        super().__init__(player, hp=25, cost={"Food": 50}, attack=2, speed=3, symbol="v", training_time=3) #TODO : speed 0.8
         self.carrying = {"Wood": 0, "Food": 0, "Gold": 0}
         self.carry_capacity = 20  # Can carry up to 20 of any resource
         self.gather_rate = 3  # 25 resources per minute (in resources per second) #TODO : 25 / 60

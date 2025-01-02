@@ -30,11 +30,26 @@ class IA:
                 elif isinstance(unit, (Swordsman, Archer, Horseman)):
                     inactive_troops.append(unit)
         
-        # Split villagers into two groups
-        num_builders = max(len(inactive_villagers) // 3, 1)  # Allocate 1/3 for building, minimum 1
-        building_villagers = inactive_villagers[:num_builders]
-        gathering_villagers = inactive_villagers[num_builders:]
+        # Count active villagers
+        active_builders = len([u for u in self.player.units if isinstance(u, Villager) and (u.task == "constructing" or u.task == "going_to_construction_site")])
+        active_gatherers = len([u for u in self.player.units if isinstance(u, Villager) and u.task == "gathering"])
         
+        total_villagers = active_builders + active_gatherers + len(inactive_villagers)
+        
+        desired_builders = max(1, total_villagers // 3)
+
+        
+        # Allocate inactive villagers based on desired ratios
+        building_villagers = []
+        gathering_villagers = []
+        
+        for villager in inactive_villagers:
+            if active_builders < desired_builders:
+                building_villagers.append(villager)
+                active_builders += 1
+            else:
+                gathering_villagers.append(villager)
+
         return building_villagers, gathering_villagers, inactive_troops
 
     def set_priorities(self):
@@ -56,6 +71,7 @@ class IA:
     def run(self):
         building_villagers, gathering_villagers, inactive_troops = self.get_inactive_units()
         
+        if building_villagers : self.debug_print(f"\nBuild villageois : {[villager.name for villager in building_villagers]}")
         self.build_structures(building_villagers)
         
         # Any remaining building villagers who couldn't build (due to lack of resources)
@@ -73,10 +89,10 @@ class IA:
 
         # Handle military units
         if self.mode == "defensive":
-            self.defend(defending_troops)
+            self.defend(list(set(remaining_troops)))
         
         if self.mode == "aggressive":
-            self.strategic_attack(remaining_troops)
+            self.strategic_attack(list(set(remaining_troops)))
         
         # Train new units
         self.train_units()
@@ -154,7 +170,7 @@ class IA:
                 break
 
     def gather_resources(self, villagers):
-        if villagers : self.debug_print([villager.name for villager in villagers])
+        if villagers : self.debug_print(f"Farm : {[villager.name for villager in villagers]}")
         for villager in villagers:
             # Determine the resource type that the player has the least of
             resource_types = sorted(self.player.owned_resources, key=self.player.owned_resources.get)
@@ -194,6 +210,8 @@ class IA:
         if not villagers:
             return
             
+        villagers = list(set(villagers))  # Ensure no duplicates
+        
         building_types = [Farm, Barracks, House, TownCenter, Stable, ArcheryRange, Keep, Camp]
         building_costs = {
             "Farm": {"Wood": 60, "Gold": 0},
@@ -210,8 +228,16 @@ class IA:
         for building in self.player.buildings:
             building_counts[type(building).__name__] += 1
 
-        # Identify the building type that is least constructed
-        least_constructed_building = min(building_counts, key=building_counts.get)
+        # Check if food is low and prioritize building a Farm
+        if self.player.owned_resources["Food"] < 50:
+            least_constructed_building = "Farm"
+        # Check if population limit is reached and prioritize building a House
+        elif self.player.population >= self.player.max_population:
+            least_constructed_building = "House"
+        else:
+            # Identify the building type that is least constructed
+            least_constructed_building = min(building_counts, key=building_counts.get)
+        
         building_class = eval(least_constructed_building)
 
         # Check if the player has enough resources to construct the identified building
@@ -342,6 +368,8 @@ class IA:
         if not troops:
             return
             
+        troops = list(set(troops))  # Ensure no duplicates
+        
         # Find closest enemy units or buildings
         enemies = self.find_nearby_enemies(max_distance=15)
         if enemies:
