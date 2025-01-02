@@ -72,7 +72,7 @@ class IA:
         building_villagers, gathering_villagers, inactive_troops = self.get_inactive_units()
         
         #if building_villagers : self.debug_print(f"Build villageois : {[villager.name for villager in building_villagers]}")
-        self.build_structures(building_villagers)
+        self.build_structures(list(set(building_villagers)))
         
         # Any remaining building villagers who couldn't build (due to lack of resources)
         # will be added to gathering villagers
@@ -128,7 +128,7 @@ class IA:
                     for dy in range(-1, 2):
                         new_x = x + dx
                         new_y = y + dy
-                        if self.is_position_valid(new_x, new_y, 1):  # Assuming villager size is 1
+                        if self.is_position_valid(new_x, new_y, 1, is_building=False):  # Assuming villager size is 1
                             Unit.train_unit(Villager, new_x, new_y, self.player, building, self.game_map, self.current_time_called)
                             self.debug_print(f"{self.player.name} : Training villager at ({new_x}, {new_y})")
                             return
@@ -141,7 +141,7 @@ class IA:
                     for dy in range(-1, 2):
                         new_x = x + dx
                         new_y = y + dy
-                        if self.is_position_valid(new_x, new_y, 1):  # Assuming villager size is 1
+                        if self.is_position_valid(new_x, new_y, 1, is_building=False):  # Assuming villager size is 1
                             Unit.train_unit(Swordsman, new_x, new_y, self.player, building, self.game_map, self.current_time_called)
                             self.debug_print(f"{self.player.name} : Training swordsman at ({new_x}, {new_y})")
                             return
@@ -152,7 +152,7 @@ class IA:
                     for dy in range(-1, 2):
                         new_x = x + dx
                         new_y = y + dy
-                        if self.is_position_valid(new_x, new_y, 1):  # Assuming villager size is 1
+                        if self.is_position_valid(new_x, new_y, 1, is_building=False):  # Assuming villager size is 1
                             Unit.train_unit(Archer, new_x, new_y, self.player, building, self.game_map, self.current_time_called)
                             self.debug_print(f"{self.player.name} : Training archer at ({new_x}, {new_y})")
                             return
@@ -163,7 +163,7 @@ class IA:
                     for dy in range(-1, 2):
                         new_x = x + dx
                         new_y = y + dy
-                        if self.is_position_valid(new_x, new_y, 1):  # Assuming villager size is 1
+                        if self.is_position_valid(new_x, new_y, 1, is_building=False):  # Assuming villager size is 1
                             Unit.train_unit(Horseman, new_x, new_y, self.player, building, self.game_map, self.current_time_called)
                             self.debug_print(f"{self.player.name} : Training horseman at ({new_x}, {new_y})")
                             return
@@ -179,15 +179,16 @@ class IA:
                 if Action(self.game_map).gather_resources(villager, resource_type, self.current_time_called):
                     break
 
-    def is_position_valid(self, x, y, building_size):
+    def is_position_valid(self, x, y, building_size, is_building=True):
         # Check map boundaries
         if not (0 <= x < self.game_map.width - building_size and 
                 0 <= y < self.game_map.height - building_size):
             return False
-        for build in self.decided_builds:
-            if (abs(build[0] - x) < building_size + 2 and
-                abs(build[1] - y) < building_size + 2):
-                return False
+        if is_building:
+            for build in self.decided_builds:
+                if (abs(build[0] - x) < building_size + 2 and
+                    abs(build[1] - y) < building_size + 2):
+                    return False
 
         # Check if area is free on map
         if not self.game_map.is_area_free(x, y, building_size):
@@ -252,7 +253,7 @@ class IA:
                             new_x = x + dx
                             new_y = y + dy
                             
-                            if self.is_position_valid(new_x, new_y, building_class(self.player).size):
+                            if self.is_position_valid(new_x, new_y, building_class(self.player).size, is_building=True):
                                 build_position = (new_x, new_y)
                                 break
                         if build_position:
