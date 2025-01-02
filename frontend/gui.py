@@ -3,6 +3,7 @@ from pygame.locals import HIDDEN
 from backend.Starter_File import GUI_size
 from backend.Building import TownCenter
 from frontend.Terrain import Map
+from backend.logger import debug_print
 from pathlib import Path
 import os
 
@@ -37,7 +38,7 @@ def load_image(file_path):
     try:
         return pygame.image.load(file_path).convert_alpha()
     except pygame.error as e:
-        print(f"Error loading image {file_path}: {e}")
+        debug_print(f"Gui File : Error loading image {file_path}: {e}")
         return pygame.Surface((TILE_WIDTH, TILE_HEIGHT))  # Return a placeholder surface
 
 # Define resource images
