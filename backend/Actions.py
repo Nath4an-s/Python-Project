@@ -207,7 +207,7 @@ class Action:
                 if target is not None:
                     unit.target_resource = target
                 else:
-                    self.debug_print(f"No {resource_type} resources found.")
+                    #self.debug_print(f"No {resource_type} resources found.")
                     unit.task = None
                     unit.target_resource = None
                     unit.target_position = None
@@ -246,7 +246,7 @@ class Action:
             if target is not None:
                 unit.target_resource = target
             else:
-                self.debug_print(f"No {resource_type} resources found.")
+                #self.debug_print(f"No {resource_type} resources found.")
                 unit.task = None
                 unit.target_position = None
                 unit.target_resource = None

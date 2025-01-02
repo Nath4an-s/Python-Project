@@ -130,7 +130,7 @@ class IA:
                         new_y = y + dy
                         if self.is_position_valid(new_x, new_y, 1, is_building=False):  # Assuming villager size is 1
                             Unit.train_unit(Villager, new_x, new_y, self.player, building, self.game_map, self.current_time_called)
-                            self.debug_print(f"{self.player.name} : Training villager at ({new_x}, {new_y})")
+                            #self.debug_print(f"{self.player.name} : Training villager at ({new_x}, {new_y})")
                             return
 
     def train_troops(self):
@@ -143,7 +143,7 @@ class IA:
                         new_y = y + dy
                         if self.is_position_valid(new_x, new_y, 1, is_building=False):  # Assuming villager size is 1
                             Unit.train_unit(Swordsman, new_x, new_y, self.player, building, self.game_map, self.current_time_called)
-                            self.debug_print(f"{self.player.name} : Training swordsman at ({new_x}, {new_y})")
+                            #self.debug_print(f"{self.player.name} : Training swordsman at ({new_x}, {new_y})")
                             return
                 break
             elif type(building).__name__ == "ArcheryRange":
@@ -154,7 +154,7 @@ class IA:
                         new_y = y + dy
                         if self.is_position_valid(new_x, new_y, 1, is_building=False):  # Assuming villager size is 1
                             Unit.train_unit(Archer, new_x, new_y, self.player, building, self.game_map, self.current_time_called)
-                            self.debug_print(f"{self.player.name} : Training archer at ({new_x}, {new_y})")
+                            #self.debug_print(f"{self.player.name} : Training archer at ({new_x}, {new_y})")
                             return
                 break
             elif type(building).__name__ == "Stable":
@@ -165,7 +165,7 @@ class IA:
                         new_y = y + dy
                         if self.is_position_valid(new_x, new_y, 1, is_building=False):  # Assuming villager size is 1
                             Unit.train_unit(Horseman, new_x, new_y, self.player, building, self.game_map, self.current_time_called)
-                            self.debug_print(f"{self.player.name} : Training horseman at ({new_x}, {new_y})")
+                            #self.debug_print(f"{self.player.name} : Training horseman at ({new_x}, {new_y})")
                             return
                 break
 
@@ -175,7 +175,7 @@ class IA:
             # Determine the resource type that the player has the least of
             resource_types = sorted(self.player.owned_resources, key=self.player.owned_resources.get)
             for resource_type in resource_types:
-                self.debug_print(f"{villager.name} : Gathering {resource_type}")
+                #self.debug_print(f"{villager.name} : Gathering {resource_type}")
                 if Action(self.game_map).gather_resources(villager, resource_type, self.current_time_called):
                     break
 
@@ -293,10 +293,22 @@ class IA:
         if targets:
             self.last_attack_time = current_time
             target = self.choose_best_target(targets)
-            for troop in troops:
-                troop.task = None  # Clear any existing task
-                Action(self.game_map).go_battle(troop, target, self.current_time_called)
-                self.debug_print(f"{self.player.name} : Attacking {target.name} with {troop.name} at {target.position}")
+            
+            # Check if the enemy is very weak
+            weakest_player = target.player
+            if len([u for u in weakest_player.units if isinstance(u, Villager)]) < 3 and len(weakest_player.buildings) < 3:
+                # Attack with all available troops
+                for troop in self.player.units:
+                    if isinstance(troop, (Swordsman, Archer, Horseman)):
+                        troop.task = None  # Clear any existing task
+                        Action(self.game_map).go_battle(troop, target, self.current_time_called)
+                        self.debug_print(f"{self.player.name} : Attacking {target.name} with {troop.name} at {target.position}")
+            else:
+                # Attack with the given troops
+                for troop in troops:
+                    troop.task = None  # Clear any existing task
+                    Action(self.game_map).go_battle(troop, target, self.current_time_called)
+                    self.debug_print(f"{self.player.name} : Attacking {target.name} with {troop.name} at {target.position}")
 
     def find_strategic_targets(self):
         targets = []
@@ -313,9 +325,26 @@ class IA:
         return targets
 
     def choose_best_target(self, targets):
+        # Group targets by player
+        player_targets = {}
+        for target in targets:
+            if target.player not in player_targets:
+                player_targets[target.player] = []
+            player_targets[target.player].append(target)
+        
+        # Find the weakest player based on the number of villagers and buildings
+        weakest_player = min(player_targets.keys(), key=lambda p: (
+            len([u for u in p.units if isinstance(u, Villager)]),
+            len(p.buildings)
+        ))
+        
+        # Filter targets to only include those from the weakest player
+        targets = player_targets[weakest_player]
+        
         # Choose target based on strategic value and distance
         return min(targets, key=lambda t: (
             0 if isinstance(t, (Barracks, ArcheryRange, Stable)) else 1,  # Military buildings first
+            1 if isinstance(t, Building) else 2,  # Then other buildings
             self.calculate_distance(self.get_base_position(), t.position)
         ))
     
