@@ -229,6 +229,7 @@ class Action:
                     # Update unit's position by calling move_unit
                     self.move_unit(unit, free_tile[0], free_tile[1], current_time_called)
                     unit.task = "marching"
+                    return True
                 else:
                     self.debug_print("No free tile found around the resource.")
                     return False
@@ -236,8 +237,9 @@ class Action:
             if any(abs(unit.position[0] - tile[0]) < 0.1 and abs(unit.position[1] - tile[1]) < 0.1 for tile in adjacent_tiles):
                 unit.task = "gathering"
                 self._gather(unit, resource_type, current_time_called)
+                return True
 
-        elif resource_type == "Food" : #should be FOod
+        elif resource_type == "Food":
             unit.last_gathered = resource_type
             # Find the coordinates of the nearest resource of the specified type
             target = Map.find_nearest_resource(self.map, unit.position, resource_type, unit.player)
@@ -254,6 +256,7 @@ class Action:
                 # Update unit's position by calling move_unit
                 self.move_unit(unit, unit.target_resource[0], unit.target_resource[1], current_time_called)
                 unit.task = "marching"
+                return True
             else:
                 unit.task = "gathering"
                 if hasattr(unit, 'last_gather_time'):
@@ -263,6 +266,7 @@ class Action:
                 if hasattr(unit, 'last_move_time'):
                     del unit.last_move_time
                 self._gather(unit, resource_type, current_time_called)
+                return True
 
         else:
             self.debug_print("Invalid resource type.")

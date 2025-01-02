@@ -61,9 +61,11 @@ class IA:
         # Any remaining building villagers who couldn't build (due to lack of resources)
         # will be added to gathering villagers
         _, remaining_builders, _ = self.get_inactive_units()
+        remaining_builders = [v for v in remaining_builders if v not in building_villagers]
         gathering_villagers.extend(remaining_builders)
         
         # Then gather resources with remaining villagers
+        gathering_villagers = list(set(gathering_villagers))  # Ensure no duplicates
         self.gather_resources(gathering_villagers)
         
         defending_troops = self.assign_defenders(inactive_troops)
@@ -152,10 +154,12 @@ class IA:
                 break
 
     def gather_resources(self, villagers):
+        if villagers : self.debug_print([villager.name for villager in villagers])
         for villager in villagers:
             # Determine the resource type that the player has the least of
             resource_types = sorted(self.player.owned_resources, key=self.player.owned_resources.get)
             for resource_type in resource_types:
+                self.debug_print(f"{villager.name} : Gathering {resource_type}")
                 if Action(self.game_map).gather_resources(villager, resource_type, self.current_time_called):
                     break
 

@@ -68,8 +68,8 @@ class GameEngine:
         Building.place_starting_buildings(self.map)  # Place starting town centers on the map
         Unit.place_starting_units(self.players, self.map)  # Place starting units on the map
         self.debug_print = debug_print
-        self.ias = [IA(player, player.ai_profile, self.map, time.time()) for player in self.players]  # Instantiate IA for each player
-        #self.ias = [IA(players[0], players[0].ai_profile, self.map, time.time())]
+        #self.ias = [IA(player, player.ai_profile, self.map, time.time()) for player in self.players]  # Instantiate IA for each player
+        self.ias = [IA(players[0], players[0].ai_profile, self.map, time.time())]
         self.IA_used = False
 
 
@@ -85,8 +85,10 @@ class GameEngine:
         listener = Listener(on_press=press, on_release=release)
         listener.start()
 
-        for player in self.players:
-            player.ai = self.ias[player.id - 1]  # Assign the corresponding AI to the player
+        #for player in self.players:
+        #    player.ai = self.ias[player.id - 1]  # Assign the corresponding AI to the player
+
+        self.players[0].ai = self.ias[0]
 
         try:
             while not self.check_victory():
