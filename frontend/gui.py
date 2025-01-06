@@ -1,8 +1,8 @@
 import pygame
-from pygame.locals import HIDDEN
 from backend.Starter_File import GUI_size
 from backend.Building import TownCenter
 from frontend.Terrain import Map
+from backend.Units import Villager
 from pathlib import Path
 import os
 
@@ -22,10 +22,10 @@ pygame.init()
 
 # Initialize the display (required before using convert_alpha or convert)
 WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600 
-screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), HIDDEN)
+screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 
 # Define paths using pathlib
-BASE_PATH = Path(__file__).resolve().parent.parent  
+BASE_PATH = Path(__file__).resolve().parent.parent
 RESOURCES_PATH = BASE_PATH / "assets" / "resources"
 BUILDINGS_PATH = BASE_PATH / "assets" / "buildings"
 
@@ -33,11 +33,12 @@ assert RESOURCES_PATH.exists(), f"Resources directory {RESOURCES_PATH} does not 
 assert BUILDINGS_PATH.exists(), f"Buildings directory {BUILDINGS_PATH} does not exist."
 
 # Helper function to load images
+
 def load_image(file_path):
     try:
         return pygame.image.load(file_path).convert_alpha()
     except pygame.error as e:
-        print(f"Gui File : Error loading image {file_path}: {e}")
+        print(f"Error loading image {file_path}: {e}")
         return pygame.Surface((TILE_WIDTH, TILE_HEIGHT))  # Return a placeholder surface
 
 # Define resource images
@@ -122,6 +123,7 @@ building_images['ArcheryRange'] = pygame.transform.scale(
     load_image(BUILDINGS_PATH / "archeryrange.png"),
     (ArcheryRange_width, ArcheryRange_height)  # Taille ajustée pour couvrir 2x2 tuiles
 )
+
 '''
     "Camp": load_image(BUILDINGS_PATH / "camp.png"),
     "Farm": load_image(BUILDINGS_PATH / "farm.png"),
@@ -144,7 +146,20 @@ building_images['Farm'] = pygame.transform.scale(
     (Farm_width, Farm_height)  # Taille ajustée pour couvrir 2x2 tuiles
 )
 
+
+background_path = BASE_PATH / "assets" / "background"
+assert background_path.exists(), f"Buildings directory {background_path} does not exist."
+
+background_texture = load_image(background_path / "background.png")
+
+gold_image = load_image(RESOURCES_PATH / "gold.png")
+gold_image = pygame.transform.scale(gold_image, (TILE_WIDTH, TILE_HEIGHT))
+
+tree_image = load_image(RESOURCES_PATH / "tree_0.png")
+tree_image = pygame.transform.scale(tree_image, (TILE_WIDTH, TILE_HEIGHT))
+
 def draw_isometric_map(screen, game_map, offset_x, offset_y):
+    screen.blit(background_texture, (0, 0))
     for y in range(game_map.height):
         for x in range(game_map.width):
             tile = game_map.grid[y][x]
@@ -157,12 +172,16 @@ def draw_isometric_map(screen, game_map, offset_x, offset_y):
             screen.blit(soil_image, (screen_x, screen_y))
 
             # Ensuite, blit de la ressource si présente
+            if 0 <= screen_x < WINDOW_WIDTH and 0 <= screen_y < WINDOW_HEIGHT:
+                screen.blit(soil_image, (screen_x, screen_y))
+            
             if tile.resource:
                 resource_type = tile.resource.type
                 image = IMAGES[resource_type]
                 # Ajuster le screen_y pour l'image de la ressource
-                screen_y -= (image.get_height() - TILE_HEIGHT)  # Cette ligne peut être ajustée selon vos besoins
-                screen.blit(image, (screen_x, screen_y))
+                screen_y_adjusted = screen_y - (image.get_height() - TILE_HEIGHT)
+                screen.blit(image, (screen_x, screen_y_adjusted))
+            
             
             if tile.building and (x, y) == tile.building.position:  # Only draw the image of the construction at the original location to avoid duplicate drawings.
                 building_type = tile.building.name.replace(" ", "")
@@ -174,6 +193,18 @@ def draw_isometric_map(screen, game_map, offset_x, offset_y):
                 else:
                     print(f"Building type {building_type} not found in building_images dictionary.")
 
+
+
+def draw_borders(screen):
+    border_color = (0, 0, 0, 128)  # Couleur noire semi-transparente
+    pygame.draw.rect(screen, border_color, pygame.Rect(0, 0, WINDOW_WIDTH, 20))  # Bord supérieur
+    pygame.draw.rect(screen, border_color, pygame.Rect(0, WINDOW_HEIGHT - 20, WINDOW_WIDTH, 20))  # Bord inférieur
+    pygame.draw.rect(screen, border_color, pygame.Rect(0, 0, 20, WINDOW_HEIGHT))  # Bord gauche
+    pygame.draw.rect(screen, border_color, pygame.Rect(WINDOW_WIDTH - 20, 0, 20, WINDOW_HEIGHT))  # Bord droit
+
+    # Ajoutez cette fonction à la fin de votre fonction run_gui_mode ou draw_isometric_map
+
+
 def draw_mini_map(screen, game_map, offset_x, offset_y):
     mini_map_width = 200
     mini_map_height = 150
@@ -182,7 +213,7 @@ def draw_mini_map(screen, game_map, offset_x, offset_y):
 
     # Draw mini-map background
     pygame.draw.rect(screen, (50, 50, 50), (mini_map_x, mini_map_y, mini_map_width, mini_map_height))
-
+    
     # Define an additional offset to shift tiles further right
     tile_offset_x = 100  # Change this value to adjust how far right the tiles are displayed
 
@@ -213,9 +244,22 @@ def draw_mini_map(screen, game_map, offset_x, offset_y):
     view_rect_y = mini_map_y + ((offset_y / (game_map.height * TILE_HEIGHT)) * mini_map_height) - (game_map.height // 20)
     view_rect_width = (GUI_size.x / (game_map.width * TILE_WIDTH)) * mini_map_width
     view_rect_height = (GUI_size.y / (game_map.height * TILE_HEIGHT)) * mini_map_height
-
+    
     pygame.draw.rect(screen, (255, 0, 0), (view_rect_x, view_rect_y, view_rect_width, view_rect_height), 2)  # Red outline
 
+
+
+VILLAGER_IMAGE_PATH = BASE_PATH / "assets" / "units" / "villager" / "Villager.png"
+villager_image = load_image(VILLAGER_IMAGE_PATH)
+
+
+def draw_villagers(screen, villagers, offset_x, offset_y):
+    for villager in villagers:
+        villager_x, villager_y = villager.position  # Suppose que chaque villageois a un attribut `position`
+        iso_x, iso_y = cart_to_iso(villager_x, villager_y)
+        screen_x = (GUI_size.x // 2) + iso_x - offset_x
+        screen_y = (GUI_size.y // 4) + iso_y - offset_y - (villager_image.get_height() - TILE_HEIGHT)
+        screen.blit(villager_image, (screen_x, screen_y))
 
 
 def run_gui_mode(game_engine):
@@ -225,6 +269,8 @@ def run_gui_mode(game_engine):
     clock = pygame.time.Clock()
 
     offset_x, offset_y = 0, game_engine.map.height + TILE_HEIGHT
+    #villager_x, villager_y = 100, 100  # Example coordinates for the villager
+    background_texture = load_image(background_path / "background.png")
 
     running = True
     while running:
@@ -247,10 +293,14 @@ def run_gui_mode(game_engine):
         if keys[pygame.K_RIGHT] and offset_x < (game_engine.map.width * TILE_WIDTH - GUI_size.x)//2:
             offset_x += scroll_speed
 
+        
         screen.fill((0, 0, 0))
-
-        draw_isometric_map(screen, game_engine.map, offset_x, offset_y)
+        screen.blit(background_texture, (0, 0)) 
+        draw_isometric_map(screen, game_engine.map, offset_x, offset_y)   
+        draw_villagers(screen, game_engine.players[0].units, offset_x, offset_y)  # Hypothèse : tous les villageois sont dans `units`            
+        draw_borders(screen)   
         draw_mini_map(screen, game_engine.map, offset_x, offset_y)
+        # Adjust villager position based on offset
 
         pygame.display.flip()
         clock.tick(60)
