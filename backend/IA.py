@@ -92,8 +92,8 @@ class IA:
         remaining_troops = [t for t in inactive_troops if t not in defending_troops]
 
         
-
-        # Handle military units
+        self.defend(list(set(defending_troops)))
+        # Handle military units based on the selected mode
         if self.mode == "defensive":
             self.defend(list(set(remaining_troops)))
         
@@ -126,7 +126,7 @@ class IA:
         elif self.player.owned_resources["Food"] > 50:
             self.train_villagers()
 
-    def train_villagers(self): #TODO: ici c'est comme si les buildings avaient tous une taille de 1 il faut changer ca
+    def train_villagers(self):
         for building in self.player.buildings:
             if isinstance(building, TownCenter):
                 x, y = building.position
@@ -134,24 +134,26 @@ class IA:
                     for dy in range(-1, 2):
                         new_x = x + dx
                         new_y = y + dy
-                        if self.is_position_valid(new_x, new_y, 1, is_building=False):  # Assuming villager size is 1
+                        if self.is_position_valid(new_x, new_y, 1, is_building=False):
                             Unit.train_unit(Villager, new_x, new_y, self.player, building, self.game_map, self.current_time_called)
                             #self.debug_print(f"{self.player.name} : Training villager at ({new_x}, {new_y})")
                             return
 
     def train_troops(self):
-        for building in self.player.buildings:
+        buildings = [building for building in self.player.buildings if type(building).__name__ in ["Barracks", "ArcheryRange", "Stable"]]
+        random.shuffle(buildings)
+        
+        for building in buildings:
             if type(building).__name__ == "Barracks":
                 x, y = building.position
                 for dx in range(-1, 2):
                     for dy in range(-1, 2):
                         new_x = x + dx
                         new_y = y + dy
-                        if self.is_position_valid(new_x, new_y, 1, is_building=False):  # Assuming villager size is 1
+                        if self.is_position_valid(new_x, new_y, 1, is_building=False):
                             Unit.train_unit(Swordsman, new_x, new_y, self.player, building, self.game_map, self.current_time_called)
                             #self.debug_print(f"{self.player.name} : Training swordsman at ({new_x}, {new_y})")
                             return
-                break
             elif type(building).__name__ == "ArcheryRange":
                 x, y = building.position
                 for dx in range(-1, 2):
@@ -162,7 +164,6 @@ class IA:
                             Unit.train_unit(Archer, new_x, new_y, self.player, building, self.game_map, self.current_time_called)
                             #self.debug_print(f"{self.player.name} : Training archer at ({new_x}, {new_y})")
                             return
-                break
             elif type(building).__name__ == "Stable":
                 x, y = building.position
                 for dx in range(-1, 2):
@@ -173,7 +174,6 @@ class IA:
                             Unit.train_unit(Horseman, new_x, new_y, self.player, building, self.game_map, self.current_time_called)
                             #self.debug_print(f"{self.player.name} : Training horseman at ({new_x}, {new_y})")
                             return
-                break
 
     def gather_resources(self, villagers):
         #if villagers : self.debug_print(f"Farm : {[villager.name for villager in villagers]}")

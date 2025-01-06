@@ -20,7 +20,7 @@ from Actions import Action
 from Building import Building
 from IA import IA
 
-#Partit Gestion de Touche en Simultanée
+#Partie Gestion de Touche en Simultanée
 
 allowedKeys = [
     Key.up,
@@ -68,8 +68,8 @@ class GameEngine:
         Building.place_starting_buildings(self.map)  # Place starting town centers on the map
         Unit.place_starting_units(self.players, self.map)  # Place starting units on the map
         self.debug_print = debug_print
-        #self.ias = [IA(player, player.ai_profile, self.map, time.time()) for player in self.players]  # Instantiate IA for each player
-        self.ias = [IA(players[0], players[0].ai_profile, self.map, time.time())]
+        self.ias = [IA(player, player.ai_profile, self.map, time.time()) for player in self.players]  # Instantiate IA for each player
+        #self.ias = [IA(players[0], players[0].ai_profile, self.map, time.time())]
         self.IA_used = False
 
 
@@ -208,7 +208,7 @@ class GameEngine:
                     for unit in self.players[2].units:
                         action.go_battle(unit, self.players[1].buildings[-1], current_time)
                 #call the IA
-                if not self.is_paused and self.turn % 5 == 0 and self.IA_used == True: # Call the IA every 5 turns: change 0, 5, 10, 15, ... depending on lag
+                if not self.is_paused and self.turn % 10 == 0 and self.IA_used == True: # Call the IA every 5 turns: change 0, 5, 10, 15, ... depending on lag
                     for ia in self.ias:
                         ia.current_time_called = current_time  # Update the current time for each IA
                         ia.run()  # Run the AI logic for each player
@@ -237,7 +237,7 @@ class GameEngine:
                         for building in player.buildings:
                             if hasattr(building, 'training_queue') and building.training_queue != []:
                                 unit = building.training_queue[0]
-                                Unit.train_unit(unit, unit.spawn_position[0], unit.spawn_position[1], player, unit.spawn_building, self.map, current_time) #TODO: (2,2) are hardcoded
+                                Unit.train_unit(unit, unit.spawn_position[0], unit.spawn_position[1], player, unit.spawn_building, self.map, current_time)
 
                 # Clear the screen and display the new part of the map after moving
                 stdscr.clear()

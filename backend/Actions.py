@@ -39,7 +39,7 @@ class Action:
 
         # Calculate time passed since the last move
         current_time = current_time_called
-        time_since_last_move = min(0.2, current_time - unit.last_move_time) #TODO: hardcode 0.2
+        time_since_last_move = min(0.2, current_time - unit.last_move_time) # Limit the time to 0.2 seconds --> good for smooth movement
 
         # Calculate the maximum distance the unit can move
         distance_to_move = unit.speed * time_since_last_move
