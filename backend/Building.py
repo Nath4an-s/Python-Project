@@ -146,7 +146,7 @@ class Camp(Building):
         # Camp acts as a drop point for resources
         # Add the gathered resources to the player's inventory
         if resource_type in unit.carrying:
-            amount = unit.carrying[resource_type]
+            amount = int(unit.carrying[resource_type])
             unit.player.owned_resources[resource_type] += amount
             debug_print(f"Camp: {unit.player.name} dropped {amount} {resource_type}.")
         else:

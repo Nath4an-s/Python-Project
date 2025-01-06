@@ -173,7 +173,16 @@ class GameEngine:
                 elif key == ord('f'):
                     Building.kill_building(self.players[2], self.players[2].buildings[-1], self.map)
                 elif key == ord('y'):
-                    Building.kill_building(self.players[1], self.players[1].buildings[-1], self.map)
+                    Building.spawn_building(self.players[0], 60, 60, Barracks, self.map)
+                    Building.spawn_building(self.players[0], 63, 63, House, self.map)
+                    Unit.spawn_unit(Swordsman, 59, 59, self.players[0], self.map)
+                    Unit.spawn_unit(Swordsman, 59, 59, self.players[0], self.map)
+                    Unit.spawn_unit(Swordsman, 59, 59, self.players[0], self.map)
+                    Unit.spawn_unit(Swordsman, 59, 59, self.players[0], self.map)
+                    Unit.spawn_unit(Swordsman, 59, 59, self.players[0], self.map)
+                    self.players[0].owned_resources["Food"] = 1000
+                    self.players[0].owned_resources["Wood"] = 1000
+                    self.players[0].owned_resources["Gold"] = 1000
                 elif key == ord('p'):
                     self.is_paused = not self.is_paused
                     if self.is_paused:
@@ -237,8 +246,8 @@ class GameEngine:
 
                 self.turn += 1
 
-            winner = [p for p in self.players if p.units or p.buildings]
-            self.debug_print(f"Player {winner[0].name} wins the game!")
+            active_players = [p for p in self.players if p.units or p.buildings]
+            self.debug_print(f"Player {active_players[0].name} wins the game!")
 
         except KeyboardInterrupt:
             self.debug_print("Game interrupted. Exiting...")

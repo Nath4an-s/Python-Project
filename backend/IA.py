@@ -18,6 +18,8 @@ class IA:
         self.attack_cooldown = 30  # Minimum time between strategic attacks
         self.last_attack_time = 0
         self.decided_builds = [] # Store the decided building positions to avoid overlap --> stored for whole game
+        self.defending_units = []  # Track units assigned to defense
+        self.target_player = None  # Targeted player for attacks
 
     def get_inactive_units(self):
         inactive_villagers = []
@@ -85,7 +87,11 @@ class IA:
         self.gather_resources(gathering_villagers)
         
         defending_troops = self.assign_defenders(inactive_troops)
+        self.defending_units = defending_troops 
+
         remaining_troops = [t for t in inactive_troops if t not in defending_troops]
+
+        
 
         # Handle military units
         if self.mode == "defensive":
@@ -281,34 +287,22 @@ class IA:
 
 # ATTACK STRATEGY    
     def strategic_attack(self, troops):
-        current_time = self.current_time_called
         if not troops or len(troops) < self.priorities["attack_threshold"]:
             return
-            
-        if current_time - self.last_attack_time < self.attack_cooldown:
+
+        if self.target_player is None or (self.target_player.units == [] and self.target_player.buildings == []):
+            self.target_player = self.choose_best_target()
+
+        if not self.target_player:
             return
 
-        # Find strategic targets (enemy resources, military buildings, etc.)
-        targets = self.find_strategic_targets()
+        targets = [t for t in self.find_strategic_targets() if t.player == self.target_player]
         if targets:
-            self.last_attack_time = current_time
-            target = self.choose_best_target(targets)
-            
-            # Check if the enemy is very weak
-            weakest_player = target.player
-            if len([u for u in weakest_player.units if isinstance(u, Villager)]) < 3 and len(weakest_player.buildings) < 3:
-                # Attack with all available troops
-                for troop in self.player.units:
-                    if isinstance(troop, (Swordsman, Archer, Horseman)):
-                        troop.task = None  # Clear any existing task
-                        Action(self.game_map).go_battle(troop, target, self.current_time_called)
-                        self.debug_print(f"{self.player.name} : Attacking {target.name} with {troop.name} at {target.position}")
-            else:
-                # Attack with the given troops
-                for troop in troops:
-                    troop.task = None  # Clear any existing task
-                    Action(self.game_map).go_battle(troop, target, self.current_time_called)
-                    self.debug_print(f"{self.player.name} : Attacking {target.name} with {troop.name} at {target.position}")
+            target = self.choose_best_target_unit(self.target_player, targets)
+            for troop in troops:
+                troop.task = None  # Clear any existing task
+                Action(self.game_map).go_battle(troop, target, self.current_time_called)
+                self.debug_print(f"{self.player.name} : Attacking {target.name} with {troop.name} at {target.position}")
 
     def find_strategic_targets(self):
         targets = []
@@ -324,29 +318,18 @@ class IA:
         
         return targets
 
-    def choose_best_target(self, targets):
-        # Group targets by player
-        player_targets = {}
-        for target in targets:
-            if target.player not in player_targets:
-                player_targets[target.player] = []
-            player_targets[target.player].append(target)
-        
-        # Find the weakest player based on the number of villagers and buildings
-        weakest_player = min(player_targets.keys(), key=lambda p: (
-            len([u for u in p.units if isinstance(u, Villager)]),
-            len(p.buildings)
-        ))
-        
-        # Filter targets to only include those from the weakest player
-        targets = player_targets[weakest_player]
-        
-        # Choose target based on strategic value and distance
-        return min(targets, key=lambda t: (
-            0 if isinstance(t, (Barracks, ArcheryRange, Stable)) else 1,  # Military buildings first
-            1 if isinstance(t, Building) else 2,  # Then other buildings
-            self.calculate_distance(self.get_base_position(), t.position)
-        ))
+    def choose_best_target(self):
+        return min(
+            (p for p in self.players if p != self.player and (p.units or p.buildings)),
+            key=lambda p: len([u for u in p.units if isinstance(u, Villager)]) + len(p.buildings),
+            default=None
+        )
+    
+    def choose_best_target_unit(self, target_player, targets):
+        return min(
+            targets,
+            key=lambda t: self.calculate_distance(self.get_base_position(), t.position)
+        )
     
     def calculate_distance(self, pos1, pos2):
         return ((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2) ** 0.5
@@ -372,15 +355,16 @@ class IA:
 
 # DEFENSE STRATEGY
     def assign_defenders(self, troops):
-        defensive_troops = []
-        if len(troops) > self.priorities["min_defenders"]:
-            # Assign some troops to defend important buildings
-            important_buildings = [b for b in self.player.buildings if isinstance(b, (TownCenter, House))]
-            for building in important_buildings:
-                if troops:
-                    defender = troops.pop()
-                    self.defend_position(defender, building.position)
-                    defensive_troops.append(defender)
+        defensive_troops = list(self.defending_units)  # Maintain existing defenders
+        needed_defenders = self.priorities["min_defenders"] - len(defensive_troops)
+
+        if needed_defenders > 0:
+            defensive_troops.extend(troops[:needed_defenders])
+
+        important_buildings = [b for b in self.player.buildings if isinstance(b, (TownCenter, Camp))]
+        for building, defender in zip(important_buildings, defensive_troops):
+            self.defend_position(defender, building.position)
+
         return defensive_troops
 
     def defend_position(self, unit, position):

@@ -368,6 +368,9 @@ class Action:
 
     
     def _attack(self, unit, enemy_unit, current_time_called):
+        if not enemy_unit or enemy_unit.hp <= 0:
+            unit.task = None
+            return
         if abs(unit.position[0] - enemy_unit.position[0]) < unit.range and abs(unit.position[1] - enemy_unit.position[1]) < unit.range or isinstance(enemy_unit, Building):
             if not hasattr(unit, 'last_hit_time'):
                 unit.last_hit_time = 0
