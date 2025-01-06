@@ -134,7 +134,9 @@ class GameEngine:
                         #action.move_unit(unit, 50, 60, current_time)
                     action.move_unit(self.players[2].units[0], 2, 2, current_time) # Move the first unit to (0, 0)
                 elif key == ord('g'):  # When 'g' is pressed, test for the functions
-                    Unit.kill_unit(self.players[2], self.players[2].units[1], self.map)
+                    Unit.kill_unit(self.players[2], self.players[2].units[0], self.map)
+                elif key == ord('b'):  # When 'b' is pressed, test for the functions
+                    Unit.kill_unit(self.players[1], self.players[1].units[0], self.map)
                 elif key == ord('\t'):  # TAB key
                     generate_html_report(self.players)
                     self.debug_print(f"HTML report generated at turn {self.turn}")
@@ -170,6 +172,8 @@ class GameEngine:
                     action.move_unit(self.players[1].units[1],2,2, current_time)
                 elif key == ord('f'):
                     Building.kill_building(self.players[2], self.players[2].buildings[-1], self.map)
+                elif key == ord('y'):
+                    Building.kill_building(self.players[1], self.players[1].buildings[-1], self.map)
                 elif key == ord('p'):
                     self.is_paused = not self.is_paused
                     if self.is_paused:
@@ -233,11 +237,14 @@ class GameEngine:
 
                 self.turn += 1
 
+            winner = [p for p in self.players if p.units or p.buildings]
+            self.debug_print(f"Player {winner[0].name} wins the game!")
+
         except KeyboardInterrupt:
             self.debug_print("Game interrupted. Exiting...")
 
     def check_victory(self):
-        active_players = [p for p in self.players if p.has_units()]
+        active_players = [p for p in self.players if p.units or p.buildings] # Check if the player has units and buildings
         return len(active_players) == 1 # Check if there is only one player left
 
     def pause_game(self):
