@@ -196,15 +196,15 @@ def draw_isometric_map(screen, game_map, offset_x, offset_y):
                     screen.blit(image, (screen_x, screen_y_adjusted))
             
             
-            if tile.building and (x, y) == tile.building.position:  # Only draw the image of the construction at the original location to avoid duplicate drawings.
-                building_type = tile.building.name.replace(" ", "")
-                if building_type in building_images:
-                    building_image = building_images[building_type]
-                    # Adjust y coordinates for precise alignment
-                    building_adjusted_y = screen_y - (building_image.get_height() - TILE_HEIGHT)
-                    screen.blit(building_image, (screen_x, building_adjusted_y))
-                else:
-                    print(f"Building type {building_type} not found in building_images dictionary.")
+            if tile.building and (x - tile.building.size + 1, y - tile.building.size + 1) == tile.building.position:  # Only draw the image of the construction at the original location to avoid duplicate drawings.
+                    building_type = tile.building.name.replace(" ", "")
+                    if building_type in building_images:
+                        building_image = building_images[building_type]
+                        # Adjust y coordinates for precise alignment
+                        building_adjusted_y = screen_y - (building_image.get_height() - TILE_HEIGHT)
+                        screen.blit(building_image, (screen_x, building_adjusted_y))
+                    else:
+                        print(f"Building type {building_type} not found in building_images dictionary.")
 
 
 
@@ -270,8 +270,8 @@ def draw_villagers(screen, villagers, offset_x, offset_y):
     for villager in villagers:
         villager_x, villager_y = villager.position  # Suppose que chaque villageois a un attribut `position`
         iso_x, iso_y = cart_to_iso(villager_x, villager_y)
-        screen_x = (GUI_size.x // 2) + iso_x - offset_x
-        screen_y = (GUI_size.y // 4) + iso_y - offset_y - (villager_image.get_height() - TILE_HEIGHT)
+        screen_x = (GUI_size.x // 2) + iso_x - offset_x + TILE_WIDTH // 4 * 3
+        screen_y = (GUI_size.y // 4) + iso_y - offset_y - (villager_image.get_height())
         screen.blit(villager_image, (screen_x, screen_y))
 
 
