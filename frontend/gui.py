@@ -274,6 +274,17 @@ def draw_villagers(screen, villagers, offset_x, offset_y):
         screen_y = (GUI_size.y // 4) + iso_y - offset_y - (villager_image.get_height())
         screen.blit(villager_image, (screen_x, screen_y))
 
+SWORDMAN_IMAGE_PATH = BASE_PATH / "assets" / "units" / "swordman" / "Halbadierattack017.png"
+swordman_image = load_image(SWORDMAN_IMAGE_PATH)
+
+def draw_swordman(screen, swordmans, offset_x, offset_y):
+    for swordman in swordmans:
+        swordman_x, swordman_y = swordman.position  # Suppose que chaque villageois a un attribut `position`
+        iso_x, iso_y = cart_to_iso( swordman_x, swordman_y)
+        screen_x = (GUI_size.x // 2) + iso_x - offset_x + TILE_WIDTH // 4 * 3
+        screen_y = (GUI_size.y // 4) + iso_y - offset_y - (swordman_image.get_height())
+        screen.blit(swordman_image, (screen_x, screen_y))        
+
 
 
 
@@ -357,6 +368,8 @@ def run_gui_mode(game_engine):
         draw_isometric_map(screen, game_engine.map, offset_x, offset_y)   
         for player in game_engine.players:
             draw_villagers(screen, player.units, offset_x, offset_y)
+        for swordsman in game_engine
+            draw_swordman(screen, swordsman, offset_x, offset_y)
         draw_borders(screen)   
         draw_mini_map(screen, game_engine.map, offset_x, offset_y)
         
