@@ -1,50 +1,60 @@
-# Projet Python
+# Projet Python : Alge of EmpAlres
 
-Commandes du Jeu
+![Bannière du projet](https://via.placeholder.com/1200x400.png?text=Alge+of+EmpAlres+Banner)
 
-Le jeu permet de tester différentes fonctionnalités et interactions avec les unités et les ressources en utilisant des commandes clavier.
+## 📜 Introduction
 
-Voici la liste des touches disponibles et leurs actions associées.
+Ce projet consiste à implémenter un moteur de jeu de stratégie en temps réel (RTS) simplifié, inspiré par *Age of Empires*. L'objectif est de créer un environnement où des intelligences artificielles (IA) s'affrontent dans des batailles stratégiques. Le projet se concentre sur le développement du moteur de jeu et la création de profils d'IA variés (défensifs, offensifs, etc.).
 
-Commandes
+Le jeu se déroule sur une carte générée aléatoirement, avec des ressources limitées et des unités spécifiques. Les joueurs (IA) doivent gérer leurs ressources, construire des bâtiments, et entraîner des unités pour vaincre leurs adversaires.
 
-h : Déplace la première unité du joueur 2 à la position (2, 2).
+## 🎯 Objectifs du Projet
 
-g : Tue la deuxième unité du joueur 2.
+- **Implémenter un moteur de jeu RTS simplifié**.
+- **Développer des profils d'IA** pour des stratégies variées.
+- **Générer des cartes aléatoires** avec des ressources stratégiquement placées.
+- **Visualiser le jeu** en mode terminal et en 2.5D (isométrique).
+- **Permettre la sauvegarde et le chargement** des parties.
 
-TAB : Génère un rapport HTML du jeu et met en pause le jeu si ce n'est pas déjà fait.
+## 🛠️ Fonctionnalités
 
-j : Construis un bâtiment de type "Farm" pour le joueur 2 à la position (1, 1).
+### 🗺️ Génération de Carte
+- **Carte aléatoire** de taille minimale 120x120.
+- **Deux types de cartes** : ressources dispersées ou concentrées au centre.
 
-r : Fait rassembler des ressources (Food) par la troisième unité du joueur 2.
+### 🏗️ Bâtiments et Unités
+- **Bâtiments** : Town Centre, House, Camp, Farm, Barracks, Stable, Archery Range, Keep.
+- **Unités** : Villager, Swordsman, Horseman, Archer.
 
-e : Déplace la deuxième unité du joueur 1 à la position (4, 2).
+### 🤖 Intelligence Artificielle
+- **Profils d'IA** : Défensif, Offensif, Équilibré.
+- **Stratégies** : Gestion des ressources, attaques coordonnées, défense.
 
-k : Fait rassembler des ressources (Wood) par la troisième unité du joueur 2.
+### 🎮 Visualisation
+- **Mode Terminal** : Affichage simplifié pour suivre le déroulement du jeu.
+- **Mode 2.5D** : Vue isométrique avec des sprites pour une expérience immersive.
 
-o : Affiche la quantité de ressources présentes sur la tuile (0, 0) et le nombre de tuiles avec de l'Or.
+### 💾 Sauvegarde et Chargement
+- **Sauvegarde rapide** (F11) et **chargement rapide** (F12).
+- **Gestion de fichiers** : Nombre illimité de sauvegardes.
 
-l : Affiche la quantité de ressources présentes sur la tuile (1, 0) et le nombre de tuiles avec de l'Or.
+## 📸 Captures d'Écran
 
-m : Affiche la quantité de ressources présentes sur la tuile (1, 1) et le nombre de tuiles avec de l'Or.
+### Mode Terminal
+![Mode Terminal](https://via.placeholder.com/600x400.png?text=Terminal+View)
 
-a : Déclenche un combat entre la première unité du joueur 2 et la deuxième unité du joueur 1.
+### Mode 2.5D
+![Mode 2.5D](https://via.placeholder.com/600x400.png?text=2.5D+View)
 
-b : Déclenche un combat entre la deuxième unité du joueur 1 et la première unité du joueur 2.
+## 📊 Schémas
 
-f : Supprime le dernier bâtiment du joueur 2.
-
-p : Met le jeu en pause ou le reprend.
-
-c : Entraîne une unité de type "Swordsman" pour le joueur 2 à la position (2, 2).
-
-u : Réduit les ressources de type "Food" du joueur 2 de 19950.
-
-v : Sauvegarde la partie dans le fichier spécifié (par défaut : game_save.dat).
-
-x : Charge la partie à partir du fichier spécifié (par défaut : game_save.dat).
-
-
-Video utile : 
-
-https://preview.redd.it/hc4xiqx9xma51.gif?width=1600&format=mp4s=1eda81b4c69634a4c15641a7d02a93b9932f1dda
+### Architecture du Moteur de Jeu
+```mermaid
+graph TD
+    A[Game Engine] --> B[Map Generation]
+    A --> C[AI Logic]
+    A --> D[Unit Management]
+    A --> E[Resource Management]
+    A --> F[Visualization]
+    F --> G[Terminal View]
+    F --> H[2.5D View]
