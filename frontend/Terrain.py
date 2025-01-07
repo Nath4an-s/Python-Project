@@ -311,7 +311,8 @@ class Resource:
 # Wood Resource Class
 class Wood(Resource):
     def __init__(self):
-        super().__init__(resource_type="Wood", amount=100, symbol="W")  # 100 per tile (tree)
+        self.variant = random.randint(0, 2)  # Randomly select tree variant
+        super().__init__(resource_type="Wood", amount=100, symbol="W")
 
 
 # Food Resource Class

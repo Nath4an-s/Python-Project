@@ -6,7 +6,7 @@ from frontend.Terrain import Map
 from backend.Units import Villager
 from pathlib import Path
 import os
-import threading
+import random
 
 # Define isometric tile dimensions
 TILE_WIDTH = 64
@@ -43,9 +43,11 @@ def load_image(file_path):
         print(f"Error loading image {file_path}: {e}")
         return pygame.Surface((TILE_WIDTH, TILE_HEIGHT))  # Return a placeholder surface
 
-# Define resource images
+
+
+
 IMAGES = {
-    "Wood": load_image(RESOURCES_PATH / "tree_0.png"),
+    "Wood": [load_image(RESOURCES_PATH / f"tree_{i}.png") for i in range(6)],
     "Gold": load_image(RESOURCES_PATH / "gold.png"),
     "Soil": load_image(RESOURCES_PATH / "soil.png"),
     # Add more resources as needed
@@ -62,6 +64,7 @@ building_images = {
     "Camp": load_image(BUILDINGS_PATH / "camp.png"),
     "Farm": load_image(BUILDINGS_PATH / "farm.png"),
     "keep": load_image(BUILDINGS_PATH / "keep.png"),
+    #"InConstruction": load_image(BUILDINGS_PATH / "inconstruction.png"),
 }
 
 # Resize building images
@@ -159,9 +162,11 @@ gold_image = pygame.transform.scale(gold_image, (TILE_WIDTH, TILE_HEIGHT))
 
 tree_image = load_image(RESOURCES_PATH / "tree_0.png")
 tree_image = pygame.transform.scale(tree_image, (TILE_WIDTH, TILE_HEIGHT))
+trees_drawn = {}  # Dictionary to store tree variants for each position
 
 def draw_isometric_map(screen, game_map, offset_x, offset_y):
     screen.blit(background_texture, (0, 0))
+    
     for y in range(game_map.height):
         for x in range(game_map.width):
             tile = game_map.grid[y][x]
@@ -176,24 +181,30 @@ def draw_isometric_map(screen, game_map, offset_x, offset_y):
             # Ensuite, blit de la ressource si présente
             if 0 <= screen_x < WINDOW_WIDTH and 0 <= screen_y < WINDOW_HEIGHT:
                 screen.blit(soil_image, (screen_x, screen_y))
+                
+                if tile.resource:
+                    resource_type = tile.resource.type
+                    if resource_type == "Wood":
+                        # Get or create tree variant for this position
+                        pos = (x, y)
+                        if pos not in trees_drawn:
+                            trees_drawn[pos] = random.randint(0, 5)
+                        image = IMAGES["Wood"][trees_drawn[pos]]
+                    else:
+                        image = IMAGES[resource_type]
+                    screen_y_adjusted = screen_y - (image.get_height() - TILE_HEIGHT)
+                    screen.blit(image, (screen_x, screen_y_adjusted))
             
-            if tile.resource:
-                resource_type = tile.resource.type
-                image = IMAGES[resource_type]
-                # Ajuster le screen_y pour l'image de la ressource
-                screen_y_adjusted = screen_y - (image.get_height() - TILE_HEIGHT)
-                screen.blit(image, (screen_x, screen_y_adjusted))
             
-            
-            if tile.building and (x, y) == tile.building.position:  # Only draw the image of the construction at the original location to avoid duplicate drawings.
-                building_type = tile.building.name.replace(" ", "")
-                if building_type in building_images:
-                    building_image = building_images[building_type]
-                    # Adjust y coordinates for precise alignment
-                    building_adjusted_y = screen_y - (building_image.get_height() - TILE_HEIGHT)
-                    screen.blit(building_image, (screen_x, building_adjusted_y))
-                else:
-                    print(f"Building type {building_type} not found in building_images dictionary.")
+            if tile.building and (x - tile.building.size + 1, y - tile.building.size + 1) == tile.building.position:  # Only draw the image of the construction at the original location to avoid duplicate drawings.
+                    building_type = tile.building.name.replace(" ", "")
+                    if building_type in building_images:
+                        building_image = building_images[building_type]
+                        # Adjust y coordinates for precise alignment
+                        building_adjusted_y = screen_y - (building_image.get_height() - TILE_HEIGHT)
+                        screen.blit(building_image, (screen_x, building_adjusted_y))
+                    else:
+                        print(f"Building type {building_type} not found in building_images dictionary.")
 
 
 
@@ -259,8 +270,8 @@ def draw_villagers(screen, villagers, offset_x, offset_y):
     for villager in villagers:
         villager_x, villager_y = villager.position  # Suppose que chaque villageois a un attribut `position`
         iso_x, iso_y = cart_to_iso(villager_x, villager_y)
-        screen_x = (GUI_size.x // 2) + iso_x - offset_x
-        screen_y = (GUI_size.y // 4) + iso_y - offset_y - (villager_image.get_height() - TILE_HEIGHT)
+        screen_x = (GUI_size.x // 2) + iso_x - offset_x + TILE_WIDTH // 4 * 3
+        screen_y = (GUI_size.y // 4) + iso_y - offset_y - (villager_image.get_height())
         screen.blit(villager_image, (screen_x, screen_y))
 
 
