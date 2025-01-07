@@ -6,6 +6,7 @@ from frontend.Terrain import Map
 from backend.Units import Villager
 from pathlib import Path
 import os
+import threading
 
 # Define isometric tile dimensions
 TILE_WIDTH = 64
@@ -263,15 +264,58 @@ def draw_villagers(screen, villagers, offset_x, offset_y):
         screen.blit(villager_image, (screen_x, screen_y))
 
 
-def run_gui_mode(game_engine):
+
+
+def display_player_resources(screen, players):
+    font = pygame.font.Font(None, 32)  # Police plus grande pour le texte
+    x_start = 10  # Position X de départ pour le texte
+    y_start = 10  # Position Y de départ pour le premier joueur
+    line_height = 35  # Hauteur entre chaque ligne de texte
+    box_padding = 10  # Padding autour du texte dans chaque boîte
+    box_color = (50, 50, 50, 200)  # Fond semi-transparent pour la boîte (RGBA)
+    text_color = (255, 255, 255)  # Blanc pour le texte
+
+    for i, player in enumerate(players):
+        y_position = y_start + i * (line_height * 5)  # Espacement vertical entre les blocs de joueurs
+        
+        # Créer le texte des ressources
+        resources_text = f"Player {player.id} ({player.name})"
+        resources_surface = font.render(resources_text, True, text_color)
+        
+        # Calculez la taille de la boîte en fonction du contenu
+        max_text_width = resources_surface.get_width()
+        resource_lines = [
+            f"Wood: {player.owned_resources['Wood']}",
+            f"Food: {player.owned_resources['Food']}",
+            f"Gold: {player.owned_resources['Gold']}",
+        ]
+        resource_surfaces = [font.render(line, True, text_color) for line in resource_lines]
+        for surface in resource_surfaces:
+            max_text_width = max(max_text_width, surface.get_width())
+        box_width = max_text_width + 2 * box_padding
+        box_height = (len(resource_lines) + 1) * line_height + box_padding
+
+        # Dessiner la boîte semi-transparente
+        box_rect = pygame.Rect(x_start, y_position, box_width, box_height)
+        box_surface = pygame.Surface((box_rect.width, box_rect.height), pygame.SRCALPHA)
+        box_surface.fill(box_color)
+        screen.blit(box_surface, box_rect.topleft)
+
+        # Dessiner le texte à l'intérieur de la boîte
+        screen.blit(resources_surface, (x_start + box_padding, y_position + box_padding))
+        for j, resource_surface in enumerate(resource_surfaces):
+            screen.blit(resource_surface, (x_start + box_padding, y_position + box_padding + (j + 1) * line_height))
+
+def run_gui_mode(game_engine): 
     pygame.init()
     
     screen = pygame.display.set_mode((GUI_size.x, GUI_size.y))
     clock = pygame.time.Clock()
 
     offset_x, offset_y = 0, game_engine.map.height + TILE_HEIGHT
-    #villager_x, villager_y = 100, 100  # Example coordinates for the villager
     background_texture = load_image(background_path / "background.png")
+    
+    show_resources = False  # Variable pour activer/désactiver l'affichage des ressources
 
     running = True
     while running:
@@ -281,29 +325,35 @@ def run_gui_mode(game_engine):
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_F12:
                     running = False
+                elif event.key == pygame.K_F2:  # Toggle resources display
+                    show_resources = not show_resources
 
         keys = pygame.key.get_pressed()
         scroll_speed = 20
 
-        if keys[pygame.K_UP] and offset_y > game_engine.map.height + TILE_HEIGHT:
+        if keys[pygame.K_UP] and offset_y > game_engine.map.height - TILE_HEIGHT:
             offset_y -= scroll_speed
-        if keys[pygame.K_DOWN] and offset_y < (game_engine.map.height * (TILE_HEIGHT+1) - GUI_size.y + TILE_HEIGHT):
+        if keys[pygame.K_DOWN] and offset_y < ((game_engine.map.height + 1) * (TILE_HEIGHT+1) - GUI_size.y):
             offset_y += scroll_speed
-        if keys[pygame.K_LEFT] and offset_x > (-game_engine.map.width * TILE_WIDTH + GUI_size.x)//2:
+        if keys[pygame.K_LEFT] and offset_x > (-(game_engine.map.width + 1) * TILE_WIDTH + GUI_size.x)//2:
             offset_x -= scroll_speed
-        if keys[pygame.K_RIGHT] and offset_x < (game_engine.map.width * TILE_WIDTH - GUI_size.x)//2:
+        if keys[pygame.K_RIGHT] and offset_x < ((game_engine.map.width - 1) * TILE_WIDTH)//2:
             offset_x += scroll_speed
 
-        
+        # Affichage de la carte et des entités
         screen.fill((0, 0, 0))
         screen.blit(background_texture, (0, 0)) 
         draw_isometric_map(screen, game_engine.map, offset_x, offset_y)   
-        draw_villagers(screen, game_engine.players[0].units, offset_x, offset_y)  # Hypothèse : tous les villageois sont dans `units`            
+        for player in game_engine.players:
+            draw_villagers(screen, player.units, offset_x, offset_y)
         draw_borders(screen)   
         draw_mini_map(screen, game_engine.map, offset_x, offset_y)
-        # Adjust villager position based on offset
+        
+        # Affichage des ressources si nécessaire
+        if show_resources:
+            display_player_resources(screen, game_engine.players)
 
         pygame.display.flip()
         clock.tick(60)
 
-    pygame.quit()   
+    pygame.quit()
