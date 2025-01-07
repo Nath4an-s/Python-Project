@@ -190,10 +190,13 @@ def draw_isometric_map(screen, game_map, offset_x, offset_y):
                         if pos not in trees_drawn:
                             trees_drawn[pos] = random.randint(0, 5)
                         image = IMAGES["Wood"][trees_drawn[pos]]
+                        screen_y_adjusted = screen_y - (image.get_height() - TILE_HEIGHT)
+                        screen.blit(image, (screen_x + TILE_WIDTH//2, screen_y_adjusted))
                     else:
-                        image = IMAGES[resource_type]
-                    screen_y_adjusted = screen_y - (image.get_height() - TILE_HEIGHT)
-                    screen.blit(image, (screen_x, screen_y_adjusted))
+                        #image = IMAGES[resource_type]
+                        #screen_y_adjusted = screen_y - (IMAGES["Gold"].get_height() - TILE_HEIGHT//2)
+                        screen_y_adjusted = screen_y - (IMAGES["Gold"].get_height() - 2*TILE_HEIGHT)
+                        screen.blit(gold_image, (screen_x + TILE_WIDTH//2, screen_y_adjusted))
             
             
             if tile.building and (x - tile.building.size + 1, y - tile.building.size + 1) == tile.building.position:  # Only draw the image of the construction at the original location to avoid duplicate drawings.
@@ -266,13 +269,44 @@ VILLAGER_IMAGE_PATH = BASE_PATH / "assets" / "units" / "villager" / "Villager.pn
 villager_image = load_image(VILLAGER_IMAGE_PATH)
 
 
-def draw_villagers(screen, villagers, offset_x, offset_y):
-    for villager in villagers:
-        villager_x, villager_y = villager.position  # Suppose que chaque villageois a un attribut `position`
-        iso_x, iso_y = cart_to_iso(villager_x, villager_y)
-        screen_x = (GUI_size.x // 2) + iso_x - offset_x + TILE_WIDTH // 4 * 3
-        screen_y = (GUI_size.y // 4) + iso_y - offset_y - (villager_image.get_height())
-        screen.blit(villager_image, (screen_x, screen_y))
+def is_behind_building(villager, building):
+    villager_x, villager_y = villager.position
+    building_x, building_y = building.position
+    building_name = building.name  # Utilisez l'attribut name pour identifier le type de bâtiment
+
+    # Définir les types de bâtiments qui bloquent la vue
+    blocking_buildings = {'Town Center', 'Barracks', 'Stables'}  # Assurez-vous que les noms correspondent à ceux définis dans les instances de Building
+
+    # Vérifiez si le villageois est directement derrière le bâtiment en coordonnée y
+    if building_name in blocking_buildings and villager_y > building_y:
+        return True
+
+    return False
+
+def draw_villagers(screen, villagers, buildings, offset_x, offset_y, villager_image):
+    for villager in sorted(villagers, key=lambda v: v.position[1]):  # Rendu par profondeur
+        villager_x, villager_y = villager.position
+        iso_villager_x, iso_villager_y = cart_to_iso(villager_x, villager_y)
+        screen_x = (GUI_size.x // 2) + iso_villager_x - offset_x
+        screen_y = (GUI_size.y // 4) + iso_villager_y - offset_y - villager_image.get_height()
+
+        # Parcourir les bâtiments pour déterminer la visibilité
+        villager_visible = True
+        for building in buildings:
+            building_x, building_y = building.position
+            building_end_y = building_y + building.size  # Assumons size est la hauteur du bâtiment
+            if building_y < villager_y < building_end_y:
+                villager_visible = False
+                break
+
+        if villager_visible:
+            screen.blit(villager_image, (screen_x, screen_y))
+
+# Assurez-vous de passer l'image correcte et d'ajuster les arguments nécessaires en fonction de votre code actuel.
+
+
+
+
 
 SWORDMAN_IMAGE_PATH = BASE_PATH / "assets" / "units" / "swordman" / "Halbadierattack017.png"
 swordman_image = load_image(SWORDMAN_IMAGE_PATH)
@@ -352,7 +386,6 @@ def run_gui_mode(game_engine):
 
         keys = pygame.key.get_pressed()
         scroll_speed = 20
-
         if keys[pygame.K_UP] and offset_y > game_engine.map.height - TILE_HEIGHT:
             offset_y -= scroll_speed
         if keys[pygame.K_DOWN] and offset_y < ((game_engine.map.height + 1) * (TILE_HEIGHT+1) - GUI_size.y):
@@ -367,12 +400,15 @@ def run_gui_mode(game_engine):
         screen.blit(background_texture, (0, 0)) 
         draw_isometric_map(screen, game_engine.map, offset_x, offset_y)   
         for player in game_engine.players:
-            draw_villagers(screen, player.units, offset_x, offset_y)
-        for swordsman in game_engine
+            draw_villagers(screen, player.units, player.buildings, offset_x, offset_y, villager_image) 
+
+
+        """
+        for swordsman in game_engine:
             draw_swordman(screen, swordsman, offset_x, offset_y)
         draw_borders(screen)   
         draw_mini_map(screen, game_engine.map, offset_x, offset_y)
-        
+        """
         # Affichage des ressources si nécessaire
         if show_resources:
             display_player_resources(screen, game_engine.players)

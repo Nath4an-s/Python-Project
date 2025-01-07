@@ -21,7 +21,7 @@ class Building:
         self.position = position  # Store the position of the TownCenter
         self.symbol = 'B'
         self.nb_workers = None # Number of workers for the building --> impact building time
-
+        
     def __str__(self):
         return self.symbol  # Ensure the building is represented by just the symbol
     
