@@ -190,10 +190,13 @@ def draw_isometric_map(screen, game_map, offset_x, offset_y):
                         if pos not in trees_drawn:
                             trees_drawn[pos] = random.randint(0, 5)
                         image = IMAGES["Wood"][trees_drawn[pos]]
+                        screen_y_adjusted = screen_y - (image.get_height() - TILE_HEIGHT)
+                        screen.blit(image, (screen_x + TILE_WIDTH//2, screen_y_adjusted))
                     else:
-                        image = IMAGES[resource_type]
-                    screen_y_adjusted = screen_y - (image.get_height() - TILE_HEIGHT)
-                    screen.blit(image, (screen_x, screen_y_adjusted))
+                        #image = IMAGES[resource_type]
+                        #screen_y_adjusted = screen_y - (IMAGES["Gold"].get_height() - TILE_HEIGHT//2)
+                        screen_y_adjusted = screen_y - (IMAGES["Gold"].get_height() - 2*TILE_HEIGHT)
+                        screen.blit(gold_image, (screen_x + TILE_WIDTH//2, screen_y_adjusted))
             
             
             if tile.building and (x - tile.building.size + 1, y - tile.building.size + 1) == tile.building.position:  # Only draw the image of the construction at the original location to avoid duplicate drawings.
@@ -368,11 +371,12 @@ def run_gui_mode(game_engine):
         draw_isometric_map(screen, game_engine.map, offset_x, offset_y)   
         for player in game_engine.players:
             draw_villagers(screen, player.units, offset_x, offset_y)
-        for swordsman in game_engine
+        """
+        for swordsman in game_engine:
             draw_swordman(screen, swordsman, offset_x, offset_y)
         draw_borders(screen)   
         draw_mini_map(screen, game_engine.map, offset_x, offset_y)
-        
+        """
         # Affichage des ressources si nécessaire
         if show_resources:
             display_player_resources(screen, game_engine.players)
