@@ -280,6 +280,20 @@ class IA:
                         self.current_time_called
                     )
                     self.decided_builds.append(build_position)
+                    if len(villagers) > 1 and random.random() < 0.5:  # Assign multiple villagers if list is greater than 1
+                        for additional_villager in villagers:
+                            if additional_villager != villager:
+                                self.debug_print(f">>>>>>>>>>>>>{self.player.name} : Assigning additional villager to construct {additional_villager.name}")
+                                Action(self.game_map).construct_building(
+                                    additional_villager, 
+                                    building_class,
+                                    build_position[0], 
+                                    build_position[1],
+                                    self.player,
+                                    self.current_time_called
+                                )
+                                self.decided_builds.append(build_position)
+                                break
                     return
     
 
