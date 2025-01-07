@@ -36,7 +36,20 @@ class Map:
                     resource = Gold()
                     tile.resource = resource
                     self.resources["Gold"].append((x, y))  # Store the position of Gold resources
+            
+            #test, vous pourrez les supprimer plus tard
+            resource = Gold()
+            self.grid[1][1].resource = resource
+            self.resources["Gold"].append((1, 1))
 
+            resource = Wood()
+            self.grid[1][2].resource = resource
+            self.resources["Wood"].append((1, 2))
+
+            resource = Gold()
+            self.grid[2][1].resource = resource
+            self.resources["Gold"].append((2, 1))
+            #fin
 
         elif GameMode == "Gold Rush":
             # Gold Rush: All gold resources are concentrated in a smaller circle within a larger circle

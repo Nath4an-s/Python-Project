@@ -400,9 +400,13 @@ def run_gui_mode(game_engine):
         screen.blit(background_texture, (0, 0)) 
         draw_isometric_map(screen, game_engine.map, offset_x, offset_y)   
         for player in game_engine.players:
+<<<<<<< HEAD
             draw_villagers(screen, player.units, player.buildings, offset_x, offset_y, villager_image) 
 
 
+=======
+            draw_villagers(screen, player.units, offset_x, offset_y)
+>>>>>>> 68650cbe46dda94a768e6ab68a0d0f33d354bb27
         """
         for swordsman in game_engine:
             draw_swordman(screen, swordsman, offset_x, offset_y)
