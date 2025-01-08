@@ -126,9 +126,11 @@ class GameEngine:
                     top_left_x = max(0, min(self.map.width - viewport_width, top_left_x + dx))
                     top_left_y = max(0, min(self.map.height - viewport_height, top_left_y + dy))
                 
-                if key == curses.KEY_F12 and USE_PYGAME != False:  # Switch to GUI mode
-                    gui.run_gui_mode(self)
-                    continue  # Skip the rest of the loop to reinitialize game engine state
+                if key == curses.KEY_F12 and USE_PYGAME:  # Switch to GUI mode
+                    gui.run_gui_mode(self)  # Call Pygame GUI mode
+                    stdscr.clear()  # Clear the terminal screen when returning
+                    stdscr.refresh()
+                    continue
                 elif key == ord('h'):  # When 'h' is pressed, test for the functions
                     #for unit in self.players[2].units:             #Takes time to calculates all paths but is perfectly smooth after that
                         #action.move_unit(unit, 50, 60, current_time)

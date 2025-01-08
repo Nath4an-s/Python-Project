@@ -286,43 +286,43 @@ def draw_swordman(screen, swordmans, offset_x, offset_y):
 
 
 
-
 def display_player_resources(screen, players):
-    font = pygame.font.Font(None, 32)  # Police plus grande pour le texte
-    x_start = 10  # Position X de départ pour le texte
-    y_start = 10  # Position Y de départ pour le premier joueur
-    line_height = 35  # Hauteur entre chaque ligne de texte
-    box_padding = 10  # Padding autour du texte dans chaque boîte
-    box_color = (50, 50, 50, 200)  # Fond semi-transparent pour la boîte (RGBA)
-    text_color = (255, 255, 255)  # Blanc pour le texte
+    font = pygame.font.Font(None, 32)  # Larger font for text
+    x_start = 10  # Starting X position for text
+    y_start = 10  # Starting Y position for the first player
+    line_height = 20  # Height between each line of text
+    box_padding = 10  # Padding around the text in each box
+    box_color = (30, 30, 30, 100)  # Semi-transparent background color for the box (RGBA)
+    text_color = (255, 255, 255)  # White for text
 
     for i, player in enumerate(players):
-        y_position = y_start + i * (line_height * 5)  # Espacement vertical entre les blocs de joueurs
-        
-        # Créer le texte des ressources
+        y_position = y_start + i * (line_height * 6)  # Adjust spacing to fit additional information
+
+        # Create the resource text
         resources_text = f"Player {player.id} ({player.name})"
         resources_surface = font.render(resources_text, True, text_color)
-        
-        # Calculez la taille de la boîte en fonction du contenu
-        max_text_width = resources_surface.get_width()
+
+        # Create resource lines
         resource_lines = [
             f"Wood: {player.owned_resources['Wood']}",
             f"Food: {player.owned_resources['Food']}",
             f"Gold: {player.owned_resources['Gold']}",
+            f"Buildings: {len(player.buildings)}",  # Count buildings
         ]
         resource_surfaces = [font.render(line, True, text_color) for line in resource_lines]
-        for surface in resource_surfaces:
-            max_text_width = max(max_text_width, surface.get_width())
+
+        # Calculate box size based on text width
+        max_text_width = max([surface.get_width() for surface in resource_surfaces])
         box_width = max_text_width + 2 * box_padding
         box_height = (len(resource_lines) + 1) * line_height + box_padding
 
-        # Dessiner la boîte semi-transparente
+        # Draw a semi-transparent box
         box_rect = pygame.Rect(x_start, y_position, box_width, box_height)
         box_surface = pygame.Surface((box_rect.width, box_rect.height), pygame.SRCALPHA)
         box_surface.fill(box_color)
         screen.blit(box_surface, box_rect.topleft)
 
-        # Dessiner le texte à l'intérieur de la boîte
+        # Draw the text inside the box
         screen.blit(resources_surface, (x_start + box_padding, y_position + box_padding))
         for j, resource_surface in enumerate(resource_surfaces):
             screen.blit(resource_surface, (x_start + box_padding, y_position + box_padding + (j + 1) * line_height))
