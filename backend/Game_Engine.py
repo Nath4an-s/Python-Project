@@ -3,6 +3,9 @@ import time
 import pickle
 import os
 
+from queue import Queue
+from frontend.gui import GUI
+
 from pynput.keyboard import Key, Listener
 from logger import debug_print
 from Units import *
@@ -57,6 +60,7 @@ def check_diagonal_movement():
         return 1, 1
     return 0, 0
 
+
 # GameEngine Class
 class GameEngine:
     def __init__(self, players, map_size=(120, 120)):
@@ -68,10 +72,34 @@ class GameEngine:
         Building.place_starting_buildings(self.map)  # Place starting town centers on the map
         Unit.place_starting_units(self.players, self.map)  # Place starting units on the map
         self.debug_print = debug_print
-        #self.ias = [IA(player, player.ai_profile, self.map, time.time()) for player in self.players]  # Instantiate IA for each player
-        self.ias = [IA(players[0], players[0].ai_profile, self.map, time.time())]
+        self.ias = [IA(player, player.ai_profile, self.map, time.time()) for player in self.players]  # Instantiate IA for each player
+        #self.ias = [IA(players[0], players[0].ai_profile, self.map, time.time())]
         self.IA_used = False
 
+        # GUI thread related attributes
+        self.gui_running = False
+        self.data_queue = Queue()
+        self.gui_thread = None
+
+    def start_gui_thread(self):
+        """Initialize and start the GUI thread"""
+        if not self.gui_thread:
+            self.data_queue = Queue()
+            self.gui_thread = GUI(self.data_queue)
+            self.gui_thread.start()
+            self.gui_running = True
+
+    def stop_gui_thread(self):
+        """Stop the GUI thread safely"""
+        if self.gui_thread:
+            self.gui_thread.stop()
+            self.gui_thread = None
+            self.gui_running = False
+
+    def update_gui(self):
+        """Send current game state to GUI thread"""
+        if self.gui_running and not self.data_queue.full():
+            self.data_queue.put(self)
 
     def run(self, stdscr):
         # Initialize the starting view position
@@ -126,9 +154,14 @@ class GameEngine:
                     top_left_x = max(0, min(self.map.width - viewport_width, top_left_x + dx))
                     top_left_y = max(0, min(self.map.height - viewport_height, top_left_y + dy))
                 
-                if key == curses.KEY_F12 and USE_PYGAME != False:  # Switch to GUI mode
-                    gui.run_gui_mode(self)
-                    continue  # Skip the rest of the loop to reinitialize game engine state
+                if key == curses.KEY_F12:
+                    if not self.gui_running:
+                        self.start_gui_thread()
+                    else:
+                        self.stop_gui_thread()
+                        stdscr.clear()
+                        stdscr.refresh()
+                        continue
                 elif key == ord('h'):  # When 'h' is pressed, test for the functions
                     #for unit in self.players[2].units:             #Takes time to calculates all paths but is perfectly smooth after that
                         #action.move_unit(unit, 50, 60, current_time)
@@ -162,8 +195,7 @@ class GameEngine:
                     self.debug_print(self.map.grid[1][1].resource.amount)
                 elif key == ord('r'):
                     for ia in self.ias:
-                        self.debug_print(ia.player.name)
-                        self.debug_print(ia.decided_builds)
+                        self.debug_print(self.players)
                 elif key == ord('a'):
                     action.go_battle(self.players[2].units[0], self.players[1].units[1], current_time)
                 elif key == ord('b'):
@@ -244,6 +276,14 @@ class GameEngine:
                 self.map.display_viewport(stdscr, top_left_x, top_left_y, viewport_width, viewport_height, Map_is_paused=self.is_paused)
                 stdscr.refresh()
 
+                if self.gui_running:
+                    self.update_gui()
+                else:
+                    # Clear the screen and display the new part of the map after moving
+                    stdscr.clear()
+                    self.map.display_viewport(stdscr, top_left_x, top_left_y, viewport_width, viewport_height, Map_is_paused=self.is_paused)
+                    stdscr.refresh()
+
                 self.turn += 1
 
             active_players = [p for p in self.players if p.units or p.buildings]
@@ -251,6 +291,9 @@ class GameEngine:
 
         except KeyboardInterrupt:
             self.debug_print("Game interrupted. Exiting...")
+        finally:
+            if self.gui_running:
+                self.stop_gui_thread()
 
     def check_victory(self):
         active_players = [p for p in self.players if p.units or p.buildings] # Check if the player has units and buildings
