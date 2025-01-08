@@ -55,6 +55,7 @@ class GUI(threading.Thread):
         self.background_texture = None
         self.villager_image = None
         self.swordman_image = None
+        self.font = None  # Ajout de l'attribut font
         
         # Setup paths
         self.setup_paths()
@@ -486,7 +487,8 @@ class GUI(threading.Thread):
         if self.show_resources:
             self.display_player_resources()
         
-        # Update display
+        # Ajouter l'affichage des FPS juste avant le flip
+        self.display_fps()
         pygame.display.flip()
 
     def initialize_pygame(self):
@@ -494,7 +496,15 @@ class GUI(threading.Thread):
         pygame.init()
         self.screen = pygame.display.set_mode((GUI_size.x, GUI_size.y), FULLSCREEN)
         self.clock = pygame.time.Clock()
+        self.font = pygame.font.Font(None, 36)  # Initialisation de la police
         self.load_resources()
+
+    def display_fps(self):
+        """Affiche les FPS dans le coin supérieur droit"""
+        fps = int(self.clock.get_fps())
+        fps_text = self.font.render(f'FPS: {fps}', True, (255, 255, 255))
+        fps_rect = fps_text.get_rect(topright=(self.screen.get_width() - 10, 10))
+        self.screen.blit(fps_text, fps_rect)
 
     def run(self):
         """Main thread loop"""
