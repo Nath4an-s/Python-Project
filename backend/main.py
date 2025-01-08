@@ -17,13 +17,13 @@ def main(stdscr, save_file=None):
     # Initialiser curses
     curses.curs_set(0)  # Masquer le curseur
     stdscr.clear()
-    # Initialiser le moteur de jeu
-    game_engine = GameEngine(players, map_size)
-    # Charger la sauvegarde si un fichier est fourni
     if save_file:
+        game_engine = GameEngine(players, map_size,True)
         game_engine.load_game(save_file)
-    else:
+    else :
+        game_engine = GameEngine(players, map_size,False)
         print("Aucun fichier de sauvegarde fourni. Démarrage d'une nouvelle partie.")
+
     # Lancer le jeu
     game_engine.run(stdscr)
 

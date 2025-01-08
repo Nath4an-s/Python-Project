@@ -63,20 +63,21 @@ def check_diagonal_movement():
 
 # GameEngine Class
 class GameEngine:
-    def __init__(self, players, map_size=(120, 120)):
+    def __init__(self, players, map_size=(120, 120),sauvegarde=False):
         self.players = players  # List of Player objects
         self.map = Map(*map_size)  # Create a map object
         self.turn = 0
         self.is_paused = False  # Flag to track if the game is paused
         self.changed_tiles = set()  # Set to track changed tiles
-        Building.place_starting_buildings(self.map)  # Place starting town centers on the map
-        Unit.place_starting_units(self.players, self.map)  # Place starting units on the map
+        if not sauvegarde :
+            Building.place_starting_buildings(self.map)   # Place starting town centers on the map
+        if not sauvegarde : 
+            Unit.place_starting_units(self.players, self.map)  # Place starting units on the map
         self.debug_print = debug_print
         self.ias = [IA(player, player.ai_profile, self.map, time.time()) for player in self.players]  # Instantiate IA for each player
         #self.ias = [IA(players[0], players[0].ai_profile, self.map, time.time())]
-        self.ias = [IA(player, player.ai_profile, self.map, time.time()) for player in self.players]  # Instantiate IA for each player
-        #self.ias = [IA(players[0], players[0].ai_profile, self.map, time.time())]
         self.IA_used = False
+        self.current_time = time.time()
 
         # GUI thread related attributes
         self.gui_running = False
@@ -103,6 +104,12 @@ class GameEngine:
         if self.gui_running and not self.data_queue.full():
             self.data_queue.put(self)
 
+    def get_current_time(self):
+        """Retourne le temps actuel si le jeu n'est pas en pause"""
+        if not self.is_paused:
+            return time.time()
+        return self.current_time
+
     def run(self, stdscr):
         # Initialize the starting view position
         top_left_x, top_left_y = 0, 0
@@ -115,15 +122,11 @@ class GameEngine:
         listener = Listener(on_press=press, on_release=release)
         listener.start()
 
-        #for player in self.players:
-        #    player.ai = self.ias[player.id - 1]  # Assign the corresponding AI to the player
-
-        self.players[0].ai = self.ias[0]
-
         try:
             while not self.check_victory():
+                # Mettre à jour current_time au début de chaque itération si le jeu n'est pas en pause
                 if not self.is_paused:
-                    current_time = time.time()
+                    self.current_time = time.time()
 
                 # Handle input
                 curses.curs_set(0)  # Hide cursor
@@ -167,7 +170,7 @@ class GameEngine:
                 elif key == ord('h'):  # When 'h' is pressed, test for the functions
                     #for unit in self.players[2].units:             #Takes time to calculates all paths but is perfectly smooth after that
                         #action.move_unit(unit, 50, 60, current_time)
-                    action.move_unit(self.players[2].units[0], 2, 2, current_time) # Move the first unit to (0, 0)
+                    action.move_unit(self.players[2].units[0], 2, 2, self.get_current_time()) # Move the first unit to (0, 0)
                 elif key == ord('g'):  # When 'g' is pressed, test for the functions
                     Unit.kill_unit(self.players[2], self.players[2].units[0], self.map)
                 elif key == ord('b'):  # When 'b' is pressed, test for the functions
@@ -179,16 +182,16 @@ class GameEngine:
                         self.is_paused = True
                         self.debug_print("Game paused.")
                 elif key == ord('j'):
-                    action.construct_building(self.players[2].units[2], Farm, 10, 10, self.players[2], current_time)
+                    action.construct_building(self.players[2].units[2], Farm, 10, 10, self.players[2], self.get_current_time())
                     #action.construct_building(self.players[2].units[1], Farm, 10, 10, self.players[2], current_time)
                     #action.construct_building(self.players[2].units[3], Barracks, 1, 1, self.players[2], current_time)
                     #action.construct_building(self.players[2].units[4], Barracks, 1, 1, self.players[2], current_time)
                 elif key == ord('t'):
-                    action.construct_building(self.players[2].units[1], House, 13, 10, self.players[2], current_time)
+                    action.construct_building(self.players[2].units[1], House, 13, 10, self.players[2], self.get_current_time())
                 elif key == ord('k'):
-                    action.gather_resources(self.players[2].units[1], "Food", current_time)
-                    action.gather_resources(self.players[2].units[2], "Wood", current_time)
-                    action.gather_resources(self.players[2].units[3], "Gold", current_time)
+                    action.gather_resources(self.players[2].units[1], "Food", self.get_current_time())
+                    action.gather_resources(self.players[2].units[2], "Wood", self.get_current_time())
+                    action.gather_resources(self.players[2].units[3], "Gold", self.get_current_time())
                 elif key == ord('o'):
                     self.debug_print(self.map.grid[0][0].resource.amount)
                 elif key == ord('l'):
@@ -200,11 +203,11 @@ class GameEngine:
                         self.debug_print(self.players)
                         self.debug_print(self.players)
                 elif key == ord('a'):
-                    action.go_battle(self.players[2].units[0], self.players[1].units[1], current_time)
+                    action.go_battle(self.players[2].units[0], self.players[1].units[1], self.get_current_time())
                 elif key == ord('b'):
-                    action.go_battle(self.players[1].units[1], self.players[2].units[0], current_time)
+                    action.go_battle(self.players[1].units[1], self.players[2].units[0], self.get_current_time())
                 elif key == ord('e'):
-                    action.move_unit(self.players[1].units[1],2,2, current_time)
+                    action.move_unit(self.players[1].units[1],2,2, self.get_current_time())
                 elif key == ord('f'):
                     Building.kill_building(self.players[2], self.players[2].buildings[-1], self.map)
                 elif key == ord('y'):
@@ -225,26 +228,26 @@ class GameEngine:
                     else:
                         self.debug_print("Game resumed.")
                 elif key == ord('c'):
-                    Unit.train_unit(Villager, 2, 2, self.players[2], self.players[2].buildings[0], self.map, current_time) #TODO:coordinates should be next to the right building (hardcoded)
-                    Unit.train_unit(Villager, 3, 2, self.players[2], self.players[2].buildings[0], self.map, current_time) #same building so after first one
-                    Unit.train_unit(Swordsman, 2, 3, self.players[2], self.players[2].buildings[1], self.map, current_time) #other buidling so same time as first one
+                    Unit.train_unit(Villager, 2, 2, self.players[2], self.players[2].buildings[0], self.map, self.get_current_time()) #TODO:coordinates should be next to the right building (hardcoded)
+                    Unit.train_unit(Villager, 3, 2, self.players[2], self.players[2].buildings[0], self.map, self.get_current_time()) #same building so after first one
+                    Unit.train_unit(Swordsman, 2, 3, self.players[2], self.players[2].buildings[1], self.map, self.get_current_time()) #other buidling so same time as first one
                 elif key == ord('u'):
                     self.players[2].owned_resources["Food"] -= 19950
                 elif key == ord('v'):  
                     self.save_game()
                 elif key == ord('i'):
                     for unit in self.players[2].units:
-                        action.go_battle(unit, self.players[1].units[1], current_time)
+                        action.go_battle(unit, self.players[1].units[1], self.get_current_time())
                 elif key == ord('n'):
                     self.IA_used = not self.IA_used
                     self.debug_print(f"IA used: {self.IA_used}")
                 elif key == ord('x'): #Attaquer un batiment
                     for unit in self.players[2].units:
-                        action.go_battle(unit, self.players[1].buildings[-1], current_time)
+                        action.go_battle(unit, self.players[1].buildings[-1], self.get_current_time())
                 #call the IA
                 if not self.is_paused and self.turn % 10 == 0 and self.IA_used == True: # Call the IA every 5 turns: change 0, 5, 10, 15, ... depending on lag
                     for ia in self.ias:
-                        ia.current_time_called = current_time  # Update the current time for each IA
+                        ia.current_time_called = self.get_current_time()  # Update the current time for each IA
                         ia.run()  # Run the AI logic for each player
                     
                 if not self.is_paused:
@@ -253,25 +256,25 @@ class GameEngine:
                         for unit in player.units:
                             if unit.target_position:
                                 target_x, target_y = unit.target_position
-                                action.move_unit(unit, target_x, target_y, current_time)
+                                action.move_unit(unit, target_x, target_y, self.get_current_time())
                             if unit.task == "gathering" or unit.task == "returning":
-                                action._gather(unit, unit.last_gathered, current_time)
+                                action._gather(unit, unit.last_gathered, self.get_current_time())
                             if unit.task == "marching":
-                                action.gather_resources(unit, unit.last_gathered, current_time)
+                                action.gather_resources(unit, unit.last_gathered, self.get_current_time())
                             if unit.task == "attacking":
-                                action._attack(unit, unit.target_attack, current_time)
+                                action._attack(unit, unit.target_attack, self.get_current_time())
                             if unit.task == "going_to_battle":
-                                action.go_battle(unit, unit.target_attack, current_time)
+                                action.go_battle(unit, unit.target_attack, self.get_current_time())
                             if unit.task == "is_attacked":
-                                action._attack(unit, unit.is_attacked_by, current_time)
+                                action._attack(unit, unit.is_attacked_by, self.get_current_time())
                             if unit.task == "going_to_construction_site":
-                                action.construct_building(unit, unit.construction_type, unit.target_building[0], unit.target_building[1], player, current_time)
+                                action.construct_building(unit, unit.construction_type, unit.target_building[0], unit.target_building[1], player, self.get_current_time())
                             if unit.task == "constructing":
-                                action._construct(unit, unit.construction_type, unit.target_building[0], unit.target_building[1], player, current_time)
+                                action._construct(unit, unit.construction_type, unit.target_building[0], unit.target_building[1], player, self.get_current_time())
                         for building in player.buildings:
                             if hasattr(building, 'training_queue') and building.training_queue != []:
                                 unit = building.training_queue[0]
-                                Unit.train_unit(unit, unit.spawn_position[0], unit.spawn_position[1], player, unit.spawn_building, self.map, current_time)
+                                Unit.train_unit(unit, unit.spawn_position[0], unit.spawn_position[1], player, unit.spawn_building, self.map, self.get_current_time())
 
                 # Clear the screen and display the new part of the map after moving
                 stdscr.clear()
