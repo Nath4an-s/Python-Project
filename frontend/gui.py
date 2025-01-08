@@ -7,486 +7,379 @@ from backend.Units import Villager
 from pathlib import Path
 import os
 import random
-import threading
-from queue import Queue
-import time
+from pygame.locals import FULLSCREEN, RESIZABLE, VIDEORESIZE
 
-class GUI(threading.Thread):
-    def __init__(self, data_queue):
-        super().__init__()
-        self.data_queue = data_queue
-        self.running = False
-        self.game_data = None
-        
-        # Constants
-        self.TILE_WIDTH = 64
-        self.TILE_HEIGHT = 32
-        self.WINDOW_WIDTH = 800
-        self.WINDOW_HEIGHT = 600
-        
-        self.PLAYER_COLORS = {
-            1: (0, 0, 255),    # Blue
-            2: (255, 0, 0),    # Red
-            3: (0, 255, 0),    # Green
-            4: (255, 255, 0),  # Yellow
-            5: (128, 0, 128),  # Purple
-            6: (0, 255, 255),  # Cyan
-            7: (255, 165, 0),  # Orange
-            8: (128, 128, 128),# Gray
-        }
-        
-        self.COLORS = {
-            "Wood": (34, 139, 34),   # Dark green for wood
-            "Gold": (255, 215, 0),   # Gold color
-            "Soil": (0, 255, 0)      # Green for soil
-        }
-        
-        # Initialize view parameters
-        self.offset_x = 0
-        self.offset_y = 0
-        self.show_resources = False
-        self.trees_drawn = {}
-        
-        # Initialize pygame components to None (will be set up in run)
-        self.screen = None
-        self.clock = None
-        self.IMAGES = {}
-        self.building_images = {}
-        self.background_texture = None
-        self.villager_image = None
-        self.swordman_image = None
-        
-        # Setup paths
-        self.setup_paths()
-        
-    def setup_paths(self):
-        self.BASE_PATH = Path(__file__).resolve().parent.parent
-        self.RESOURCES_PATH = self.BASE_PATH / "assets" / "resources"
-        self.BUILDINGS_PATH = self.BASE_PATH / "assets" / "buildings"
-        self.BACKGROUND_PATH = self.BASE_PATH / "assets" / "background"
-        
-        assert self.RESOURCES_PATH.exists(), f"Resources directory {self.RESOURCES_PATH} does not exist."
-        assert self.BUILDINGS_PATH.exists(), f"Buildings directory {self.BUILDINGS_PATH} does not exist."
-        assert self.BACKGROUND_PATH.exists(), f"Background directory {self.BACKGROUND_PATH} does not exist."
+# Define isometric tile dimensions
+TILE_WIDTH = 64
+TILE_HEIGHT = 32
 
-    def load_image(self, file_path):
-        try:
-            return pygame.image.load(file_path).convert_alpha()
-        except pygame.error as e:
-            print(f"Error loading image {file_path}: {e}")
-            return pygame.Surface((self.TILE_WIDTH, self.TILE_HEIGHT))
+# Define colors for different players' town centers
+PLAYER_COLORS = {
+    1:(0, 0, 255),  # Blue
+    2:(255, 0, 0),  # Red
+    3:(0, 255, 0),  # Green
+    4:(255, 255, 0),  # Yellow
+    5:(128, 0, 128),  # Purple
+    6:(0, 255, 255),  # Cyan
+    7:(255, 165, 0),  # Orange
+    8:(128, 128, 128),  # Gray
+}
 
-    def load_resources(self):
-        # Load basic images
-        self.IMAGES = {
-            "Wood": [self.load_image(self.RESOURCES_PATH / f"tree_{i}.png") for i in range(6)],
-            "Gold": self.load_image(self.RESOURCES_PATH / "gold.png"),
-            "Soil": self.load_image(self.RESOURCES_PATH / "soil.png"),
-        }
+# Initialize pygame
+pygame.init()
 
-        # Load and scale building images
-        building_types = {
-            "TownCenter": (256, 256),
-            "Barracks": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6),
-            "House": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),
-            "Rubble": (64, 64),
-            "Stable": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6),
-            "ArcheryRange": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),
-            "Camp": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),
-            "Farm": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),
-            "keep": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 2)
-        }
+# Initialize the display (required before using convert_alpha or convert)
+WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600 
+screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), HIDDEN)
 
-        self.building_images = {}
-        for building_type, size in building_types.items():
-            image = self.load_image(self.BUILDINGS_PATH / f"{building_type.lower()}.png")
-            self.building_images[building_type] = pygame.transform.scale(image, size)
+# Define paths using pathlib
+BASE_PATH = Path(__file__).resolve().parent.parent
+RESOURCES_PATH = BASE_PATH / "assets" / "resources"
+BUILDINGS_PATH = BASE_PATH / "assets" / "buildings"
 
-        # Load background
-        self.background_texture = self.load_image(self.BACKGROUND_PATH / "background.png")
-        
-        # Load unit images
-        self.villager_image = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "Villager.png")   
-        self.villager_image_1 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk001.png")
-        self.villager_image_2 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk002.png")
-        self.villager_image_3 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk003.png")
-        self.villager_image_4 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk004.png")
-        self.villager_image_5 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk005.png")
-        self.villager_image_6 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk006.png")
-        self.villager_image_7 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk007.png")
-        self.villager_image_8 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk008.png")
-        self.villager_image_9 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk009.png")
-        self.villager_image_10 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk010.png")
-        self.villager_image_11 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk011.png")
-        self.villager_image_12 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk012.png")
-        self.villager_image_13 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk013.png")
-        self.villager_image_14 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk014.png")
-        self.villager_image_15 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk015.png")
+assert RESOURCES_PATH.exists(), f"Resources directory {RESOURCES_PATH} does not exist."
+assert BUILDINGS_PATH.exists(), f"Buildings directory {BUILDINGS_PATH} does not exist."
 
-        self.liste_villager_walking_animation = [
-            self.villager_image,self.villager_image_1,self.villager_image_2,self.villager_image_3,self.villager_image_4,self.villager_image_5,
-            self.villager_image_6,self.villager_image_7,self.villager_image_8,self.villager_image_9,self.villager_image_10,self.villager_image_11,
-            self.villager_image_12,self.villager_image_13,self.villager_image_14,self.villager_image_15
-        ]
-        
-        self.villager_image_act1 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract001.png")
-        self.villager_image_act2 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract002.png")
-        self.villager_image_act3 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract003.png")
-        self.villager_image_act4 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract004.png")
-        self.villager_image_act5 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract005.png")
-        self.villager_image_act6 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract006.png")
-        self.villager_image_act7 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract007.png")
-        self.villager_image_act8 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract008.png")
-        self.villager_image_act9 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract009.png")
-        self.villager_image_act10 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract010.png")
-        self.villager_image_act11 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract011.png")
-        self.villager_image_act12 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract012.png")
-        self.villager_image_act13 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract013.png")
-        self.villager_image_act14 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract014.png")
-        self.villager_image_act15 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract015.png")
-      
-   
- 
-        self.liste_villager_acting_animation = [
-            self.villager_image_act1,self.villager_image_act2,self.villager_image_act3,self.villager_image_act4,self.villager_image_act5,
-            self.villager_image_act6,self.villager_image_act7,self.villager_image_act8,self.villager_image_act9,self.villager_image_act10,
-            self.villager_image_act11,self.villager_image_act12,self.villager_image_act13,self.villager_image_act14,self.villager_image_act15
-            
-        ]
-        self.swordman_image = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierattack017.png")
-        
-        # Scale gold and tree images
-        self.IMAGES["Gold"] = pygame.transform.scale(self.IMAGES["Gold"], (self.TILE_WIDTH, self.TILE_HEIGHT))
-        for i in range(len(self.IMAGES["Wood"])):
-            scaled_width = int(self.TILE_WIDTH * 1.5)  # Augmenter la largeur de 50%
-            scaled_height = int(self.TILE_HEIGHT * 1.5)  # Augmenter la hauteur de 50%
-            self.IMAGES["Wood"][i] = pygame.transform.scale(self.IMAGES["Wood"][i], (scaled_width, scaled_height))
+# Helper function to load images
 
-
-        def draw_trees(self, trees, buildings):
-            for tree in trees:
-                tree_x, tree_y = tree.position
-                iso_tree_x, iso_tree_y = self.cart_to_iso(tree_x, tree_y)
-                screen_x = iso_tree_x - self.offset_x
-                screen_y = iso_tree_y - self.offset_y - tree.image.get_height()
-
-                tree_visible = True
-                for building in buildings:
-                    if self.is_behind_building(tree, building):
-                        tree_visible = False
-                        break
-
-                if tree_visible:
-                    self.screen.blit(tree.image, (screen_x, screen_y))
-                else:
-                    # Si l'arbre est partiellement caché, réduire l'opacité ou ajuster la position
-                    modified_image = self.modify_tree_image(tree.image)  # Définir cette fonction pour ajuster l'image
-                    self.screen.blit(modified_image, (screen_x, screen_y))
+def load_image(file_path):
+    try:
+        return pygame.image.load(file_path).convert_alpha()
+    except pygame.error as e:
+        print(f"Error loading image {file_path}: {e}")
+        return pygame.Surface((TILE_WIDTH, TILE_HEIGHT))  # Return a placeholder surface
 
 
 
-    def cart_to_iso(self, cart_x, cart_y):
-        iso_x = (cart_x - cart_y) * (self.TILE_WIDTH // 2)
-        iso_y = (cart_x + cart_y) * (self.TILE_HEIGHT // 2)
-        return iso_x, iso_y
 
-    def draw_isometric_map(self):
-        if not self.game_data or not self.game_data.map:
-            return
+IMAGES = {
+    "Wood": [load_image(RESOURCES_PATH / f"tree_{i}.png") for i in range(6)],
+    "Gold": load_image(RESOURCES_PATH / "gold.png"),
+    "Soil": load_image(RESOURCES_PATH / "soil.png"),
+    # Add more resources as needed
+}
 
-        self.screen.blit(self.background_texture, (0, 0))
-        
-        for y in range(self.game_data.map.height):
-            for x in range(self.game_data.map.width):
-                tile = self.game_data.map.grid[y][x]
+# Define building images
+building_images = {
+    "TownCenter": load_image(BUILDINGS_PATH / "tower.png"),
+    "Barracks": load_image(BUILDINGS_PATH / "barrack.png"),
+    "House": load_image(BUILDINGS_PATH / "house.png"),
+    "Rubble": load_image(BUILDINGS_PATH / "rubble.png"),
+    "Stable": load_image(BUILDINGS_PATH / "stable.png"),
+    "ArcheryRange": load_image(BUILDINGS_PATH / "archeryrange.png"),
+    "Camp": load_image(BUILDINGS_PATH / "camp.png"),
+    "Farm": load_image(BUILDINGS_PATH / "farm.png"),
+    "keep": load_image(BUILDINGS_PATH / "keep.png"),
+    #"InConstruction": load_image(BUILDINGS_PATH / "inconstruction.png"),
+}
+
+# Resize building images
+for key, image in building_images.items():
+    if 'TownCenter' == key:
+        building_images[key] = pygame.transform.scale(image, (256, 256))  # Exemple pour TownCenter qui occupe 4x4 tuiles
+    else:
+        building_images[key] = pygame.transform.scale(image, (64, 64))  # Taille standard pour les autres bâtiments
+
+# Define colors for different resources
+COLORS = {
+    "Wood": (34, 139, 34),  # Dark green for wood
+    "Gold": (255, 215, 0),  # Gold color
+    "Soil": (0, 255, 0)    # Green for soil
+}
+
+# Convert 2D grid coordinates to isometric coordinates
+def cart_to_iso(cart_x, cart_y):
+    iso_x = (cart_x - cart_y) * (TILE_WIDTH // 2)
+    iso_y = (cart_x + cart_y) * (TILE_HEIGHT // 2)
+    return iso_x, iso_y
+
+# Calculate building dimensions
+barracks_width = TILE_WIDTH * 3
+barracks_height = TILE_HEIGHT * 3 * 2  # La hauteur est doublée pour maintenir l'aspect isométrique
+
+# Resize and assign images for buildings
+building_images['Barracks'] = pygame.transform.scale(
+    load_image(BUILDINGS_PATH / "barrack.png"),
+    (barracks_width, barracks_height)
+)
+
+TownCenter_width = TILE_WIDTH * 4
+TownCenter_height = TILE_HEIGHT * 8  # La hauteur est doublée pour maintenir l'aspect isométrique
+
+building_images['TownCenter'] = pygame.transform.scale(
+     load_image(BUILDINGS_PATH / "towncenter.png"),
+    (TownCenter_width, TownCenter_height)
+)
+
+House_width = TILE_WIDTH * 2
+House_height = TILE_HEIGHT * 4
+
+building_images['House'] = pygame.transform.scale(
+    load_image(BUILDINGS_PATH / "house.png"),
+    (House_width, House_height)
+)
+
+Stable_width = TILE_WIDTH * 3
+Stable_height = TILE_HEIGHT * 6
+
+building_images['Stable'] = pygame.transform.scale(
+    load_image(BUILDINGS_PATH / "stable.png"),
+    (Stable_width, Stable_height)  # Taille ajustée pour couvrir 3x3 tuiles
+)
+
+ArcheryRange_width = TILE_WIDTH * 2
+ArcheryRange_height = TILE_HEIGHT * 4
+
+building_images['ArcheryRange'] = pygame.transform.scale(
+    load_image(BUILDINGS_PATH / "archeryrange.png"),
+    (ArcheryRange_width, ArcheryRange_height)  # Taille ajustée pour couvrir 2x2 tuiles
+)
+
+'''
+    "Camp": load_image(BUILDINGS_PATH / "camp.png"),
+    "Farm": load_image(BUILDINGS_PATH / "farm.png"),
+    "keep": load_image(BUILDINGS_PATH / "keep.png"),
+'''
+
+Camp_width = TILE_WIDTH * 2
+Camp_height = TILE_HEIGHT * 4
+
+building_images['Camp'] = pygame.transform.scale(
+    load_image(BUILDINGS_PATH / "camp.png"),
+    (Camp_width, Camp_height)  # Taille ajustée pour couvrir 2x2 tuiles
+)
+
+Farm_width = TILE_WIDTH * 2
+Farm_height = TILE_HEIGHT * 4
+
+building_images['Farm'] = pygame.transform.scale(
+    load_image(BUILDINGS_PATH / "farm.png"),
+    (Farm_width, Farm_height)  # Taille ajustée pour couvrir 2x2 tuiles
+)
+
+
+background_path = BASE_PATH / "assets" / "background"
+assert background_path.exists(), f"Buildings directory {background_path} does not exist."
+
+background_texture = load_image(background_path / "background.png")
+
+gold_image = load_image(RESOURCES_PATH / "gold.png")
+gold_image = pygame.transform.scale(gold_image, (TILE_WIDTH, TILE_HEIGHT))
+
+tree_image = load_image(RESOURCES_PATH / "tree_0.png")
+tree_image = pygame.transform.scale(tree_image, (TILE_WIDTH, TILE_HEIGHT))
+trees_drawn = {}  # Dictionary to store tree variants for each position
+
+def draw_isometric_map(screen, game_map, offset_x, offset_y):
+    screen.blit(background_texture, (0, 0))
+    
+    for y in range(game_map.height):
+        for x in range(game_map.width):
+            tile = game_map.grid[y][x]
+
+            # Blit de la texture de sol d'abord
+            soil_image = IMAGES['Soil']
+            iso_x, iso_y = cart_to_iso(x, y)
+            screen_x = (GUI_size.x // 2) + iso_x - offset_x
+            screen_y = (GUI_size.y // 4) + iso_y - offset_y - (soil_image.get_height() - TILE_HEIGHT)
+            screen.blit(soil_image, (screen_x, screen_y))
+
+            # Ensuite, blit de la ressource si présente
+            if 0 <= screen_x < WINDOW_WIDTH and 0 <= screen_y < WINDOW_HEIGHT:
+                screen.blit(soil_image, (screen_x, screen_y))
                 
-                soil_image = self.IMAGES['Soil']
-                iso_x, iso_y = self.cart_to_iso(x, y)
-                screen_x = (GUI_size.x // 2) + iso_x - self.offset_x
-                screen_y = (GUI_size.y // 4) + iso_y - self.offset_y - (soil_image.get_height() - self.TILE_HEIGHT)
-                
-                if 0 <= screen_x < self.WINDOW_WIDTH and 0 <= screen_y < self.WINDOW_HEIGHT:
-                    self.screen.blit(soil_image, (screen_x, screen_y))
-                    
-                    if tile.resource:
-                        if tile.resource.type == "Wood":
-                            pos = (x, y)
-                            if pos not in self.trees_drawn:
-                                self.trees_drawn[pos] = random.randint(0, 5)
-                            image = self.IMAGES["Wood"][self.trees_drawn[pos]]
-                            screen_y_adjusted = screen_y - (image.get_height() - self.TILE_HEIGHT)
-                            self.screen.blit(image, (screen_x + self.TILE_WIDTH//2, screen_y_adjusted))
-                        else:
-                            screen_y_adjusted = screen_y - (self.IMAGES["Gold"].get_height() - 2*self.TILE_HEIGHT)
-                            self.screen.blit(self.IMAGES["Gold"], (screen_x + self.TILE_WIDTH//2, screen_y_adjusted))
-                
-                if tile.building and (x - tile.building.size + 1, y - tile.building.size + 1) == tile.building.position:
-                    building_type = tile.building.name.replace(" ", "")
-                    if building_type in self.building_images:
-                        building_image = self.building_images[building_type]
-                        building_adjusted_y = screen_y - (building_image.get_height() - self.TILE_HEIGHT)
-                        self.screen.blit(building_image, (screen_x, building_adjusted_y))
-                        
-    def draw_villagers(self, villagers, buildings):
-        animation_speed = 5  # Vitesse de l'animation
-        position_count = {}
-        for villager in villagers:
-            pos = (villager.position[0], villager.position[1])
-            if pos not in position_count:
-                position_count[pos] = []
-            position_count[pos].append(villager)
-
-        for pos, villagers_at_pos in position_count.items():
-            for index, villager in enumerate(villagers_at_pos):
-                villager_x, villager_y = villager.position
-                iso_villager_x, iso_villager_y = self.cart_to_iso(villager_x, villager_y)
-                screen_x, screen_y = self.adjust_villager_position(
-                    (GUI_size.x // 2) + iso_villager_x - self.offset_x,
-                    (GUI_size.y // 4) + iso_villager_y - self.offset_y - self.villager_image.get_height(),
-                    len(villagers_at_pos), index)
-
-                if self.is_villager_visible(villager_x, villager_y, buildings):
-                    current_time = pygame.time.get_ticks() // (1000 // animation_speed)
-                    if villager.is_acting:
-                        animation_frames = self.liste_villager_acting_animation
+                if tile.resource:
+                    resource_type = tile.resource.type
+                    if resource_type == "Wood":
+                        # Get or create tree variant for this position
+                        pos = (x, y)
+                        if pos not in trees_drawn:
+                            trees_drawn[pos] = random.randint(0, 5)
+                        image = IMAGES["Wood"][trees_drawn[pos]]
+                        screen_y_adjusted = screen_y - (image.get_height() - TILE_HEIGHT)
+                        screen.blit(image, (screen_x + TILE_WIDTH//2, screen_y_adjusted))
                     else:
-                        animation_frames = self.liste_villager_walking_animation
-                    current_frame = current_time % len(animation_frames)
-                    villager_image = animation_frames[current_frame]
-                    self.screen.blit(villager_image, (screen_x, screen_y))
-
-
-
-    def is_villager_visible(self, villager_x, villager_y, buildings):
-        villager_iso_x, villager_iso_y = self.cart_to_iso(villager_x, villager_y)
-        
-        for building in buildings:
-            building_x, building_y = building.position
-            building_iso_x, building_iso_y = self.cart_to_iso(building_x, building_y)
-
-            # Assumer que la taille du bâtiment affecte également la visibilité
-            # Création d'une boîte englobante pour le bâtiment
-            building_width, building_height = self.building_images[building.name.replace(" ", "")].get_size()
+                        #image = IMAGES[resource_type]
+                        #screen_y_adjusted = screen_y - (IMAGES["Gold"].get_height() - TILE_HEIGHT//2)
+                        screen_y_adjusted = screen_y - (IMAGES["Gold"].get_height() - 2*TILE_HEIGHT)
+                        screen.blit(gold_image, (screen_x + TILE_WIDTH//2, screen_y_adjusted))
             
-            # Convertir en coordonnées isométriques la zone du bâtiment
-            building_iso_end_x = building_iso_x + building_width
-            building_iso_end_y = building_iso_y + building_height
+            
+            if tile.building and (x - tile.building.size + 1, y - tile.building.size + 1) == tile.building.position:  # Only draw the image of the construction at the original location to avoid duplicate drawings.
+                    building_type = tile.building.name.replace(" ", "")
+                    if building_type in building_images:
+                        building_image = building_images[building_type]
+                        # Adjust y coordinates for precise alignment
+                        building_adjusted_y = screen_y - (building_image.get_height() - TILE_HEIGHT)
+                        screen.blit(building_image, (screen_x, building_adjusted_y))
+                    else:
+                        print(f"Building type {building_type} not found in building_images dictionary.")
 
-            # Vérifier si le villageois est derrière le bâtiment (cacher le villageois si il est derrière le bâtiment selon l'axe y)
-            if building_iso_x < villager_iso_x < building_iso_end_x and villager_iso_y < building_iso_y:
-                return False
+
+
+def draw_borders(screen):
+    border_color = (0, 0, 0, 128)  # Couleur noire semi-transparente
+    pygame.draw.rect(screen, border_color, pygame.Rect(0, 0, WINDOW_WIDTH, 20))  # Bord supérieur
+    pygame.draw.rect(screen, border_color, pygame.Rect(0, WINDOW_HEIGHT - 20, WINDOW_WIDTH, 20))  # Bord inférieur
+    pygame.draw.rect(screen, border_color, pygame.Rect(0, 0, 20, WINDOW_HEIGHT))  # Bord gauche
+    pygame.draw.rect(screen, border_color, pygame.Rect(WINDOW_WIDTH - 20, 0, 20, WINDOW_HEIGHT))  # Bord droit
+
+    # Ajoutez cette fonction à la fin de votre fonction run_gui_mode ou draw_isometric_map
+
+
+
+
+VILLAGER_IMAGE_PATH = BASE_PATH / "assets" / "units" / "villager" / "Villager.png"
+villager_image = load_image(VILLAGER_IMAGE_PATH)
+
+
+def is_behind_building(villager, building):
+    villager_x, villager_y = villager.position
+    building_x, building_y = building.position
+    building_name = building.name  # Utilisez l'attribut name pour identifier le type de bâtiment
+
+    # Définir les types de bâtiments qui bloquent la vue
+    blocking_buildings = {'Town Center', 'Barracks', 'Stables'}  # Assurez-vous que les noms correspondent à ceux définis dans les instances de Building
+
+    # Vérifiez si le villageois est directement derrière le bâtiment en coordonnée y
+    if building_name in blocking_buildings and villager_y > building_y:
         return True
-    
-    def adjust_villager_position(self, screen_x, screen_y, count, index):
-        offset = 10  # Décalage en pixels entre chaque villageois
-        # Calculer le décalage pour chaque villageois pour éviter la superposition
-        offset_x = (index % 2) * offset - (offset * (count - 1) / 2)
-        offset_y = (index // 2) * offset - (offset * (count - 1) / 2)
-        return screen_x + offset_x, screen_y + offset_y
 
+    return False
 
-    def is_position_free(self, x, y, buildings):
-        for building in buildings:
-            building_x, building_y = building.position
-            # Assumer que la taille du bâtiment s'étend de sa position initiale à sa taille en largeur et hauteur
-            if building_x <= x < building_x + building.size and building_y <= y < building_y + building.size:
-                return False
-        return True
-
-    def is_behind_building(self, object, building):
-        object_x, object_y = object.position
-        building_x, building_y = building.position
-        building_end_x = building_x + building.width
-        building_end_y = building_y + building.height
-
-        # Assumer une simple vérification basée sur la coordonnée Y pour simplification
-        return object_y > building_y and object_y < building_end_y
-
-
-
-    def draw_swordman(self, swordmans):
-        for swordman in swordmans:
-            iso_x, iso_y = self.cart_to_iso(swordman.position[0], swordman.position[1])
-            screen_x = iso_x - self.offset_x
-            screen_y = iso_y - self.offset_y - self.swordman_image.get_height()
-            self.screen.blit(self.swordman_image, (screen_x, screen_y))
-
-    def draw_archer(self, archers):
-        for archer in archers:
-            iso_x, iso_y = self.cart_to_iso(archer.position[0], archer.position[1])
-            screen_x = iso_x - self.offset_x
-            screen_y = iso_y - self.offset_y - self.archer_image.get_height()
-            self.screen.blit(self.archer_image, (screen_x, screen_y))
-
-    def draw_horseman(self, horsemans):
-        for horseman in horsemans:
-            iso_x, iso_y = self.cart_to_iso(horseman.position[0], horseman.position[1])
-            screen_x = iso_x - self.offset_x
-            screen_y = iso_y - self.offset_y - self.horseman_image.get_height()
-            self.screen.blit(self.horseman_image, (screen_x, screen_y))
-
-    def draw_mini_map(self):
-        mini_map_width = 200
-        mini_map_height = 150
-        mini_map_x = self.screen.get_width() - mini_map_width - 10
-        mini_map_y = self.screen.get_height() - mini_map_height - 10
-
-        pygame.draw.rect(self.screen, (50, 50, 50), (mini_map_x, mini_map_y, mini_map_width, mini_map_height))
-        
-        tile_offset_x = 100
-
-        for y in range(self.game_data.map.height):
-            for x in range(self.game_data.map.width):
-                tile = self.game_data.map.grid[y][x]
-
-                if isinstance(tile.building, TownCenter):
-                    player = tile.building.player
-                    color = self.PLAYER_COLORS.get(player.id, (255, 255, 255))
-                else:
-                    resource_type = tile.resource.type if tile.resource else "Soil"
-                    color = self.COLORS[resource_type]
-
-                iso_x, iso_y = self.cart_to_iso(x, y)
-                
-                mini_map_iso_x = mini_map_x + (iso_x * (mini_map_width / (self.game_data.map.width * self.TILE_WIDTH))) + tile_offset_x
-                mini_map_iso_y = mini_map_y + (iso_y * (mini_map_height / (self.game_data.map.height * self.TILE_HEIGHT)))
-                
-                pygame.draw.rect(self.screen, color, (mini_map_iso_x, mini_map_iso_y, 2, 2))
-
-        view_rect_x = mini_map_x + ((self.offset_x / (self.game_data.map.width * self.TILE_WIDTH)) * mini_map_width) + (tile_offset_x - self.game_data.map.width // 12)
-        view_rect_y = mini_map_y + ((self.offset_y / (self.game_data.map.height * self.TILE_HEIGHT)) * mini_map_height) - (self.game_data.map.height // 20)
-        view_rect_width = (GUI_size.x / (self.game_data.map.width * self.TILE_WIDTH)) * mini_map_width
-        view_rect_height = (GUI_size.y / (self.game_data.map.height * self.TILE_HEIGHT)) * mini_map_height
-        
-        pygame.draw.rect(self.screen, (255, 0, 0), (view_rect_x, view_rect_y, view_rect_width, view_rect_height), 2)
-
-    def handle_mini_map_click(self, event):
-        mini_map_width = 200
-        mini_map_height = 150
-        mini_map_x = GUI_size.x - mini_map_width - 10
-        mini_map_y = GUI_size.y - mini_map_height - 10
-
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            mouse_x, mouse_y = event.pos
-            if (mini_map_x <= mouse_x <= mini_map_x + mini_map_width and 
-                mini_map_y <= mouse_y <= mini_map_y + mini_map_height):
-                relative_x = (mouse_x - mini_map_x) / mini_map_width
-                relative_y = (mouse_y - mini_map_y) / mini_map_height
-                
-                self.offset_x = int(relative_x * self.game_data.map.width * self.TILE_WIDTH - (GUI_size.x / 2))
-                self.offset_y = int(relative_y * self.game_data.map.height * self.TILE_HEIGHT - (GUI_size.y / 2))
-
-    def display_player_resources(self):
-        font = pygame.font.Font(None, 32)
-        x_start = 10
-        y_start = 10
-        line_height = 20
-        box_padding = 10
-        box_color = (30, 30, 30, 100)
-        text_color = (255, 255, 255)
-
-        for i, player in enumerate(self.game_data.players):
-            y_position = y_start + i * (line_height * 6)
-            
-            resources_text = f"Player {player.id} ({player.name})"
-            resources_surface = font.render(resources_text, True, text_color)
-            
-            resource_lines = [
-                f"Wood: {player.owned_resources['Wood']}",
-                f"Food: {player.owned_resources['Food']}",
-                f"Gold: {player.owned_resources['Gold']}",
-                f"Buildings: {len(player.buildings)}",
-            ]
-            resource_surfaces = [font.render(line, True, text_color) for line in resource_lines]
-            
-            max_text_width = max([surface.get_width() for surface in resource_surfaces])
-            box_width = max_text_width + 2 * box_padding
-            box_height = (len(resource_lines) + 1) * line_height + box_padding
-            
-            box_rect = pygame.Rect(x_start, y_position, box_width, box_height)
-            box_surface = pygame.Surface((box_rect.width, box_rect.height), pygame.SRCALPHA)
-            box_surface.fill(box_color)
-            self.screen.blit(box_surface, box_rect.topleft)
-            
-            self.screen.blit(resources_surface, (x_start + box_padding, y_position + box_padding))
-            for j, resource_surface in enumerate(resource_surfaces):
-                self.screen.blit(resource_surface, 
-                    (x_start + box_padding, y_position + box_padding + (j + 1) * line_height))
-                
-    def is_behind_building(villager, building):
+def draw_villagers(screen, villagers, buildings, offset_x, offset_y, villager_image):
+    for villager in sorted(villagers, key=lambda v: v.position[1]):  # Rendu par profondeur
         villager_x, villager_y = villager.position
-        building_x, building_y = building.position
-        building_name = building.name  # Utilisez l'attribut name pour identifier le type de bâtiment
+        iso_villager_x, iso_villager_y = cart_to_iso(villager_x, villager_y)
+        screen_x = (GUI_size.x // 2) + iso_villager_x - offset_x
+        screen_y = (GUI_size.y // 4) + iso_villager_y - offset_y - villager_image.get_height()
 
-        # Définir les types de bâtiments qui bloquent la vue
-        blocking_buildings = {'Town Center', 'Barracks', 'Stables'}  # Assurez-vous que les noms correspondent à ceux définis dans les instances de Building
+        # Parcourir les bâtiments pour déterminer la visibilité
+        villager_visible = True
+        for building in buildings:
+            building_x, building_y = building.position
+            building_end_y = building_y + building.size  # Assumons size est la hauteur du bâtiment
+            if building_y < villager_y < building_end_y:
+                villager_visible = False
+                break
 
-        # Vérifiez si le villageois est directement derrière le bâtiment en coordonnée y
-        if building_name in blocking_buildings and villager_y > building_y:
-            return True
+        if villager_visible:
+            screen.blit(villager_image, (screen_x, screen_y))
 
-        return False
-    def handle_keyboard_input(self):
-        """Handle keyboard input for map scrolling"""
-        keys = pygame.key.get_pressed()
-        scroll_speed = 20
+# Assurez-vous de passer l'image correcte et d'ajuster les arguments nécessaires en fonction de votre code actuel.
+
+
+
+
+
+SWORDMAN_IMAGE_PATH = BASE_PATH / "assets" / "units" / "swordman" / "Halbadierattack017.png"
+swordman_image = load_image(SWORDMAN_IMAGE_PATH)
+
+def draw_swordman(screen, swordmans, offset_x, offset_y):
+    for swordman in swordmans:
+        swordman_x, swordman_y = swordman.position  # Suppose que chaque villageois a un attribut `position`
+        iso_x, iso_y = cart_to_iso( swordman_x, swordman_y)
+        screen_x = (GUI_size.x // 2) + iso_x - offset_x + TILE_WIDTH // 4 * 3
+        screen_y = (GUI_size.y // 4) + iso_y - offset_y - (swordman_image.get_height())
+        screen.blit(swordman_image, (screen_x, screen_y))        
+
+
+
+
+def display_player_resources(screen, players):
+    font = pygame.font.Font(None, 32)  # Larger font for text
+    x_start = 10  # Starting X position for text
+    y_start = 10  # Starting Y position for the first player
+    line_height = 20  # Height between each line of text
+    box_padding = 10  # Padding around the text in each box
+    box_color = (30, 30, 30, 100)  # Semi-transparent background color for the box (RGBA)
+    text_color = (255, 255, 255)  # White for text
+
+    for i, player in enumerate(players):
+        y_position = y_start + i * (line_height * 6)  # Adjust spacing to fit additional information
+
+        # Create the resource text
+        resources_text = f"Player {player.id} ({player.name})"
+        resources_surface = font.render(resources_text, True, text_color)
+
+        # Create resource lines
+        resource_lines = [
+            f"Wood: {player.owned_resources['Wood']}",
+            f"Food: {player.owned_resources['Food']}",
+            f"Gold: {player.owned_resources['Gold']}",
+            f"Buildings: {len(player.buildings)}",  # Count buildings
+        ]
+        resource_surfaces = [font.render(line, True, text_color) for line in resource_lines]
+
+        # Calculate box size based on text width
+        max_text_width = max([surface.get_width() for surface in resource_surfaces])
+        box_width = max_text_width + 2 * box_padding
+        box_height = (len(resource_lines) + 1) * line_height + box_padding
+
+        # Draw a semi-transparent box
+        box_rect = pygame.Rect(x_start, y_position, box_width, box_height)
+        box_surface = pygame.Surface((box_rect.width, box_rect.height), pygame.SRCALPHA)
+        box_surface.fill(box_color)
+        screen.blit(box_surface, box_rect.topleft)
+
+        # Draw the text inside the box
+        screen.blit(resources_surface, (x_start + box_padding, y_position + box_padding))
+        for j, resource_surface in enumerate(resource_surfaces):
+            screen.blit(resource_surface, (x_start + box_padding, y_position + box_padding + (j + 1) * line_height))
+
+
+
+def run_gui_mode(game_engine):
+    pygame.init()
     
-        if self.game_data and self.game_data.map:
-            if keys[pygame.K_UP] and self.offset_y > self.game_data.map.height - self.TILE_HEIGHT:
-                self.offset_y -= scroll_speed
-            if keys[pygame.K_DOWN] and self.offset_y < ((self.game_data.map.height + 1) * (self.TILE_HEIGHT + 1) - GUI_size.y):
-                self.offset_y += scroll_speed
-            if keys[pygame.K_LEFT] and self.offset_x > (-(self.game_data.map.width + 1) * self.TILE_WIDTH + GUI_size.x) // 2:
-                self.offset_x -= scroll_speed
-            if keys[pygame.K_RIGHT] and self.offset_x < ((self.game_data.map.width - 1) * self.TILE_WIDTH) // 2:
-                self.offset_x += scroll_speed
+    # Initialiser l'écran en mode plein écran
+    screen = pygame.display.set_mode((GUI_size.x, GUI_size.y), pygame.FULLSCREEN)
+    clock = pygame.time.Clock()
 
-    def handle_events(self):
-        """Handle all pygame events"""
+    # Variables pour gérer le défilement et le zoom
+    offset_x, offset_y = 0, game_engine.map.height + TILE_HEIGHT
+    zoom_level = 1.0  # Niveau de zoom initial
+    background_texture_scaled = background_texture  # Texture redimensionnée pour le zoom
+    
+    show_resources = False  # Variable pour afficher/masquer les ressources
+    running = True
+
+    while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_F12:
-                    self.running = False
-                elif event.key == pygame.K_F2:
-                    self.show_resources = not self.show_resources
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                self.handle_mini_map_click(event)
-
-        self.handle_keyboard_input()
-
-    def update_display(self):
-        """Update the complete display"""
-        if not self.game_data:
-            return
+                if event.key == pygame.K_F12:  # Quitter le jeu
+                    running = False
+                elif event.key == pygame.K_F2:  # Afficher/masquer les ressources
+                    show_resources = not show_resources
             
-        # Clear screen
-        self.screen.fill((0, 0, 0))
-        
-        # Draw all elements
-        self.draw_isometric_map()
-        
-        # Draw units for all players
-        if hasattr(self.game_data, 'players'):
-            for player in self.game_data.players:
-                self.draw_villagers(player.units, player.buildings)
-                if hasattr(player, 'swordmans'):
-                    self.draw_swordman(player.swordmans)
-                if hasattr(player, 'archers'):
-                    self.draw_archer(player.archers)
-                if hasattr(player, 'horsemans'):
-                    self.draw_horseman(player.horsemans)
-    
-        
-        # Draw mini-map
-        self.draw_mini_map()
-        
-        # Draw resources if enabled
-        if self.show_resources:
-            self.display_player_resources()
-        
-        # Update display
+
+        # Gestion des touches pour déplacer la carte
+        keys = pygame.key.get_pressed()
+        scroll_speed = 20
+        if keys[pygame.K_UP] and offset_y > game_engine.map.height - TILE_HEIGHT:
+            offset_y -= scroll_speed
+        if keys[pygame.K_DOWN] and offset_y < ((game_engine.map.height + 1) * (TILE_HEIGHT + 1) - GUI_size.y):
+            offset_y += scroll_speed
+        if keys[pygame.K_LEFT] and offset_x > (-(game_engine.map.width + 1) * TILE_WIDTH + GUI_size.x) // 2:
+            offset_x -= scroll_speed
+        if keys[pygame.K_RIGHT] and offset_x < ((game_engine.map.width - 1) * TILE_WIDTH) // 2:
+            offset_x += scroll_speed
+
+        # Affichage de la carte et des entités
+        screen.fill((0, 0, 0))
+        screen.blit(background_texture_scaled, (0, 0))  # Appliquer le zoom sur l'arrière-plan
+        draw_isometric_map(screen, game_engine.map, offset_x, offset_y)   
+        for player in game_engine.players:
+            draw_villagers(screen, player.units, player.buildings, offset_x, offset_y, villager_image)
+
+        # Afficher la mini-map
+        draw_mini_map(screen, game_engine.map, offset_x, offset_y)
+        # Affichage des ressources si activé
+        if show_resources:
+            display_player_resources(screen, game_engine.players)
+
         pygame.display.flip()
 
     def initialize_pygame(self):
