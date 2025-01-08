@@ -15,9 +15,14 @@ TILE_HEIGHT = 32
 
 # Define colors for different players' town centers
 PLAYER_COLORS = {
-    1: (0, 0, 255),  # Blue for Player 1
-    2: (255, 0, 0),  # Red for Player 2
-    3: (128, 0, 128) # Purple for Player 3
+    1:(0, 0, 255),  # Blue
+    2:(255, 0, 0),  # Red
+    3:(0, 255, 0),  # Green
+    4:(255, 255, 0),  # Yellow
+    5:(128, 0, 128),  # Purple
+    6:(0, 255, 255),  # Cyan
+    7:(255, 165, 0),  # Orange
+    8:(128, 128, 128),  # Gray
 }
 
 # Initialize pygame

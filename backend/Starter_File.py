@@ -50,6 +50,8 @@ def generate_player_colors(num_players):
                 colors.append(color)
         return colors
 
+
+
 def start_random_players():
     """Generate players randomly without user input."""
     num_players = random.randint(2, 8)  # Choose a random number of players between 2 and 8
