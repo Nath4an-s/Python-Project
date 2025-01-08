@@ -10,6 +10,7 @@ from pynput.keyboard import Key, Listener
 from logger import debug_print
 from Units import *
 from Building import *
+from Actions import *
 from frontend.Terrain import Map
 try:
     from frontend import gui
@@ -19,8 +20,7 @@ except ImportError:
     debug_print("Pygame not installed; running without Pygame features such as 2.5D map view.")
 
 from html_report import generate_html_report
-from Actions import Action
-from Building import Building
+
 from IA import IA
 
 #Partie Gestion de Touche en Simultanée
