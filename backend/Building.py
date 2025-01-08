@@ -4,7 +4,7 @@ from Units import *
 import random
 import math
 
-from Starter_File import players as players_list
+from backend.Starter_File import players as players_list
 from logger import debug_print
 
 # Building Class
@@ -21,7 +21,7 @@ class Building:
         self.position = position  # Store the position of the TownCenter
         self.symbol = 'B'
         self.nb_workers = None # Number of workers for the building --> impact building time
-
+        
     def __str__(self):
         return self.symbol  # Ensure the building is represented by just the symbol
     

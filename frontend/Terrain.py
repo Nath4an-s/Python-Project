@@ -189,29 +189,15 @@ class Map:
                     tile = self.grid[map_y][map_x]
                     if (map_x, map_y) in changed_tiles or not changed_tiles:
                         if tile.building:
-                            # Determine the color based on the building's owner
-                            player = tile.building.player.name
-                            if player == "Player 1":
-                                color_pair = curses.color_pair(1)  # Blue
-                            elif player == "Player 2":
-                                color_pair = curses.color_pair(2)  # Red
-                            elif player == "Player 3":
-                                color_pair = curses.color_pair(3)  # Purple
-                            else:
-                                color_pair = curses.color_pair(0)  # Default
+                            # Assign color based on player's ID
+                            player_id = tile.building.player.id
+                            color_pair = curses.color_pair((player_id % 8) + 1)  # Cycle through colors
                             stdscr.addstr(y, x * 2, str(tile.building), color_pair)
                         elif tile.unit:
-                            # Determine the color based on the unit's owner
+                            # Assign color based on player's ID
                             for unit in tile.unit:
-                                player = unit.player.name
-                                if player == "Player 1":
-                                    color_pair = curses.color_pair(1)  # Blue
-                                elif player == "Player 2":
-                                    color_pair = curses.color_pair(2)  # Red
-                                elif player == "Player 3":
-                                    color_pair = curses.color_pair(3)  # Purple
-                                else:
-                                    color_pair = curses.color_pair(0)  # Default
+                                player_id = unit.player.id
+                                color_pair = curses.color_pair((player_id % 8) + 1)  # Cycle through colors
                                 stdscr.addstr(y, x * 2, str(unit), color_pair)
                         else:
                             stdscr.addstr(y, x * 2, str(tile))
@@ -240,10 +226,15 @@ class Map:
     def setup_colors(self):
         curses.start_color()
         # Define color pairs: pair number, foreground color, background color
-        curses.init_pair(1, curses.COLOR_BLUE, curses.COLOR_BLACK)    # Player 1 (blue)
-        curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)     # Player 2 (red)
-        curses.init_pair(3, curses.COLOR_MAGENTA, curses.COLOR_BLACK) # Player 3 (purple)
-        curses.init_pair(4, curses.COLOR_RED, curses.COLOR_BLACK)     # Pause border (red)
+        curses.init_pair(1, curses.COLOR_BLUE, curses.COLOR_BLACK)    # Player 1 (Blue)
+        curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)     # Player 2 (Red)
+        curses.init_pair(3, curses.COLOR_MAGENTA, curses.COLOR_BLACK) # Player 3 (Purple)
+        curses.init_pair(4, curses.COLOR_GREEN, curses.COLOR_BLACK)   # Player 4 (Green)
+        curses.init_pair(5, curses.COLOR_YELLOW, curses.COLOR_BLACK)  # Player 5 (Yellow)
+        curses.init_pair(6, curses.COLOR_CYAN, curses.COLOR_BLACK)    # Player 6 (Cyan)
+        curses.init_pair(7, curses.COLOR_WHITE, curses.COLOR_BLACK)   # Player 7 (White)
+        curses.init_pair(8, curses.COLOR_BLACK, curses.COLOR_WHITE)   # Player 8 (Black background, White text)
+        curses.init_pair(9, curses.COLOR_RED, curses.COLOR_BLACK)     # Pause border (Red)
     def find_nearest_resource(self, start_position, resource_type, player):
         min_distance = float('inf')
         nearest_resource = None
