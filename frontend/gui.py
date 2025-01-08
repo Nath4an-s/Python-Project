@@ -31,6 +31,17 @@ pygame.init()
 # Initialize the display (required before using convert_alpha or convert)
 WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600 
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), HIDDEN)
+zoom_level = 1.0
+zoom_increment = 0.1  # Incrément de zoom pour chaque mouvement de molette
+
+# Fonction pour gérer le zoom
+def handle_zoom(event, zoom_level):
+    if event.type == pygame.MOUSEWHEEL:
+        if event.y > 0:  # Molette vers le haut
+            zoom_level += zoom_increment
+        elif event.y < 0:  # Molette vers le bas
+            zoom_level = max(0.1, zoom_level - zoom_increment)  # Empêcher un zoom négatif ou nul
+    return zoom_level
 
 # Define paths using pathlib
 BASE_PATH = Path(__file__).resolve().parent.parent
@@ -353,6 +364,10 @@ def run_gui_mode(game_engine):
                     running = False
                 elif event.key == pygame.K_F2:  # Afficher/masquer les ressources
                     show_resources = not show_resources
+            if event.type == pygame.QUIT:
+                running = False
+        # Gérer le zoom avec la molette de la souris
+            zoom_level = handle_zoom(event, zoom_level)
             
 
         # Gestion des touches pour déplacer la carte
