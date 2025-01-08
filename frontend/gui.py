@@ -7,6 +7,7 @@ from backend.Units import Villager
 from pathlib import Path
 import os
 import random
+from pygame.locals import FULLSCREEN, RESIZABLE, VIDEORESIZE
 
 # Define isometric tile dimensions
 TILE_WIDTH = 64
@@ -221,48 +222,6 @@ def draw_borders(screen):
     # Ajoutez cette fonction à la fin de votre fonction run_gui_mode ou draw_isometric_map
 
 
-def draw_mini_map(screen, game_map, offset_x, offset_y):
-    mini_map_width = 200
-    mini_map_height = 150
-    mini_map_x = screen.get_width() - mini_map_width - 10
-    mini_map_y = screen.get_height() - mini_map_height - 10
-
-    # Draw mini-map background
-    pygame.draw.rect(screen, (50, 50, 50), (mini_map_x, mini_map_y, mini_map_width, mini_map_height))
-    
-    # Define an additional offset to shift tiles further right
-    tile_offset_x = 100  # Change this value to adjust how far right the tiles are displayed
-
-    # Draw the entire game map scaled down
-    for y in range(game_map.height):
-        for x in range(game_map.width):
-            tile = game_map.grid[y][x]  # Correctly access the tile from the grid
-
-            # Check if the tile has a TownCenter
-            if isinstance(tile.building, TownCenter):
-                player = tile.building.player
-                color = PLAYER_COLORS.get(player.id, (255, 255, 255))  # Default to white if no player color
-            else:
-                resource_type = tile.resource.type if tile.resource else "Soil"
-                color = COLORS[resource_type]
-
-            iso_x, iso_y = cart_to_iso(x, y)
-
-            # Scale coordinates for mini-map with offset
-            mini_map_iso_x = mini_map_x + (iso_x * (mini_map_width / (game_map.width * TILE_WIDTH))) + tile_offset_x
-            mini_map_iso_y = mini_map_y + (iso_y * (mini_map_height / (game_map.height * TILE_HEIGHT)))
-
-            # Draw the tile on the mini-map
-            pygame.draw.rect(screen, color, (mini_map_iso_x, mini_map_iso_y, 2, 2))  # Draw a small rectangle
-
-    # Calculate and draw the view rectangle on the mini-map
-    view_rect_x = mini_map_x + ((offset_x / (game_map.width * TILE_WIDTH)) * mini_map_width) + (tile_offset_x - game_map.width // 12)
-    view_rect_y = mini_map_y + ((offset_y / (game_map.height * TILE_HEIGHT)) * mini_map_height) - (game_map.height // 20)
-    view_rect_width = (GUI_size.x / (game_map.width * TILE_WIDTH)) * mini_map_width
-    view_rect_height = (GUI_size.y / (game_map.height * TILE_HEIGHT)) * mini_map_height
-    
-    pygame.draw.rect(screen, (255, 0, 0), (view_rect_x, view_rect_y, view_rect_width, view_rect_height), 2)  # Red outline
-
 
 
 VILLAGER_IMAGE_PATH = BASE_PATH / "assets" / "units" / "villager" / "Villager.png"
@@ -322,6 +281,7 @@ def draw_swordman(screen, swordmans, offset_x, offset_y):
 
 
 
+
 def display_player_resources(screen, players):
     font = pygame.font.Font(None, 32)  # Police plus grande pour le texte
     x_start = 10  # Position X de départ pour le texte
@@ -362,58 +322,56 @@ def display_player_resources(screen, players):
         for j, resource_surface in enumerate(resource_surfaces):
             screen.blit(resource_surface, (x_start + box_padding, y_position + box_padding + (j + 1) * line_height))
 
-def run_gui_mode(game_engine): 
+
+
+def run_gui_mode(game_engine):
     pygame.init()
     
-    screen = pygame.display.set_mode((GUI_size.x, GUI_size.y))
+    # Initialiser l'écran en mode plein écran
+    screen = pygame.display.set_mode((GUI_size.x, GUI_size.y), pygame.FULLSCREEN)
     clock = pygame.time.Clock()
 
+    # Variables pour gérer le défilement et le zoom
     offset_x, offset_y = 0, game_engine.map.height + TILE_HEIGHT
-    background_texture = load_image(background_path / "background.png")
+    zoom_level = 1.0  # Niveau de zoom initial
+    background_texture_scaled = background_texture  # Texture redimensionnée pour le zoom
     
-    show_resources = False  # Variable pour activer/désactiver l'affichage des ressources
-
+    show_resources = False  # Variable pour afficher/masquer les ressources
     running = True
+
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_F12:
+                if event.key == pygame.K_F12:  # Quitter le jeu
                     running = False
-                elif event.key == pygame.K_F2:  # Toggle resources display
+                elif event.key == pygame.K_F2:  # Afficher/masquer les ressources
                     show_resources = not show_resources
+            
 
+        # Gestion des touches pour déplacer la carte
         keys = pygame.key.get_pressed()
         scroll_speed = 20
         if keys[pygame.K_UP] and offset_y > game_engine.map.height - TILE_HEIGHT:
             offset_y -= scroll_speed
-        if keys[pygame.K_DOWN] and offset_y < ((game_engine.map.height + 1) * (TILE_HEIGHT+1) - GUI_size.y):
+        if keys[pygame.K_DOWN] and offset_y < ((game_engine.map.height + 1) * (TILE_HEIGHT + 1) - GUI_size.y):
             offset_y += scroll_speed
-        if keys[pygame.K_LEFT] and offset_x > (-(game_engine.map.width + 1) * TILE_WIDTH + GUI_size.x)//2:
+        if keys[pygame.K_LEFT] and offset_x > (-(game_engine.map.width + 1) * TILE_WIDTH + GUI_size.x) // 2:
             offset_x -= scroll_speed
-        if keys[pygame.K_RIGHT] and offset_x < ((game_engine.map.width - 1) * TILE_WIDTH)//2:
+        if keys[pygame.K_RIGHT] and offset_x < ((game_engine.map.width - 1) * TILE_WIDTH) // 2:
             offset_x += scroll_speed
 
         # Affichage de la carte et des entités
         screen.fill((0, 0, 0))
-        screen.blit(background_texture, (0, 0)) 
+        screen.blit(background_texture_scaled, (0, 0))  # Appliquer le zoom sur l'arrière-plan
         draw_isometric_map(screen, game_engine.map, offset_x, offset_y)   
         for player in game_engine.players:
-<<<<<<< HEAD
-            draw_villagers(screen, player.units, player.buildings, offset_x, offset_y, villager_image) 
+            draw_villagers(screen, player.units, player.buildings, offset_x, offset_y, villager_image)
 
-
-=======
-            draw_villagers(screen, player.units, offset_x, offset_y)
->>>>>>> 68650cbe46dda94a768e6ab68a0d0f33d354bb27
-        """
-        for swordsman in game_engine:
-            draw_swordman(screen, swordsman, offset_x, offset_y)
-        draw_borders(screen)   
+        # Afficher la mini-map
         draw_mini_map(screen, game_engine.map, offset_x, offset_y)
-        """
-        # Affichage des ressources si nécessaire
+        # Affichage des ressources si activé
         if show_resources:
             display_player_resources(screen, game_engine.players)
 
@@ -421,3 +379,71 @@ def run_gui_mode(game_engine):
         clock.tick(60)
 
     pygame.quit()
+
+
+
+
+
+def draw_mini_map(screen, game_map, offset_x, offset_y):
+    mini_map_width = 200
+    mini_map_height = 150
+    mini_map_x = screen.get_width() - mini_map_width - 10
+    mini_map_y = screen.get_height() - mini_map_height - 10
+
+    # Draw mini-map background
+    pygame.draw.rect(screen, (50, 50, 50), (mini_map_x, mini_map_y, mini_map_width, mini_map_height))
+
+    # Define an additional offset to shift tiles further right
+    tile_offset_x = 100  # Change this value to adjust how far right the tiles are displayed
+
+    # Draw the entire game map scaled down
+    for y in range(game_map.height):
+        for x in range(game_map.width):
+            tile = game_map.grid[y][x]  # Correctly access the tile from the grid
+
+            # Check if the tile has a TownCenter
+            if isinstance(tile.building, TownCenter):
+                player = tile.building.player
+                color = PLAYER_COLORS.get(player.id, (255, 255, 255))  # Default to white if no player color
+            else:
+                resource_type = tile.resource.type if tile.resource else "Soil"
+                color = COLORS[resource_type]
+
+            iso_x, iso_y = cart_to_iso(x, y)
+
+            # Scale coordinates for mini-map with offset
+            mini_map_iso_x = mini_map_x + (iso_x * (mini_map_width / (game_map.width * TILE_WIDTH))) + tile_offset_x
+            mini_map_iso_y = mini_map_y + (iso_y * (mini_map_height / (game_map.height * TILE_HEIGHT)))
+
+            # Draw the tile on the mini-map
+            pygame.draw.rect(screen, color, (mini_map_iso_x, mini_map_iso_y, 2, 2))  # Draw a small rectangle
+
+    # Calculate and draw the view rectangle on the mini-map
+    view_rect_x = mini_map_x + ((offset_x / (game_map.width * TILE_WIDTH)) * mini_map_width) + (tile_offset_x - game_map.width // 12)
+    view_rect_y = mini_map_y + ((offset_y / (game_map.height * TILE_HEIGHT)) * mini_map_height) - (game_map.height // 20)
+    view_rect_width = (GUI_size.x / (game_map.width * TILE_WIDTH)) * mini_map_width
+    view_rect_height = (GUI_size.y / (game_map.height * TILE_HEIGHT)) * mini_map_height
+
+    pygame.draw.rect(screen, (255, 0, 0), (view_rect_x, view_rect_y, view_rect_width, view_rect_height), 2)  # Red outline
+
+
+def handle_mini_map_click(event, game_map, offset_x, offset_y, zoom_level):
+    mini_map_width = 200
+    mini_map_height = 150
+    mini_map_x = GUI_size.x - mini_map_width - 10
+    mini_map_y = GUI_size.y - mini_map_height - 10
+
+    if event.type == pygame.MOUSEBUTTONDOWN:
+        mouse_x, mouse_y = event.pos
+        if mini_map_x <= mouse_x <= mini_map_x + mini_map_width and mini_map_y <= mouse_y <= mini_map_y + mini_map_height:
+            # Convertir les coordonnées de la mini-map en coordonnées de la carte principale
+            relative_x = (mouse_x - mini_map_x) / mini_map_width
+            relative_y = (mouse_y - mini_map_y) / mini_map_height
+
+            # Mettre à jour les offsets pour centrer la vue principale sur la position cliquée
+            offset_x = int(relative_x * game_map.width * TILE_WIDTH - (GUI_size.x / 2))
+            offset_y = int(relative_y * game_map.height * TILE_HEIGHT - (GUI_size.y / 2))
+
+    return offset_x, offset_y
+
+
