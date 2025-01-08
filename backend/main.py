@@ -4,7 +4,9 @@ import curses
 import os
 import sys
 import argparse
-
+import pygame
+from pygame.locals import HIDDEN
+from pygame.locals import FULLSCREEN    
 # Ajouter le chemin du projet à sys.path pour ne pas avoir à le faire dans le terminal
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(project_root)
@@ -35,6 +37,23 @@ def display_player_items(stdscr, players):
         color_pair = curses.color_pair(player_id)  # Associe l'ID du joueur à une couleur
         stdscr.addstr(f"Joueur {player_id}: {player.name} ({player.civilization})\n", color_pair)
 # Main function to initialize and start the game using curses
+
+
+
+
+def jouer_musique():
+    chemin_musique = "C:/Users/Asus/Desktop/Python-Project-1/assets/Music/Soundtrack.mp3"
+    if os.path.exists(chemin_musique):
+        pygame.mixer.music.load(chemin_musique)
+        pygame.mixer.music.play(-1)  # -1 pour jouer en boucle
+    else:
+        print(f"Le fichier de musique {chemin_musique} est introuvable.")
+
+def arreter_musique():
+    pygame.mixer.music.stop()
+
+
+
 def main(stdscr, save_file=None):
     # Initialiser curses
     curses.curs_set(0)  # Masquer le curseur
@@ -67,7 +86,7 @@ def main(stdscr, save_file=None):
         game_engine.load_game(save_file)
     else:
         print("Aucun fichier de sauvegarde fourni. Démarrage d'une nouvelle partie.")
-
+    
     # Lancer le jeu
     game_engine.run(stdscr)
 
