@@ -11,8 +11,11 @@ from pygame.locals import FULLSCREEN
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(project_root)
 
+os.system('cls' if os.name == 'nt' else 'clear')
+
+
 from Game_Engine import GameEngine
-from Starter_File import players, map_size
+from backend.Starter_File import players, map_size
 
 def init_colors():
     curses.start_color()

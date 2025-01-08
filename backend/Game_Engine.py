@@ -68,8 +68,8 @@ class GameEngine:
         Building.place_starting_buildings(self.map)  # Place starting town centers on the map
         Unit.place_starting_units(self.players, self.map)  # Place starting units on the map
         self.debug_print = debug_print
-        #self.ias = [IA(player, player.ai_profile, self.map, time.time()) for player in self.players]  # Instantiate IA for each player
-        self.ias = [IA(players[0], players[0].ai_profile, self.map, time.time())]
+        self.ias = [IA(player, player.ai_profile, self.map, time.time()) for player in self.players]  # Instantiate IA for each player
+        #self.ias = [IA(players[0], players[0].ai_profile, self.map, time.time())]
         self.IA_used = False
 
 
@@ -164,8 +164,7 @@ class GameEngine:
                     self.debug_print(self.map.grid[1][1].resource.amount)
                 elif key == ord('r'):
                     for ia in self.ias:
-                        self.debug_print(ia.player.name)
-                        self.debug_print(ia.decided_builds)
+                        self.debug_print(self.players)
                 elif key == ord('a'):
                     action.go_battle(self.players[2].units[0], self.players[1].units[1], current_time)
                 elif key == ord('b'):
