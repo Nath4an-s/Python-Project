@@ -1,13 +1,11 @@
-# Player.py
-
-#Civilizations' starting resources
+# Civilizations' starting resources
 Means_starting_resources = {"Wood": 200, "Food": 50, "Gold": 50}
 Leans_starting_resources = {"Wood": 2000, "Food": 2000, "Gold": 2000}
 Marines_starting_resources = {"Wood": 20000, "Food": 20000, "Gold": 20000}
 
 # Player Class
 class Player:
-    def __init__(self, name, civilization, ai_profile, player_id):
+    def __init__(self, name, civilization, ai_profile, player_id, color=None):
         self.name = name
         self.civilization = civilization
         self.units = []  # Initialize the units list
@@ -15,6 +13,7 @@ class Player:
         self.constructing_buildings = []
         self.ai_profile = ai_profile
         self.ai = None
+        self.color = color
         self.population = 0
         self.max_population = 200
         self.training_units = []
@@ -27,7 +26,7 @@ class Player:
             self.owned_resources = Marines_starting_resources
         
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.civilization})"
 
     def take_turn(self, game_map):
         self.ai_profile.make_decision(self, game_map)

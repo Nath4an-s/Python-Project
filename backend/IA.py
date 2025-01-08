@@ -4,7 +4,7 @@ from frontend.Terrain import Map
 from logger import debug_print
 from Building import *
 from Units import *
-from Starter_File import players
+from backend.Starter_File import players
 
 class IA:
     def __init__(self, player, mode, game_map, current_time_called): #only one player --> IA class will be called for each player in GameEngine

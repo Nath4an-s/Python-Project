@@ -74,6 +74,8 @@ class GameEngine:
         self.debug_print = debug_print
         self.ias = [IA(player, player.ai_profile, self.map, time.time()) for player in self.players]  # Instantiate IA for each player
         #self.ias = [IA(players[0], players[0].ai_profile, self.map, time.time())]
+        self.ias = [IA(player, player.ai_profile, self.map, time.time()) for player in self.players]  # Instantiate IA for each player
+        #self.ias = [IA(players[0], players[0].ai_profile, self.map, time.time())]
         self.IA_used = False
 
         # GUI thread related attributes
@@ -195,6 +197,7 @@ class GameEngine:
                     self.debug_print(self.map.grid[1][1].resource.amount)
                 elif key == ord('r'):
                     for ia in self.ias:
+                        self.debug_print(self.players)
                         self.debug_print(self.players)
                 elif key == ord('a'):
                     action.go_battle(self.players[2].units[0], self.players[1].units[1], current_time)
