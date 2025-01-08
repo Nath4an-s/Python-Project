@@ -189,6 +189,7 @@ class Villager(Unit):
         self.last_gathered = None
         self.target_resource = None
         self.range = 0.99
+        self.is_acting = None
 
 
 # Swordsman Class
@@ -199,6 +200,8 @@ class Swordsman(Unit):
         self.range = 0.99
         self.task = None
         self.name = "Swordsman"
+        self.is_acting = None
+
 
 
 # Horseman Class
@@ -209,6 +212,8 @@ class Horseman(Unit):
         self.range = 0.99
         self.task = None
         self.name = "Horseman"
+        self.is_acting = None
+
 
 
 # Archer Class
@@ -219,3 +224,5 @@ class Archer(Unit):
         self.range = 4  # Archers have a range of 4 tiles
         self.task = None
         self.name = "Archer"
+        self.is_acting = None
+
