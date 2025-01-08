@@ -231,7 +231,6 @@ class GameEngine:
                 elif key == ord('u'):
                     self.players[2].owned_resources["Food"] -= 19950
                 elif key == ord('v'):  
-                    a = (x for x in range(10))
                     self.save_game()
                 elif key == ord('i'):
                     for unit in self.players[2].units:
@@ -335,7 +334,7 @@ class GameEngine:
                     'map': self.map,
                     'turn': self.turn,
                     'is_paused': self.is_paused,
-                    'changed_tiles': self.changed_tiles,
+                    'changed_tiles': self.changed_tiles
                 }
                 pickle.dump(game_state, f)
             self.debug_print(f"Game saved to {filename}.")
@@ -355,6 +354,7 @@ class GameEngine:
                 self.turn = game_state['turn']
                 self.is_paused = game_state['is_paused']
                 self.changed_tiles = game_state['changed_tiles']
+                self.current_time = time.time()
             self.debug_print(f"Game loaded from {filename}.")
         except Exception as e:
             self.debug_print(f"Error loading game: {e}")
