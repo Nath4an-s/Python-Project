@@ -162,29 +162,6 @@ class GUI(threading.Thread):
             scaled_height = int(self.TILE_HEIGHT * 1.5)  # Augmenter la hauteur de 50%
             self.IMAGES["Wood"][i] = pygame.transform.scale(self.IMAGES["Wood"][i], (scaled_width, scaled_height))
 
-
-        def draw_trees(self, trees, buildings):
-            for tree in trees:
-                tree_x, tree_y = tree.position
-                iso_tree_x, iso_tree_y = self.cart_to_iso(tree_x, tree_y)
-                screen_x = iso_tree_x - self.offset_x
-                screen_y = iso_tree_y - self.offset_y - tree.image.get_height()
-
-                tree_visible = True
-                for building in buildings:
-                    if self.is_behind_building(tree, building):
-                        tree_visible = False
-                        break
-
-                if tree_visible:
-                    self.screen.blit(tree.image, (screen_x, screen_y))
-                else:
-                    # Si l'arbre est partiellement caché, réduire l'opacité ou ajuster la position
-                    modified_image = self.modify_tree_image(tree.image)  # Définir cette fonction pour ajuster l'image
-                    self.screen.blit(modified_image, (screen_x, screen_y))
-
-
-
     def cart_to_iso(self, cart_x, cart_y):
         iso_x = (cart_x - cart_y) * (self.TILE_WIDTH // 2)
         iso_y = (cart_x + cart_y) * (self.TILE_HEIGHT // 2)
@@ -207,7 +184,32 @@ class GUI(threading.Thread):
                 
                 if 0 <= screen_x < self.WINDOW_WIDTH and 0 <= screen_y < self.WINDOW_HEIGHT:
                     self.screen.blit(soil_image, (screen_x, screen_y))
+
+
+    def draw_buildings(self, buildings):
+        for building in sorted(buildings, key=lambda v: v.position[1]):
+            building_x, building_y = building.position
+            iso_x, iso_y = self.cart_to_iso(building_x, building_y)
+            screen_x = (GUI_size.x // 2) + iso_x - self.offset_x - self.TILE_WIDTH
+            screen_y = (GUI_size.y // 4) + iso_y - self.offset_y + 3 * self.TILE_HEIGHT
+            
+            building_x, building_y = building_x + building.size - 1, building_y + building.size - 1
+            building_type = building.name.replace(" ", "")
+            if building_type in self.building_images:
+                building_image = self.building_images[building_type]
+                building_adjusted_y = screen_y - building_image.get_height()
+                self.screen.blit(building_image, (screen_x, building_adjusted_y))
+
+    def draw_resources(self):
+        for y in range(self.game_data.map.height):
+            for x in range(self.game_data.map.width):
+                tile = self.game_data.map.grid[y][x]
+                soil_image = self.IMAGES['Soil']
+                iso_x, iso_y = self.cart_to_iso(x, y)
+                screen_x = (GUI_size.x // 2) + iso_x - self.offset_x
+                screen_y = (GUI_size.y // 4) + iso_y - self.offset_y - (soil_image.get_height() - self.TILE_HEIGHT)
                     
+                if tile.resource:
                     if tile.resource:
                         if tile.resource.type == "Wood":
                             pos = (x, y)
@@ -215,19 +217,12 @@ class GUI(threading.Thread):
                                 self.trees_drawn[pos] = random.randint(0, 5)
                             image = self.IMAGES["Wood"][self.trees_drawn[pos]]
                             screen_y_adjusted = screen_y - (image.get_height() - self.TILE_HEIGHT)
-                            self.screen.blit(image, (screen_x + self.TILE_WIDTH//2, screen_y_adjusted))
+                            self.screen.blit(image, (screen_x + self.TILE_WIDTH//4, screen_y_adjusted))
                         else:
-                            screen_y_adjusted = screen_y - (self.IMAGES["Gold"].get_height() - 2*self.TILE_HEIGHT)
+                            screen_y_adjusted = screen_y - (self.IMAGES["Gold"].get_height() - self.TILE_HEIGHT)
                             self.screen.blit(self.IMAGES["Gold"], (screen_x + self.TILE_WIDTH//2, screen_y_adjusted))
-                
-                if tile.building and (x - tile.building.size + 1, y - tile.building.size + 1) == tile.building.position:
-                    building_type = tile.building.name.replace(" ", "")
-                    if building_type in self.building_images:
-                        building_image = self.building_images[building_type]
-                        building_adjusted_y = screen_y - (building_image.get_height() - self.TILE_HEIGHT)
-                        self.screen.blit(building_image, (screen_x, building_adjusted_y))
-                        
-    def draw_villagers(self, villagers, buildings):
+
+    def draw_villagers(self, villagers):
         animation_speed = 5  # Vitesse de l'animation
         position_count = {}
         for villager in villagers:
@@ -241,41 +236,18 @@ class GUI(threading.Thread):
                 villager_x, villager_y = villager.position
                 iso_villager_x, iso_villager_y = self.cart_to_iso(villager_x, villager_y)
                 screen_x, screen_y = self.adjust_villager_position(
-                    (GUI_size.x // 2) + iso_villager_x - self.offset_x,
+                    (GUI_size.x // 2) + iso_villager_x - self.offset_x + 3*self.TILE_WIDTH//4,
                     (GUI_size.y // 4) + iso_villager_y - self.offset_y - self.villager_image.get_height(),
                     len(villagers_at_pos), index)
 
-                if self.is_villager_visible(villager_x, villager_y, buildings):
-                    current_time = pygame.time.get_ticks() // (1000 // animation_speed)
-                    if villager.is_acting:
-                        animation_frames = self.liste_villager_acting_animation
-                    else:
-                        animation_frames = self.liste_villager_walking_animation
-                    current_frame = current_time % len(animation_frames)
-                    villager_image = animation_frames[current_frame]
-                    self.screen.blit(villager_image, (screen_x, screen_y))
-
-
-
-    def is_villager_visible(self, villager_x, villager_y, buildings):
-        villager_iso_x, villager_iso_y = self.cart_to_iso(villager_x, villager_y)
-        
-        for building in buildings:
-            building_x, building_y = building.position
-            building_iso_x, building_iso_y = self.cart_to_iso(building_x, building_y)
-
-            # Assumer que la taille du bâtiment affecte également la visibilité
-            # Création d'une boîte englobante pour le bâtiment
-            building_width, building_height = self.building_images[building.name.replace(" ", "")].get_size()
-            
-            # Convertir en coordonnées isométriques la zone du bâtiment
-            building_iso_end_x = building_iso_x + building_width
-            building_iso_end_y = building_iso_y + building_height
-
-            # Vérifier si le villageois est derrière le bâtiment (cacher le villageois si il est derrière le bâtiment selon l'axe y)
-            if building_iso_x < villager_iso_x < building_iso_end_x and villager_iso_y < building_iso_y:
-                return False
-        return True
+                current_time = pygame.time.get_ticks() // (1000 // animation_speed)
+                if villager.is_acting:
+                    animation_frames = self.liste_villager_acting_animation
+                else:
+                    animation_frames = self.liste_villager_walking_animation
+                current_frame = current_time % len(animation_frames)
+                villager_image = animation_frames[current_frame]
+                self.screen.blit(villager_image, (screen_x, screen_y))
         
     def adjust_villager_position(self, screen_x, screen_y, count, index):
         offset = 10  # Décalage en pixels entre chaque villageois
@@ -470,13 +442,16 @@ class GUI(threading.Thread):
         # Draw units for all players
         if hasattr(self.game_data, 'players'):
             for player in self.game_data.players:
-                self.draw_villagers(player.units, player.buildings)
+                self.draw_villagers(player.units)
                 if hasattr(player, 'swordmans'):
                     self.draw_swordman(player.swordmans)
                 if hasattr(player, 'archers'):
                     self.draw_archer(player.archers)
                 if hasattr(player, 'horsemans'):
                     self.draw_horseman(player.horsemans)
+
+                self.draw_resources()
+                self.draw_buildings(player.buildings)
     
         
         # Draw mini-map
