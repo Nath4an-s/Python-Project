@@ -172,7 +172,7 @@ class GUI(threading.Thread):
         if not self.game_data or not self.game_data.map:
             return
 
-        #self.screen.blit(self.background_texture, (0, 0))
+        self.screen.blit(self.background_texture, (0, 0))
         
         for y in range(self.game_data.map.height):
             for x in range(self.game_data.map.width):
@@ -204,13 +204,36 @@ class GUI(threading.Thread):
                                 self.trees_drawn[pos] = random.randint(0, 5)
                             image = self.IMAGES["Wood"][self.trees_drawn[pos]]
                             screen_y_adjusted = screen_y - (image.get_height() - self.TILE_HEIGHT)
-                            self.screen.blit(image, (screen_x + self.TILE_WIDTH//4, screen_y_adjusted))
+                            
+                            render_list.append((screen_x + self.TILE_WIDTH//4, screen_y_adjusted, iso_x, iso_y, 'resource', image))
                         else:
-                            screen_y_adjusted = screen_y - (self.IMAGES["Gold"].get_height() - self.TILE_HEIGHT)
-                            self.screen.blit(self.IMAGES["Gold"], (screen_x + self.TILE_WIDTH//2, screen_y_adjusted))
+                            image = self.IMAGES["Gold"]
+                            screen_y_adjusted = screen_y - (image.get_height() - self.TILE_HEIGHT)
+                            
+                            render_list.append((screen_x + self.TILE_WIDTH//2, screen_y_adjusted, iso_x, iso_y,'resource', image))
 
-    def draw_villagers(self, villagers):
-        animation_speed = 5  # Vitesse de l'animation
+        for building in sorted(player.buildings, key=lambda b: (b.position[1] + b.size - 1, b.position[0])):
+            bottom_right_x = building.position[0] + building.size - 1
+            bottom_right_y = building.position[1] + building.size - 1
+        
+            iso_x, iso_y = self.cart_to_iso(bottom_right_x, bottom_right_y)
+        
+            screen_x = (GUI_size.x // 2) + iso_x - self.offset_x
+            screen_y = (GUI_size.y // 4) + iso_y - self.offset_y
+        
+            building_type = building.name.replace(" ", "")
+            if building_type in self.building_images:
+
+                current_time = pygame.time.get_ticks() // (1000 // animation_speed)
+                building_image = self.building_images[building_type]
+
+                building_adjusted_y = screen_y - building_image.get_height()
+                screen_x += self.TILE_WIDTH * (2 - building.size) // 2
+                if building.size == 3:
+                    building_adjusted_y += (self.TILE_HEIGHT // 2)
+
+                render_list.append((screen_x, building_adjusted_y, iso_x, iso_y, 'building', building_image))
+
         position_count = {}
         for villager in player.units:
             pos = (villager.position[0], villager.position[1])
@@ -234,7 +257,22 @@ class GUI(threading.Thread):
                     animation_frames = self.liste_villager_walking_animation
                 current_frame = current_time % len(animation_frames)
                 villager_image = animation_frames[current_frame]
-                self.screen.blit(villager_image, (screen_x, screen_y))
+
+                render_list.append((screen_x, screen_y, iso_x, iso_y, 'unit', villager_image))
+        return render_list
+
+    def draw_all_objects(self, player):
+
+        self.draw_isometric_map()
+
+        render_list = self.prepare_render_list(player)
+
+        render_list.sort(key=lambda obj: (obj[3], obj[2]))  
+
+        for obj in render_list:
+            screen_x, screen_y, _, _, obj_type, image = obj
+            self.screen.blit(image, (screen_x, screen_y))
+                
         
     def adjust_villager_position(self, screen_x, screen_y, count, index):
         offset = 10  # Décalage en pixels entre chaque villageois
@@ -385,19 +423,6 @@ class GUI(threading.Thread):
                 self.screen.blit(resource_surface, 
                     (x_start + box_padding, y_position + box_padding + (j + 1) * line_height))
                 
-    def is_behind_building(villager, building):
-        villager_x, villager_y = villager.position
-        building_x, building_y = building.position
-        building_name = building.name  # Utilisez l'attribut name pour identifier le type de bâtiment
-
-        # Définir les types de bâtiments qui bloquent la vue
-        blocking_buildings = {'Town Center', 'Barracks', 'Stables'}  # Assurez-vous que les noms correspondent à ceux définis dans les instances de Building
-
-        # Vérifiez si le villageois est directement derrière le bâtiment en coordonnée y
-        if building_name in blocking_buildings and villager_y > building_y:
-            return True
-
-        return False
     def handle_keyboard_input(self):
         """Handle keyboard input for map scrolling"""
         keys = pygame.key.get_pressed()
