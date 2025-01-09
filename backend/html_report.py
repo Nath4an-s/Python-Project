@@ -179,7 +179,7 @@ def generate_html_report(players):
             <div class="info">
                 <p>Population: {player.population}/{max_population_build}</p>
                 <div class="progress-bar">
-                    <div class="progress" style="width: {player.population / max_population_build * 100}%;"></div>
+                    <div class="progress" style="width: {0 if max_population_build == 0 else player.population / max_population_build * 100}%;"></div>
                 </div>
                 <p>Resources | Wood: {player.owned_resources['Wood']} | Food: {player.owned_resources['Food']} | Gold: {player.owned_resources['Gold']}</p>
             </div>

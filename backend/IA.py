@@ -313,9 +313,8 @@ class IA:
         if targets:
             target = self.choose_best_target_unit(self.target_player, targets)
             for troop in troops:
-                troop.task = None  # Clear any existing task
+                #troop.task = None  # Clear any existing task
                 Action(self.game_map).go_battle(troop, target, self.current_time_called)
-                self.debug_print(f"{self.player.name} : Attacking {target.name} with {troop.name} at {target.position}")
 
     def find_strategic_targets(self):
         targets = []

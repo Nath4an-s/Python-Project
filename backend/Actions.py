@@ -357,7 +357,7 @@ class Action:
             unit.path = None  # Reset path if target position has changed
 
         # Check if the unit is within range to attack
-        if (abs(unit.position[0] - target_x) < unit.range and abs(unit.position[1] - target_y) < unit.range) or (isinstance(enemy_unit, Building) and abs(unit.position[0] - target_x) <= 2 and abs(unit.position[1] - target_y) <= 2):
+        if (abs(unit.position[0] - target_x) < unit.range and abs(unit.position[1] - target_y) < unit.range) or (isinstance(enemy_unit, Building) and abs(unit.position[0] - target_x) <= enemy_unit.size and abs(unit.position[1] - target_y) <= enemy_unit.size):
             unit.task = "attacking"
             if not isinstance(enemy_unit, Building):
                 enemy_unit.is_attacked_by = unit
@@ -378,10 +378,12 @@ class Action:
 
             time_since_last_hit = current_time_called - unit.last_hit_time
             if time_since_last_hit >= 1.0:  # Ensure at least 1 second between attacks
-                if unit.attack > enemy_unit.hp:
+                if unit.attack >= enemy_unit.hp:
                     enemy_unit.hp = 0
                     if isinstance(enemy_unit, Building):
                         Building.kill_building(enemy_unit.player, enemy_unit, self.map)
+                        self.debug_print(f"{unit.name} has destroyed the building {enemy_unit.name}.")
+
                     else:
                         Unit.kill_unit(enemy_unit.player, enemy_unit, self.map)
                     unit.task = None

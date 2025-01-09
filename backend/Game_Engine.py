@@ -174,7 +174,25 @@ class GameEngine:
                 elif key == ord('g'):  # When 'g' is pressed, test for the functions
                     Unit.kill_unit(self.players[2], self.players[2].units[0], self.map)
                 elif key == ord('b'):  # When 'b' is pressed, test for the functions
-                    Unit.kill_unit(self.players[1], self.players[1].units[0], self.map)
+                    Building.spawn_building(self.players[2], 4, 4, House, self.map)
+                    Building.spawn_building(self.players[2], 6, 6, House, self.map)
+                    Unit.spawn_unit(Swordsman, 2, 2, self.players[2], self.map)
+                    
+                    Unit.spawn_unit(Swordsman, 2, 2, self.players[2], self.map)
+
+                    Unit.spawn_unit(Swordsman, 2, 2, self.players[2], self.map)
+
+                    Unit.spawn_unit(Swordsman, 2, 2, self.players[2], self.map)
+
+                    Unit.spawn_unit(Swordsman, 2, 2, self.players[2], self.map)
+
+                    Unit.spawn_unit(Swordsman, 2, 2, self.players[2], self.map)
+
+                    Unit.spawn_unit(Swordsman, 2, 2, self.players[2], self.map)
+
+                    Unit.spawn_unit(Swordsman, 2, 2, self.players[2], self.map)
+
+
                 elif key == ord('\t'):  # TAB key
                     generate_html_report(self.players)
                     self.debug_print(f"HTML report generated at turn {self.turn}")
@@ -295,6 +313,7 @@ class GameEngine:
 
             active_players = [p for p in self.players if p.units or p.buildings]
             self.debug_print(f"Player {active_players[0].name} wins the game!")
+            input("Press Enter to exit...")
 
         except KeyboardInterrupt:
             self.debug_print("Game interrupted. Exiting...")

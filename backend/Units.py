@@ -180,10 +180,10 @@ class Villager(Unit):
             noms_disponibles = self.lire_noms_fichier()
             name = random.choice(noms_disponibles)
 
-        super().__init__(player, hp=25, cost={"Food": 50}, attack=2, speed=3, symbol="v", training_time=3) #TODO : speed 0.8
+        super().__init__(player, hp=25, cost={"Food": 50}, attack=2, speed=8, symbol="v", training_time=3) #TODO : speed 0.8
         self.carrying = {"Wood": 0, "Food": 0, "Gold": 0}
         self.carry_capacity = 20  # Can carry up to 20 of any resource
-        self.gather_rate = 3  # 25 resources per minute (in resources per second) #TODO : 25 / 60
+        self.gather_rate = 25/60  # 25 resources per minute (in resources per second) #TODO : 25 / 60
         self.name = name
         self.task = None
         self.last_gathered = None
@@ -196,7 +196,7 @@ class Villager(Unit):
 class Swordsman(Unit):
     cost = {"Wood": 50, "Gold": 20}
     def __init__(self, player):
-        super().__init__(player, hp=40, cost={"Food": 50, "Gold": 20}, attack=4, speed=0.9, symbol="s", training_time=20)
+        super().__init__(player, hp=40, cost={"Food": 50, "Gold": 20}, attack=4, speed=9, symbol="s", training_time=20) #TODO : speed 0.9
         self.range = 0.99
         self.task = None
         self.name = "Swordsman"
@@ -208,7 +208,7 @@ class Swordsman(Unit):
 class Horseman(Unit):
     cost = {"Wood": 80, "Gold": 60}
     def __init__(self, player):
-        super().__init__(player, hp=45, cost={"Food": 80, "Gold": 20}, attack=4, speed=1.2, symbol="h", training_time=30)
+        super().__init__(player, hp=45, cost={"Food": 80, "Gold": 20}, attack=4, speed=12, symbol="h", training_time=30) #TODO : speed 1.2
         self.range = 0.99
         self.task = None
         self.name = "Horseman"
@@ -220,7 +220,7 @@ class Horseman(Unit):
 class Archer(Unit):
     cost = {"Wood": 30, "Gold": 40}
     def __init__(self, player):
-        super().__init__(player, hp=30, cost={"Wood": 25, "Gold": 45}, attack=4, speed=1, symbol="a", training_time=35)
+        super().__init__(player, hp=30, cost={"Wood": 25, "Gold": 45}, attack=4, speed=10, symbol="a", training_time=35) #TODO : speed 1
         self.range = 4  # Archers have a range of 4 tiles
         self.task = None
         self.name = "Archer"

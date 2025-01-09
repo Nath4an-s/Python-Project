@@ -3,13 +3,14 @@ from pygame.locals import HIDDEN, FULLSCREEN, RESIZABLE, VIDEORESIZE
 from backend.Starter_File import GUI_size
 from backend.Building import TownCenter
 from frontend.Terrain import Map
-from backend.Units import Villager
+from backend.Units import Villager, Horseman, Archer, Swordsman
 from pathlib import Path
 import os
 import random
 import threading
 from queue import Queue
 import time
+import queue
 
 class GUI(threading.Thread):
     def __init__(self, data_queue):
@@ -153,8 +154,43 @@ class GUI(threading.Thread):
             self.villager_image_act11,self.villager_image_act12,self.villager_image_act13,self.villager_image_act14,self.villager_image_act15
             
         ]
-        self.swordman_image = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierattack017.png")
+        self.swordman_image_1 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk001.png")
+        self.swordman_image_2 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk002.png")
+        self.swordman_image_3 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk003.png")
+        self.swordman_image_4 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk004.png")
+        self.swordman_image_5 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk005.png")
+        self.swordman_image_6 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk006.png")
+        self.swordman_image_7 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk007.png")
+        self.swordman_image_8 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk008.png")
+        self.swordman_image_9 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk009.png")
+        self.swordman_image_10 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk010.png")
+        self.swordman_image_11 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk011.png")
+        self.swordman_image_12 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk012.png")
+        self.swordman_image_13 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk013.png")
+        self.swordman_image_14 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk014.png")
+        self.swordman_image_15 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk015.png")
+
+        self.liste_swordman_walking_animation = [self.swordman_image_1,self.swordman_image_2,self.swordman_image_3, self.swordman_image_4,self.swordman_image_5,
+                                                 self.swordman_image_6,self.swordman_image_7,self.swordman_image_8,self.swordman_image_9,self.swordman_image_10,self.swordman_image_11,
+                                                 self.swordman_image_12,self.swordman_image_13,self.swordman_image_14,self.swordman_image_15]
         
+        self.swordman_image_att_1 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierattack001.png")
+        self.swordman_image_att_2 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierattack002.png")
+        self.swordman_image_att_3 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierattack003.png")
+        self.swordman_image_att_4 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierattack004.png")
+        self.swordman_image_att_5 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierattack005.png")
+        self.swordman_image_att_6 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierattack006.png")
+        self.swordman_image_att_7 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierattack007.png")
+        self.swordman_image_att_8 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierattack008.png")
+        self.swordman_image_att_9 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierattack009.png")
+        self.swordman_image_att_10 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierattack010.png")
+
+        self.liste_swordman_attacking_animation = [self.swordman_image_att_1,self.swordman_image_att_2,self.swordman_image_att_3,self.swordman_image_att_4,self.swordman_image_att_5,
+                                                    self.swordman_image_att_6,self.swordman_image_att_7,self.swordman_image_att_8,self.swordman_image_att_9,self.swordman_image_att_10]
+
+        self.archer_image = self.load_image(self.BASE_PATH / "assets" / "units" / "archer" / "Archerwalk001.png")
+        self.horseman_image = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "Cavalierwalk001.png")
+
         # Scale gold and tree images
         self.IMAGES["Gold"] = pygame.transform.scale(self.IMAGES["Gold"], (self.TILE_WIDTH, self.TILE_HEIGHT))
         for i in range(len(self.IMAGES["Wood"])):
@@ -283,12 +319,32 @@ class GUI(threading.Thread):
         return object_y > building_y and object_y < building_end_y
 
     def draw_swordman(self, swordmans):
+        animation_speed = 10  # Vitesse de l'animation
+        position_count = {}
         for swordman in swordmans:
-            iso_x, iso_y = self.cart_to_iso(swordman.position[0], swordman.position[1])
-            screen_x = iso_x - self.offset_x
-            screen_y = iso_y - self.offset_y - self.swordman_image.get_height()
-            if 0 <= screen_x < self.WINDOW_WIDTH and 0 <= screen_y < self.WINDOW_HEIGHT:
-                self.screen.blit(self.swordman_image, (screen_x, screen_y))
+            pos = (swordman.position[0], swordman.position[1])
+            if pos not in position_count:
+                position_count[pos] = []
+                position_count[pos].append(swordman)
+
+        for pos, swordmans_at_pos in position_count.items():
+            for index, swordman in enumerate(swordmans_at_pos):
+                swordman_x, swordman_y = swordman.position
+                iso_swordman_x, iso_swordman_y = self.cart_to_iso(swordman_x, swordman_y)
+                screen_x, screen_y = self.adjust_villager_position(
+                (GUI_size.x // 2) + iso_swordman_x - self.offset_x + 3*self.TILE_WIDTH//4,
+                (GUI_size.y // 4) + iso_swordman_y - self.offset_y - self.swordman_image_1.get_height(),
+                len(swordmans_at_pos), index)
+
+                current_time = pygame.time.get_ticks() // (1000 // animation_speed)
+                if swordman.task == "attacking":
+                    animation_frames = self.liste_swordman_attacking_animation
+                else:
+                    animation_frames = self.liste_swordman_walking_animation
+                current_frame = current_time % len(animation_frames)
+                swordman_image = animation_frames[current_frame]
+                if 0 <= screen_x < self.WINDOW_WIDTH and 0 <= screen_y < self.WINDOW_HEIGHT:
+                    self.screen.blit(swordman_image, (screen_x, screen_y))
 
     def draw_archer(self, archers):
         for archer in archers:
@@ -472,13 +528,17 @@ class GUI(threading.Thread):
         # Draw units for all players
         if hasattr(self.game_data, 'players'):
             for player in self.game_data.players:
-                self.draw_villagers(player.units)
-                if hasattr(player, 'swordmans'):
-                    self.draw_swordman(player.swordmans)
-                if hasattr(player, 'archers'):
-                    self.draw_archer(player.archers)
-                if hasattr(player, 'horsemans'):
-                    self.draw_horseman(player.horsemans)
+                for unit in player.units:
+                    unit_type = type(unit).__name__
+                    if unit_type == "Villager":
+                        self.draw_villagers([unit])
+                    elif unit_type == "Swordsman":
+                        self.draw_swordman([unit])
+                    elif unit_type == "Archer":
+                        self.draw_archer([unit])
+                    elif unit_type == "Horseman":
+                        self.draw_horseman([unit])
+
 
                 self.draw_resources()
                 self.draw_buildings(player.buildings)
@@ -522,7 +582,7 @@ class GUI(threading.Thread):
                     new_data = self.data_queue.get_nowait()
                     if new_data is not None:
                         self.game_data = new_data
-                except Queue.Empty:
+                except queue.Empty:
                     pass
                 
                 # Handle events and update display
