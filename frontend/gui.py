@@ -27,7 +27,7 @@ class GUI(threading.Thread):
         self.PLAYER_COLORS = {
             1: (0, 0, 255),    # Blue
             2: (255, 0, 0),    # Red
-            3: (0, 100, 0),    # Green
+            3: (0, 255, 0),    # Green
             4: (255, 255, 0),  # Yellow
             5: (128, 0, 128),  # Purple
             6: (0, 255, 255),  # Cyan
@@ -171,10 +171,11 @@ class GUI(threading.Thread):
         if not self.game_data or not self.game_data.map:
             return
 
-        #self.screen.blit(self.background_texture, (0, 0))
+        self.screen.blit(self.background_texture, (0, 0))
         
         for y in range(self.game_data.map.height):
             for x in range(self.game_data.map.width):
+                tile = self.game_data.map.grid[y][x]
                 
                 soil_image = self.IMAGES['Soil']
                 iso_x, iso_y = self.cart_to_iso(x, y)
@@ -183,10 +184,23 @@ class GUI(threading.Thread):
                 
                 if 0 <= screen_x < self.WINDOW_WIDTH and 0 <= screen_y < self.WINDOW_HEIGHT:
                     self.screen.blit(soil_image, (screen_x, screen_y))
-    
-    def prepare_render_list(self, player):
-        render_list = []
-        animation_speed = 5  # Vitesse de l'animation
+
+
+    def draw_buildings(self, buildings):
+        for building in sorted(buildings, key=lambda v: v.position[1]):
+            building_x, building_y = building.position
+            iso_x, iso_y = self.cart_to_iso(building_x, building_y)
+            screen_x = (GUI_size.x // 2) + iso_x - self.offset_x - self.TILE_WIDTH
+            screen_y = (GUI_size.y // 4) + iso_y - self.offset_y + 3 * self.TILE_HEIGHT
+            
+            building_x, building_y = building_x + building.size - 1, building_y + building.size - 1
+            building_type = building.name.replace(" ", "")
+            if building_type in self.building_images:
+                building_image = self.building_images[building_type]
+                building_adjusted_y = screen_y - building_image.get_height()
+                self.screen.blit(building_image, (screen_x, building_adjusted_y))
+
+    def draw_resources(self):
         for y in range(self.game_data.map.height):
             for x in range(self.game_data.map.width):
                 tile = self.game_data.map.grid[y][x]
@@ -203,38 +217,15 @@ class GUI(threading.Thread):
                                 self.trees_drawn[pos] = random.randint(0, 5)
                             image = self.IMAGES["Wood"][self.trees_drawn[pos]]
                             screen_y_adjusted = screen_y - (image.get_height() - self.TILE_HEIGHT)
-                            
-                            render_list.append((screen_x + self.TILE_WIDTH//4, screen_y_adjusted, iso_x, iso_y, 'resource', image))
+                            self.screen.blit(image, (screen_x + self.TILE_WIDTH//4, screen_y_adjusted))
                         else:
-                            image = self.IMAGES["Gold"]
-                            screen_y_adjusted = screen_y - (image.get_height() - self.TILE_HEIGHT)
-                            
-                            render_list.append((screen_x + self.TILE_WIDTH//2, screen_y_adjusted, iso_x, iso_y,'resource', image))
+                            screen_y_adjusted = screen_y - (self.IMAGES["Gold"].get_height() - self.TILE_HEIGHT)
+                            self.screen.blit(self.IMAGES["Gold"], (screen_x + self.TILE_WIDTH//2, screen_y_adjusted))
 
-        for building in sorted(player.buildings, key=lambda b: (b.position[1] + b.size - 1, b.position[0])):
-            bottom_right_x = building.position[0] + building.size - 1
-            bottom_right_y = building.position[1] + building.size - 1
-        
-            iso_x, iso_y = self.cart_to_iso(bottom_right_x, bottom_right_y)
-        
-            screen_x = (GUI_size.x // 2) + iso_x - self.offset_x
-            screen_y = (GUI_size.y // 4) + iso_y - self.offset_y
-        
-            building_type = building.name.replace(" ", "")
-            if building_type in self.building_images:
-
-                current_time = pygame.time.get_ticks() // (1000 // animation_speed)
-                building_image = self.building_images[building_type]
-
-                building_adjusted_y = screen_y - building_image.get_height()
-                screen_x += self.TILE_WIDTH * (2 - building.size) // 2
-                if building.size == 3:
-                    building_adjusted_y += (self.TILE_HEIGHT // 2)
-
-                render_list.append((screen_x, building_adjusted_y, iso_x, iso_y, 'building', building_image))
-
+    def draw_villagers(self, villagers):
+        animation_speed = 5  # Vitesse de l'animation
         position_count = {}
-        for villager in player.units:
+        for villager in villagers:
             pos = (villager.position[0], villager.position[1])
             if pos not in position_count:
                 position_count[pos] = []
@@ -256,22 +247,7 @@ class GUI(threading.Thread):
                     animation_frames = self.liste_villager_walking_animation
                 current_frame = current_time % len(animation_frames)
                 villager_image = animation_frames[current_frame]
-
-                render_list.append((screen_x, screen_y, iso_x, iso_y, 'unit', villager_image))
-        return render_list
-
-    def draw_all_objects(self, player):
-
-        self.draw_isometric_map()
-
-        render_list = self.prepare_render_list(player)
-
-        render_list.sort(key=lambda obj: (obj[3], obj[2]))  
-
-        for obj in render_list:
-            screen_x, screen_y, _, _, obj_type, image = obj
-            if 0 <= screen_x < self.WINDOW_WIDTH and 0 <= screen_y < self.WINDOW_HEIGHT:
-                self.screen.blit(image, (screen_x, screen_y))
+                self.screen.blit(villager_image, (screen_x, screen_y))
         
     def adjust_villager_position(self, screen_x, screen_y, count, index):
         offset = 10  # Décalage en pixels entre chaque villageois
@@ -289,29 +265,37 @@ class GUI(threading.Thread):
                 return False
         return True
 
+    def is_behind_building(self, object, building):
+        object_x, object_y = object.position
+        building_x, building_y = building.position
+        building_end_x = building_x + building.width
+        building_end_y = building_y + building.height
+
+        # Assumer une simple vérification basée sur la coordonnée Y pour simplification
+        return object_y > building_y and object_y < building_end_y
+
+
+
     def draw_swordman(self, swordmans):
         for swordman in swordmans:
             iso_x, iso_y = self.cart_to_iso(swordman.position[0], swordman.position[1])
             screen_x = iso_x - self.offset_x
             screen_y = iso_y - self.offset_y - self.swordman_image.get_height()
-            if 0 <= screen_x < self.WINDOW_WIDTH and 0 <= screen_y < self.WINDOW_HEIGHT:
-                self.screen.blit(self.swordman_image, (screen_x, screen_y))
+            self.screen.blit(self.swordman_image, (screen_x, screen_y))
 
     def draw_archer(self, archers):
         for archer in archers:
             iso_x, iso_y = self.cart_to_iso(archer.position[0], archer.position[1])
             screen_x = iso_x - self.offset_x
             screen_y = iso_y - self.offset_y - self.archer_image.get_height()
-            if 0 <= screen_x < self.WINDOW_WIDTH and 0 <= screen_y < self.WINDOW_HEIGHT:
-                self.screen.blit(self.archer_image, (screen_x, screen_y))
+            self.screen.blit(self.archer_image, (screen_x, screen_y))
 
     def draw_horseman(self, horsemans):
         for horseman in horsemans:
             iso_x, iso_y = self.cart_to_iso(horseman.position[0], horseman.position[1])
             screen_x = iso_x - self.offset_x
             screen_y = iso_y - self.offset_y - self.horseman_image.get_height()
-            if 0 <= screen_x < self.WINDOW_WIDTH and 0 <= screen_y < self.WINDOW_HEIGHT:
-                self.screen.blit(self.horseman_image, (screen_x, screen_y))
+            self.screen.blit(self.horseman_image, (screen_x, screen_y))
 
     def draw_mini_map(self):
         mini_map_width = 200
@@ -319,17 +303,20 @@ class GUI(threading.Thread):
         mini_map_x = self.screen.get_width() - mini_map_width - 10
         mini_map_y = self.screen.get_height() - mini_map_height - 10
 
-        pygame.draw.rect(self.screen, (50, 40, 50), (mini_map_x, mini_map_y, mini_map_width, mini_map_height))
+        pygame.draw.rect(self.screen, (50, 50, 50), (mini_map_x, mini_map_y, mini_map_width, mini_map_height))
         
         tile_offset_x = 100
 
-        # Draw terrain and resources
         for y in range(self.game_data.map.height):
             for x in range(self.game_data.map.width):
                 tile = self.game_data.map.grid[y][x]
 
-                resource_type = tile.resource.type if tile.resource else "Soil"
-                color = self.COLORS[resource_type]
+                if isinstance(tile.building, TownCenter):
+                    player = tile.building.player
+                    color = self.PLAYER_COLORS.get(player.id, (255, 255, 255))
+                else:
+                    resource_type = tile.resource.type if tile.resource else "Soil"
+                    color = self.COLORS[resource_type]
 
                 iso_x, iso_y = self.cart_to_iso(x, y)
                 
@@ -337,23 +324,6 @@ class GUI(threading.Thread):
                 mini_map_iso_y = mini_map_y + (iso_y * (mini_map_height / (self.game_data.map.height * self.TILE_HEIGHT)))
                 
                 pygame.draw.rect(self.screen, color, (mini_map_iso_x, mini_map_iso_y, 2, 2))
-
-        # Draw players and their units
-        for player in self.game_data.players:
-            player_color = self.PLAYER_COLORS.get(player.id, (255, 255, 255))
-            # Draw player units
-            for unit in player.units:
-                iso_x, iso_y = self.cart_to_iso(unit.position[0], unit.position[1])
-                mini_map_iso_x = mini_map_x + (iso_x * (mini_map_width / (self.game_data.map.width * self.TILE_WIDTH))) + tile_offset_x
-                mini_map_iso_y = mini_map_y + (iso_y * (mini_map_height / (self.game_data.map.height * self.TILE_HEIGHT)))
-                pygame.draw.circle(self.screen, player_color, (int(mini_map_iso_x), int(mini_map_iso_y)), 2)
-
-            # Draw player buildings
-            for building in player.buildings:
-                iso_x, iso_y = self.cart_to_iso(building.position[0], building.position[1])
-                mini_map_iso_x = mini_map_x + (iso_x * (mini_map_width / (self.game_data.map.width * self.TILE_WIDTH))) + tile_offset_x
-                mini_map_iso_y = mini_map_y + (iso_y * (mini_map_height / (self.game_data.map.height * self.TILE_HEIGHT)))
-                pygame.draw.rect(self.screen, player_color, (mini_map_iso_x, mini_map_iso_y, 3, 3))
 
         # Calculate viewing rectangle dimensions
         view_rect_width = (GUI_size.x / (self.game_data.map.width * self.TILE_WIDTH)) * mini_map_width
@@ -479,15 +449,16 @@ class GUI(threading.Thread):
         # Draw units for all players
         if hasattr(self.game_data, 'players'):
             for player in self.game_data.players:
-                #self.draw_buildings(player)
-                #self.draw_villagers(player)
-                self.draw_all_objects(player)
+                self.draw_villagers(player.units)
                 if hasattr(player, 'swordmans'):
                     self.draw_swordman(player.swordmans)
                 if hasattr(player, 'archers'):
                     self.draw_archer(player.archers)
                 if hasattr(player, 'horsemans'):
                     self.draw_horseman(player.horsemans)
+
+                self.draw_resources()
+                self.draw_buildings(player.buildings)
     
         
         # Draw mini-map
