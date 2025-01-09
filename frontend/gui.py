@@ -172,7 +172,7 @@ class GUI(threading.Thread):
         if not self.game_data or not self.game_data.map:
             return
 
-        self.screen.blit(self.background_texture, (0, 0))
+        #self.screen.blit(self.background_texture, (0, 0))
         
         for y in range(self.game_data.map.height):
             for x in range(self.game_data.map.width):
@@ -271,8 +271,8 @@ class GUI(threading.Thread):
 
         for obj in render_list:
             screen_x, screen_y, _, _, obj_type, image = obj
-            self.screen.blit(image, (screen_x, screen_y))
-                
+            if 0 <= screen_x < self.WINDOW_WIDTH and 0 <= screen_y < self.WINDOW_HEIGHT:
+                self.screen.blit(image, (screen_x, screen_y))
         
     def adjust_villager_position(self, screen_x, screen_y, count, index):
         offset = 10  # Décalage en pixels entre chaque villageois
@@ -423,6 +423,19 @@ class GUI(threading.Thread):
                 self.screen.blit(resource_surface, 
                     (x_start + box_padding, y_position + box_padding + (j + 1) * line_height))
                 
+    def is_behind_building(villager, building):
+        villager_x, villager_y = villager.position
+        building_x, building_y = building.position
+        building_name = building.name  # Utilisez l'attribut name pour identifier le type de bâtiment
+
+        # Définir les types de bâtiments qui bloquent la vue
+        blocking_buildings = {'Town Center', 'Barracks', 'Stables'}  # Assurez-vous que les noms correspondent à ceux définis dans les instances de Building
+
+        # Vérifiez si le villageois est directement derrière le bâtiment en coordonnée y
+        if building_name in blocking_buildings and villager_y > building_y:
+            return True
+
+        return False
     def handle_keyboard_input(self):
         """Handle keyboard input for map scrolling"""
         keys = pygame.key.get_pressed()
