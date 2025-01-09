@@ -95,7 +95,7 @@ class GUI(threading.Thread):
             "Stable": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6),
             "ArcheryRange": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),
             "Camp": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),
-            "Farm": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),
+            "Farm": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 2),
             "Keep": (64,64)
         }
 
@@ -103,6 +103,7 @@ class GUI(threading.Thread):
         for building_type, size in building_types.items():
             image = self.load_image(self.BUILDINGS_PATH / f"{building_type.lower()}.png")
             self.building_images[building_type] = pygame.transform.scale(image, size)
+            
 
         # Load background
         self.background_texture = self.load_image(self.BACKGROUND_PATH / "background.png")
@@ -211,7 +212,6 @@ class GUI(threading.Thread):
         
         for y in range(self.game_data.map.height):
             for x in range(self.game_data.map.width):
-                tile = self.game_data.map.grid[y][x]
                 
                 soil_image = self.IMAGES['Soil']
                 iso_x, iso_y = self.cart_to_iso(x, y)
@@ -265,8 +265,8 @@ class GUI(threading.Thread):
                             if 0 <= screen_x < self.WINDOW_WIDTH and 0 <= screen_y < self.WINDOW_HEIGHT:
                                 self.screen.blit(self.IMAGES["Gold"], (screen_x + self.TILE_WIDTH//2, screen_y_adjusted))
 
-    def draw_villagers(self, villagers):
-        animation_speed = 10  # Vitesse de l'animation
+    def draw_villagers(self, villagers, buildings):
+        animation_speed = 5 
         position_count = {}
         for villager in villagers:
             pos = (villager.position[0], villager.position[1])
@@ -274,12 +274,32 @@ class GUI(threading.Thread):
                 position_count[pos] = []
             position_count[pos].append(villager)
 
+        building_masks = []
+        for building in buildings:
+            bottom_right_x = building.position[0] + building.size - 1
+            bottom_right_y = building.position[1] + building.size - 1
+            iso_building_x, iso_building_y = self.cart_to_iso(bottom_right_x, bottom_right_y)
+
+            screen_building_x = (GUI_size.x // 2) + iso_building_x - self.offset_x
+            screen_building_y = (GUI_size.y // 4) + iso_building_y - self.offset_y
+
+            building_type = building.name.replace(" ", "")
+            if building_type in self.building_images:
+                building_image = self.building_images[building_type]
+                building_adjusted_y = screen_building_y - building_image.get_height()
+                screen_building_x += self.TILE_WIDTH * (2 - building.size) // 2
+                if building.size == 3:
+                    building_adjusted_y += (self.TILE_HEIGHT // 2)
+
+                building_mask = pygame.mask.from_surface(building_image)
+                building_masks.append((building_mask, screen_building_x, building_adjusted_y))
+
         for pos, villagers_at_pos in position_count.items():
             for index, villager in enumerate(villagers_at_pos):
                 villager_x, villager_y = villager.position
                 iso_villager_x, iso_villager_y = self.cart_to_iso(villager_x, villager_y)
                 screen_x, screen_y = self.adjust_villager_position(
-                    (GUI_size.x // 2) + iso_villager_x - self.offset_x + 3*self.TILE_WIDTH//4,
+                    (GUI_size.x // 2) + iso_villager_x - self.offset_x + 3 * self.TILE_WIDTH // 4,
                     (GUI_size.y // 4) + iso_villager_y - self.offset_y - self.villager_image_1.get_height(),
                     len(villagers_at_pos), index)
 
@@ -290,8 +310,20 @@ class GUI(threading.Thread):
                     animation_frames = self.liste_villager_walking_animation
                 current_frame = current_time % len(animation_frames)
                 villager_image = animation_frames[current_frame]
-                if 0 <= screen_x < self.WINDOW_WIDTH and 0 <= screen_y < self.WINDOW_HEIGHT:
-                    self.screen.blit(villager_image, (screen_x, screen_y))
+                
+                villager_surface = pygame.Surface(villager_image.get_size(), pygame.SRCALPHA)
+                villager_surface.blit(villager_image, (0, 0))
+                villager_mask = pygame.mask.from_surface(villager_surface)
+
+                for building_mask, building_screen_x, building_screen_y in building_masks:
+                    offset_x = screen_x - building_screen_x
+                    offset_y = screen_y - building_screen_y
+                    villager_mask.erase(building_mask, (offset_x, offset_y))
+
+                visible_surface = villager_mask.to_surface(unsetcolor=(0, 0, 0, 0), setcolor=(255, 255, 255, 255))
+                visible_surface.blit(villager_image, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+
+                self.screen.blit(visible_surface, (screen_x, screen_y))
         
     def adjust_villager_position(self, screen_x, screen_y, count, index):
         offset = 10  # Décalage en pixels entre chaque villageois
@@ -527,21 +559,20 @@ class GUI(threading.Thread):
         
         # Draw units for all players
         if hasattr(self.game_data, 'players'):
+            self.draw_resources()
             for player in self.game_data.players:
+                self.draw_buildings(player.buildings)
                 for unit in player.units:
                     unit_type = type(unit).__name__
                     if unit_type == "Villager":
-                        self.draw_villagers([unit])
+                        self.draw_villagers([unit],player.buildings)
                     elif unit_type == "Swordsman":
                         self.draw_swordman([unit])
                     elif unit_type == "Archer":
                         self.draw_archer([unit])
                     elif unit_type == "Horseman":
                         self.draw_horseman([unit])
-
-
-                self.draw_resources()
-                self.draw_buildings(player.buildings)
+                
     
         
         # Draw mini-map
