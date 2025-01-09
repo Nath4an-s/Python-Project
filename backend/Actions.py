@@ -315,6 +315,7 @@ class Action:
         
         # Check if unit's carrying capacity is full or if it needs to return due to lack of resource
         if unit.carrying[resource_type] >= unit.carry_capacity or unit.task == "returning":
+            unit.task = "returning"
             # Locate the nearest drop-off location (Town Center or Camp)
             if resource_type == "Food" and tile.building:
                 tile.building.is_farmed = False

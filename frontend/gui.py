@@ -53,7 +53,7 @@ class GUI(threading.Thread):
         self.IMAGES = {}
         self.building_images = {}
         self.background_texture = None
-        self.villager_image = None
+        self.villager_image_1 = None
         self.swordman_image = None
         self.font = None  # Ajout de l'attribut font
         
@@ -107,7 +107,6 @@ class GUI(threading.Thread):
         self.background_texture = self.load_image(self.BACKGROUND_PATH / "background.png")
         
         # Load unit images
-        self.villager_image = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "Villager.png")   
         self.villager_image_1 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk001.png")
         self.villager_image_2 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk002.png")
         self.villager_image_3 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk003.png")
@@ -125,7 +124,7 @@ class GUI(threading.Thread):
         self.villager_image_15 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk015.png")
 
         self.liste_villager_walking_animation = [
-            self.villager_image,self.villager_image_1,self.villager_image_2,self.villager_image_3,self.villager_image_4,self.villager_image_5,
+            self.villager_image_1,self.villager_image_2,self.villager_image_3,self.villager_image_4,self.villager_image_5,
             self.villager_image_6,self.villager_image_7,self.villager_image_8,self.villager_image_9,self.villager_image_10,self.villager_image_11,
             self.villager_image_12,self.villager_image_13,self.villager_image_14,self.villager_image_15
         ]
@@ -247,11 +246,11 @@ class GUI(threading.Thread):
                 iso_villager_x, iso_villager_y = self.cart_to_iso(villager_x, villager_y)
                 screen_x, screen_y = self.adjust_villager_position(
                     (GUI_size.x // 2) + iso_villager_x - self.offset_x + 3*self.TILE_WIDTH//4,
-                    (GUI_size.y // 4) + iso_villager_y - self.offset_y - self.villager_image.get_height(),
+                    (GUI_size.y // 4) + iso_villager_y - self.offset_y - self.villager_image_1.get_height(),
                     len(villagers_at_pos), index)
 
                 current_time = pygame.time.get_ticks() // (1000 // animation_speed)
-                if villager.is_acting:
+                if villager.task == "gathering":
                     animation_frames = self.liste_villager_acting_animation
                 else:
                     animation_frames = self.liste_villager_walking_animation
