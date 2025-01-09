@@ -326,10 +326,13 @@ class GUI(threading.Thread):
                 
                 pygame.draw.rect(self.screen, color, (mini_map_iso_x, mini_map_iso_y, 2, 2))
 
-        view_rect_x = mini_map_x + ((self.offset_x / (self.game_data.map.width * self.TILE_WIDTH)) * mini_map_width) + (tile_offset_x - self.game_data.map.width // 12)
-        view_rect_y = mini_map_y + ((self.offset_y / (self.game_data.map.height * self.TILE_HEIGHT)) * mini_map_height) - (self.game_data.map.height // 20)
+        # Calculate viewing rectangle dimensions
         view_rect_width = (GUI_size.x / (self.game_data.map.width * self.TILE_WIDTH)) * mini_map_width
         view_rect_height = (GUI_size.y / (self.game_data.map.height * self.TILE_HEIGHT)) * mini_map_height
+        
+        # Center the rect on the offset position
+        view_rect_x = mini_map_x + ((self.offset_x / (self.game_data.map.width * self.TILE_WIDTH)) * mini_map_width) + (tile_offset_x - view_rect_width/2)
+        view_rect_y = mini_map_y + ((self.offset_y / (self.game_data.map.height * self.TILE_HEIGHT)) * mini_map_height) - view_rect_height/2
         
         pygame.draw.rect(self.screen, (255, 0, 0), (view_rect_x, view_rect_y, view_rect_width, view_rect_height), 2)
 
@@ -338,16 +341,20 @@ class GUI(threading.Thread):
         mini_map_height = 150
         mini_map_x = GUI_size.x - mini_map_width - 10
         mini_map_y = GUI_size.y - mini_map_height - 10
+        tile_offset_x = 100
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_x, mouse_y = event.pos
             if (mini_map_x <= mouse_x <= mini_map_x + mini_map_width and 
                 mini_map_y <= mouse_y <= mini_map_y + mini_map_height):
-                relative_x = (mouse_x - mini_map_x) / mini_map_width
-                relative_y = (mouse_y - mini_map_y) / mini_map_height
                 
-                self.offset_x = int(relative_x * self.game_data.map.width * self.TILE_WIDTH - (GUI_size.x / 2))
-                self.offset_y = int(relative_y * self.game_data.map.height * self.TILE_HEIGHT - (GUI_size.y / 2))
+                # Calculate relative position within mini-map, centering the view rectangle
+                relative_x = (mouse_x - mini_map_x - tile_offset_x) / mini_map_width 
+                relative_y = (mouse_y - mini_map_y) / mini_map_height
+
+                # Calculate offset to center the view on clicked position
+                self.offset_x = int(relative_x * self.game_data.map.width * self.TILE_WIDTH)
+                self.offset_y = int(relative_y * self.game_data.map.height * self.TILE_HEIGHT)
 
     def display_player_resources(self):
         font = pygame.font.Font(None, 32)
