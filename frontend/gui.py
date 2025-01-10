@@ -190,7 +190,170 @@ class GUI(threading.Thread):
                                                     self.swordman_image_att_6,self.swordman_image_att_7,self.swordman_image_att_8,self.swordman_image_att_9,self.swordman_image_att_10]
 
         self.archer_image = self.load_image(self.BASE_PATH / "assets" / "units" / "archer" / "Archerwalk001.png")
-        self.horseman_image = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "Cavalierwalk001.png")
+            
+        
+        self.horseman_image_walk1 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "walkhorseman"/ "Cavalierwalk001.png")
+        self.horseman_image_walk2 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "walkhorseman"/ "Cavalierwalk002.png")
+        self.horseman_image_walk3 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "walkhorseman"/ "Cavalierwalk003.png")
+        self.horseman_image_walk4 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "walkhorseman"/ "Cavalierwalk004.png")
+        self.horseman_image_walk5 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "walkhorseman"/ "Cavalierwalk005.png")
+        self.horseman_image_wakl6 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "walkhorseman"/ "Cavalierwalk006.png")
+        self.horseman_image_walk7 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "walkhorseman"/ "Cavalierwalk007.png")
+        self.horseman_image_walk8 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "walkhorseman"/ "Cavalierwalk008.png")
+        self.horseman_image_walk9 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "walkhorseman"/ "Cavalierwalk009.png")
+        self.horseman_image_wakk10 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "walkhorseman"/"Cavalierwalk010.png")
+
+        self.liste_swordman_walking_animation = [
+            self.horseman_image_walk1, self.horseman_image_walk2, self.horseman_image_walk3, self.horseman_image_walk4, self.horseman_image_walk5,
+            self.horseman_image_wakl6, self.horseman_image_walk7, self.horseman_image_walk8, self.horseman_image_walk9, self.horseman_image_wakk10,
+        ]
+
+        self.horseman_image_die1 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "diehorseman"/ "Cavalierdie001.png")
+        self.horseman_image_die2 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "diehorseman"/ "Cavalierdie002.png")
+        self.horseman_image_die3 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "diehorseman"/ "Cavalierdie003.png")
+        self.horseman_image_die4 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "diehorseman"/ "Cavalierdie004.png")
+        self.horseman_image_die5 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "diehorseman"/ "Cavalierdie005.png")
+        self.horseman_image_die6 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "diehorseman"/ "Cavalierdie006.png")
+        self.horseman_image_die7 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "diehorseman"/ "Cavalierdie007.png")
+        self.horseman_image_die8 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "diehorseman"/ "Cavalierdie008.png")
+        self.horseman_image_die9 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "diehorseman"/ "Cavalierdie009.png")
+        self.horseman_image_die10 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "diehorseman"/"Cavalierdie010.png")
+
+        self.liste_horseman_dying_animation = [
+            self.horseman_image_die1, self.horseman_image_die2, self.horseman_image_die3, self.horseman_image_die4, self.horseman_image_die5,
+            self.horseman_image_die6, self.horseman_image_die7, self.horseman_image_die8, self.horseman_image_die9, self.horseman_image_die10,
+        ]
+        self.horseman_image_attacking_en_bas1 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas" / "Cavalierattack001.png")
+        self.horseman_image_attacking_en_bas2 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas" / "Cavalierattack002.png")
+        self.horseman_image_attacking_en_bas3 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas" / "Cavalierattack003.png")
+        self.horseman_image_attacking_en_bas4 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas" / "Cavalierattack004.png")
+        self.horseman_image_attacking_en_bas5 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas" / "Cavalierattack005.png")
+        self.horseman_image_attacking_en_bas6 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas" / "Cavalierattack006.png")
+        self.horseman_image_attacking_en_bas7 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas" / "Cavalierattack007.png")
+        self.horseman_image_attacking_en_bas8 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas" / "Cavalierattack008.png")
+        self.horseman_image_attacking_en_bas9 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas" / "Cavalierattack009.png")
+        self.horseman_image_attacking_en_bas10 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas" / "Cavalierattack010.png")
+    
+
+
+        self.liste_horseman_attacking_en_bas_animation = [
+            self.horseman_image_attacking_en_bas1, self.horseman_image_attacking_en_bas2, self.horseman_image_attacking_en_bas3, self.horseman_image_attacking_en_bas4, self.horseman_image_attacking_en_bas5,
+            self.horseman_image_attacking_en_bas6, self.horseman_image_attacking_en_bas7, self.horseman_image_attacking_en_bas8, self.horseman_image_attacking_en_bas9, self.horseman_image_attacking_en_bas10,
+
+        ]
+
+        self.horseman_image_attacking_en_bas_droite_1 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_droite"/ "Cavalierattack020r.png")
+        self.horseman_image_attacking_en_bas_droite_2 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_droite"/ "Cavalierattack020r (2).png")
+        self.horseman_image_attacking_en_bas_droite_3 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_droite"/ "Cavalierattack020r (3).png")
+        self.horseman_image_attacking_en_bas_droite_4 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_droite"/ "Cavalierattack020r (4).png")
+        self.horseman_image_attacking_en_bas_droite_5 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_droite"/ "Cavalierattack020r (5).png")
+        self.horseman_image_attacking_en_bas_droite_6 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_droite"/ "Cavalierattack020r (6).png")
+        self.horseman_image_attacking_en_bas_droite_7 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_droite"/ "Cavalierattack020r (7).png")
+        self.horseman_image_attacking_en_bas_droite_8 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_droite"/ "Cavalierattack020r (8).png")
+        self.horseman_image_attacking_en_bas_droite_9 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_droite"/ "Cavalierattack020r (9).png")
+        self.horseman_image_attacking_en_bas_droite_10 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_droite"/ "Cavalierattack020r (10).png")
+
+        self.liste_horseman_attacking_en_bas_a_droite_animation = [
+            self.horseman_image_attacking_en_bas_droite_1, self.horseman_image_attacking_en_bas_droite_2, self.horseman_image_attacking_en_bas_droite_3, self.horseman_image_attacking_en_bas_droite_4, self.horseman_image_attacking_en_bas_droite_5,
+            self.horseman_image_attacking_en_bas_droite_6, self.horseman_image_attacking_en_bas_droite_7, self.horseman_image_attacking_en_bas_droite_8, self.horseman_image_attacking_en_bas_droite_9, self.horseman_image_attacking_en_bas_droite_10,
+        ]
+        
+        self.horseman_image_attacking_en_bas_gauche_1 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_gauche"/ "Cavalierattack011.png")
+        self.horseman_image_attacking_en_bas_gauche_2 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" /"attack_bas"/ "attacking_en_bas_à_gauche"/ "Cavalierattack012.png")
+        self.horseman_image_attacking_en_bas_gauche_3 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_gauche"/ "Cavalierattack013.png")
+        self.horseman_image_attacking_en_bas_gauche_4 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_gauche"/ "Cavalierattack014.png")
+        self.horseman_image_attacking_en_bas_gauche_5 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_gauche"/ "Cavalierattack015.png")
+        self.horseman_image_attacking_en_bas_gauche_6 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/  "attacking_en_bas_à_gauche"/ "Cavalierattack016.png")
+        self.horseman_image_attacking_en_bas_gauche_7 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_gauche"/ "Cavalierattack017.png")
+        self.horseman_image_attacking_en_bas_gauche_8 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_gauche"/ "Cavalierattack018.png")
+        self.horseman_image_attacking_en_bas_gauche_9 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_gauche"/ "Cavalierattack019.png")
+        self.horseman_image_attacking_en_bas_gauche_10 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_gauche"/ "Cavalierattack020.png")
+    
+        self.liste_horseman_attacking_en_bas_a_gauche_animation = [
+            self.horseman_image_attacking_en_bas_gauche_1, self.horseman_image_attacking_en_bas_gauche_2, self.horseman_image_attacking_en_bas_gauche_3, self.horseman_image_attacking_en_bas_gauche_4, self.horseman_image_attacking_en_bas_gauche_5,
+            self.horseman_image_attacking_en_bas_gauche_6, self.horseman_image_attacking_en_bas_gauche_7, self.horseman_image_attacking_en_bas_gauche_8, self.horseman_image_attacking_en_bas_gauche_9, self.horseman_image_attacking_en_bas_gauche_10,
+        ]
+
+    
+        self.horseman_image_attacking_en_haut1 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut"/ "Cavalierattack041.png")
+        self.horseman_image_attacking_en_haut2 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut"/ "Cavalierattack042.png")
+        self.horseman_image_attacking_en_haut3 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut"/ "Cavalierattack043.png")
+        self.horseman_image_attacking_en_haut4 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut"/ "Cavalierattack044.png")
+        self.horseman_image_attacking_en_haut5 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut"/ "Cavalierattack045.png")
+        self.horseman_image_attacking_en_haut6 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut"/ "Cavalierattack046.png")
+        self.horseman_image_attacking_en_haut7 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut"/ "Cavalierattack047.png")
+        self.horseman_image_attacking_en_haut8 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut"/ "Cavalierattack048.png")
+        self.horseman_image_attacking_en_haut9 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut"/ "Cavalierattack049.png")
+        self.horseman_image_attacking_en_haut10 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut"/"Cavalierattack050.png")
+
+        self.liste_horseman_attacking_en_haut_animation = [
+            self.horseman_image_attacking_en_haut1, self.horseman_image_attacking_en_haut2, self.horseman_image_attacking_en_haut3, self.horseman_image_attacking_en_haut4, self.horseman_image_attacking_en_haut5,
+            self.horseman_image_attacking_en_haut6, self.horseman_image_attacking_en_haut7, self.horseman_image_attacking_en_haut8, self.horseman_image_attacking_en_haut9, self.horseman_image_attacking_en_haut10,
+        ]
+
+        self.horseman_image_attacking_en_haut_droite_1 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_droite"/ "Cavalierattack031r (1).png")
+        self.horseman_image_attacking_en_haut_droite_2 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_droite"/ "Cavalierattack031r (2).png")
+        self.horseman_image_attacking_en_haut_droite_3 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_droite"/ "Cavalierattack031r (3).png")
+        self.horseman_image_attacking_en_haut_droite_4 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_droite"/ "Cavalierattack031r (4).png")
+        self.horseman_image_attacking_en_haut_droite_5 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_droite"/ "Cavalierattack031r (5).png")
+        self.horseman_image_attacking_en_haut_droite_6 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_droite"/ "Cavalierattack031r (6).png")
+        self.horseman_image_attacking_en_haut_droite_7 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_droite"/ "Cavalierattack031r (7).png")
+        self.horseman_image_attacking_en_haut_droite_8 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_droite"/ "Cavalierattack031r (8).png")
+        self.horseman_image_attacking_en_haut_droite_9 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/  "attacking_en_haut_à_droite"/ "Cavalierattack031r (9).png")
+        self.horseman_image_attacking_en_haut_droite_10 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_droite"/ "Cavalierattack031r (10).png")
+
+        self.liste_horseman_attacking_en_haut_a_droite_animation = [
+            self.horseman_image_attacking_en_haut_droite_1, self.horseman_image_attacking_en_haut_droite_2, self.horseman_image_attacking_en_haut_droite_3, self.horseman_image_attacking_en_haut_droite_4, self.horseman_image_attacking_en_haut_droite_5,
+            self.horseman_image_attacking_en_haut_droite_6, self.horseman_image_attacking_en_haut_droite_7, self.horseman_image_attacking_en_haut_droite_8, self.horseman_image_attacking_en_haut_droite_9, self.horseman_image_attacking_en_haut_droite_10,
+        ]
+
+        self.horseman_image_attacking_en_haut_gauche_1 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_gauche"/ "Cavalierattack031.png")
+        self.horseman_image_attacking_en_haut_gauche_2 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_gauche"/ "Cavalierattack032.png")
+        self.horseman_image_attacking_en_haut_gauche_3 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_gauche"/ "Cavalierattack033.png")
+        self.horseman_image_attacking_en_haut_gauche_4 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_gauche"/ "Cavalierattack034.png")
+        self.horseman_image_attacking_en_haut_gauche_5 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_gauche"/ "Cavalierattack035.png")
+        self.horseman_image_attacking_en_haut_gauche_6 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_gauche"/ "Cavalierattack036.png")
+        self.horseman_image_attacking_en_haut_gauche_7 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_gauche"/ "Cavalierattack037.png")
+        self.horseman_image_attacking_en_haut_gauche_8 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/  "attacking_en_haut_à_gauche"/ "Cavalierattack038.png")
+        self.horseman_image_attacking_en_haut_gauche_9 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_gauche"/ "Cavalierattack039.png")
+        self.horseman_image_attacking_en_haut_gauche_10 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_gauche"/ "Cavalierattack040.png")
+
+        self.liste_horseman_attacking_en_haut_a_gauche_animation = [
+            self.horseman_image_attacking_en_haut_gauche_1, self.horseman_image_attacking_en_haut_gauche_2, self.horseman_image_attacking_en_haut_gauche_3, self.horseman_image_attacking_en_haut_gauche_4, self.horseman_image_attacking_en_haut_gauche_5,
+            self.horseman_image_attacking_en_haut_gauche_6, self.horseman_image_attacking_en_haut_gauche_7, self.horseman_image_attacking_en_haut_gauche_8, self.horseman_image_attacking_en_haut_gauche_9, self.horseman_image_attacking_en_haut_gauche_10,
+        ]
+
+        self.horseman_image_attacking_a_droit_1 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_droit" / "Cavalierattack030r (1).png")
+        self.horseman_image_attacking_a_droit_2 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_droit" / "Cavalierattack030r (2).png")
+        self.horseman_image_attacking_a_droit_3 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_droit" / "Cavalierattack030r (3).png")
+        self.horseman_image_attacking_a_droit_4 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_droit" / "Cavalierattack030r (4).png")
+        self.horseman_image_attacking_a_droit_5 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_droit" / "Cavalierattack030r (5).png")
+        self.horseman_image_attacking_a_droit_6 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_droit" / "Cavalierattack030r (6).png")
+        self.horseman_image_attacking_a_droit_7 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_droit" / "Cavalierattack030r (7).png")
+        self.horseman_image_attacking_a_droit_8 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_droit" / "Cavalierattack030r (8).png")
+        self.horseman_image_attacking_a_droit_9 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_droit" / "Cavalierattack030r (9).png")
+        self.horseman_image_attacking_a_droit_10 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_droit" / "Cavalierattack030r (10).png")
+
+        self.liste_horseman_attacking_a_droit_animation = [
+            self.horseman_image_attacking_a_droit_1, self.horseman_image_attacking_a_droit_2, self.horseman_image_attacking_a_droit_3, self.horseman_image_attacking_a_droit_4, self.horseman_image_attacking_a_droit_5,
+            self.horseman_image_attacking_a_droit_6, self.horseman_image_attacking_a_droit_7, self.horseman_image_attacking_a_droit_8, self.horseman_image_attacking_a_droit_9, self.horseman_image_attacking_a_droit_10,
+        ]
+        
+        self.horseman_image_attacking_a_gauche_1 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_gauche" / "Cavalierattack021.png")
+        self.horseman_image_attacking_a_gauche_2 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_gauche" / "Cavalierattack022.png")
+        self.horseman_image_attacking_a_gauche_3 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_gauche" / "Cavalierattack023.png")
+        self.horseman_image_attacking_a_gauche_4 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_gauche" / "Cavalierattack024.png")
+        self.horseman_image_attacking_a_gauche_5 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_gauche" / "Cavalierattack025.png")
+        self.horseman_image_attacking_a_gauche_6 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_gauche" / "Cavalierattack026.png")
+        self.horseman_image_attacking_a_gauche_7 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_gauche" / "Cavalierattack027.png")
+        self.horseman_image_attacking_a_gauche_8 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_gauche" / "Cavalierattack028.png")
+        self.horseman_image_attacking_a_gauche_9 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_gauche" / "Cavalierattack029.png")
+        self.horseman_image_attacking_a_gauche_10 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_gauche" / "Cavalierattack030.png")
+
+        self.liste_horseman_attacking_a_gauche_animation = [
+            self.horseman_image_attacking_a_gauche_1, self.horseman_image_attacking_a_gauche_2, self.horseman_image_attacking_a_gauche_3, self.horseman_image_attacking_a_gauche_4, self.horseman_image_attacking_a_gauche_5,
+            self.horseman_image_attacking_a_gauche_6, self.horseman_image_attacking_a_gauche_7, self.horseman_image_attacking_a_gauche_8, self.horseman_image_attacking_a_gauche_9, self.horseman_image_attacking_a_gauche_10,
+        ]
 
         # Scale gold and tree images
         self.IMAGES["Gold"] = pygame.transform.scale(self.IMAGES["Gold"], (self.TILE_WIDTH, self.TILE_HEIGHT))
@@ -387,12 +550,44 @@ class GUI(threading.Thread):
                 self.screen.blit(self.archer_image, (screen_x, screen_y))
 
     def draw_horseman(self, horsemans):
+        animation_speed = 2  # 2 frames per second (0.5 seconds per frame)
         for horseman in horsemans:
             iso_x, iso_y = self.cart_to_iso(horseman.position[0], horseman.position[1])
             screen_x = iso_x - self.offset_x
-            screen_y = iso_y - self.offset_y - self.horseman_image.get_height()
+            screen_y = iso_y - self.offset_y - self.horseman_image_die1.get_height()
+
+            current_time = pygame.time.get_ticks() // (1000 // animation_speed)
+            if horseman.task == "dying":
+                animation_frames = self.liste_horseman_dying_animation
+            elif horseman.task == "attacking":
+                if horseman.direction == "en_bas":
+                    animation_frames = self.liste_horseman_attacking_en_bas_animation
+                elif horseman.direction == "en_haut":
+                    animation_frames = self.liste_horseman_attacking_en_haut_animation
+                elif horseman.direction == "bas_droit":
+                    animation_frames = self.liste_horseman_attacking_en_bas_a_droite_animation
+                elif horseman.direction == "bas_gauche":
+                    animation_frames = self.liste_horseman_attacking_en_bas_a_gauche_animation
+
+                elif horseman.direction == "haut_gauche":
+                    animation_frames =  self.liste_horseman_attacking_en_haut_a_gauche_animation 
+
+                elif horseman.direction == "haut_droite":
+                    animation_frames =  self.liste_horseman_attacking_en_haut_a_droite_animation 
+
+                elif horseman.direction == "droit":
+                    animation_frames =  self.liste_horseman_attacking_a_droit_animation 
+
+                elif horseman.direction == "gauche":
+                    animation_frames =  self.liste_horseman_attacking_a_gauche_animation 
+            else:
+                animation_frames = self.liste_swordman_walking_animation
+
+            current_frame = current_time % len(animation_frames)
+            horseman_image = animation_frames[current_frame]
+
             if 0 <= screen_x < self.WINDOW_WIDTH and 0 <= screen_y < self.WINDOW_HEIGHT:
-                self.screen.blit(self.horseman_image, (screen_x, screen_y))
+                self.screen.blit(horseman_image, (screen_x, screen_y))
 
     def draw_mini_map(self):
         mini_map_width = 200
