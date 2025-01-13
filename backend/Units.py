@@ -76,10 +76,18 @@ class Unit:
     @classmethod
     def spawn_unit(cls, unit_class, x, y, player, game_map):
         if isinstance(unit_class, type):
-            unit = unit_class(player)  # create an  instance
+            if unit_class == Horseman:
+                unit = unit_class(player, position=(x, y))
+            elif unit_class == Villager:
+                unit = unit_class(player, position=(x, y))
+            else:
+                unit = unit_class(player)
         else:
             unit = unit_class
+        
 
+
+        
         if (0 <= x < game_map.width and 
             0 <= y < game_map.height and 
             not (player.population >= player.max_population or 
@@ -102,18 +110,23 @@ class Unit:
         
     @classmethod
     def train_unit(cls, unit_to_train, x, y, player, building, game_map, current_time_called):
-        # Check if the player has enough resources
-        for resource_type, amount in unit_to_train.cost.items() :
-            if player.owned_resources.get(resource_type, 0) < amount and unit_to_train not in player.training_units :
+    # Check if the player has enough resources
+        for resource_type, amount in unit_to_train.cost.items():
+            if player.owned_resources.get(resource_type, 0) < amount and unit_to_train not in player.training_units:
                 debug_print(f"Not enough {resource_type} to train {unit_to_train.name}.")
                 return
         if isinstance(unit_to_train, type):
-            unit_to_train = unit_to_train(player)
+            if unit_to_train == Horseman:
+                unit_to_train = unit_to_train(player, position=(x, y))
+            elif unit_to_train == Villager:
+                unit_to_train = unit_to_train(player, position=(x, y))
+            else:
+                unit_to_train = unit_to_train(player)
         
         if player.population < min(player.max_population, sum(building.population_increase for building in player.buildings)):
             unit_to_train.spawn_position = (x, y)
             unit_to_train.spawn_building = building
-            if (not hasattr(unit_to_train, 'training_start') or unit_to_train.training_start is None):
+            if not hasattr(unit_to_train, 'training_start') or unit_to_train.training_start is None:
                 unit_to_train.training_start = current_time_called
                 for resource_type, amount in unit_to_train.cost.items():
                     if player.owned_resources.get(resource_type, 0) < amount and unit_to_train not in player.training_units:
@@ -175,7 +188,7 @@ class Villager(Unit):
             debug_print(f"Le fichier {fichier} n'a pas été trouvé.")
             return ["Villager"]  # in case file not found
 
-    def __init__(self, player, name=None):
+    def __init__(self, player,position, direction="en_bas", name = None):
         if name is None:
             noms_disponibles = self.lire_noms_fichier()
             name = random.choice(noms_disponibles)
@@ -190,6 +203,9 @@ class Villager(Unit):
         self.target_resource = None
         self.range = 0.99
         self.is_acting = None
+        self.position = position
+        self.direction = direction
+
 
 
 # Swordsman Class
@@ -201,19 +217,21 @@ class Swordsman(Unit):
         self.task = None
         self.name = "Swordsman"
         self.is_acting = None
-
+       
 
 
 # Horseman Class
 class Horseman(Unit):
     cost = {"Wood": 80, "Gold": 60}
-    def __init__(self, player):
+    def __init__(self, player,position, direction="en_bas"):
         super().__init__(player, hp=45, cost={"Food": 80, "Gold": 20}, attack=4, speed=12, symbol="h", training_time=30) #TODO : speed 1.2
         self.range = 0.99
         self.task = None
         self.name = "Horseman"
         self.is_acting = None
-
+        self.position = position
+        self.direction = direction
+       
 
 
 # Archer Class

@@ -11,10 +11,13 @@ import threading
 from queue import Queue
 import time
 import queue
+from PIL import Image
 
 class GUI(threading.Thread):
     def __init__(self, data_queue):
         super().__init__()
+        self.clock = pygame.time.Clock()
+        self.fps = 60  # Set the desired frame rate
         self.data_queue = data_queue
         self.running = False
         self.game_data = None
@@ -72,6 +75,7 @@ class GUI(threading.Thread):
         assert self.BACKGROUND_PATH.exists(), f"Background directory {self.BACKGROUND_PATH} does not exist."
 
     def load_image(self, file_path):
+        assert os.path.exists(file_path), f"File {file_path} does not exist."
         try:
             return pygame.image.load(file_path).convert_alpha()
         except pygame.error as e:
@@ -95,7 +99,7 @@ class GUI(threading.Thread):
             "Stable": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6),
             "ArcheryRange": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),
             "Camp": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),
-            "Farm": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),
+            "Farm": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 2),
             "Keep": (64,64)
         }
 
@@ -103,100 +107,512 @@ class GUI(threading.Thread):
         for building_type, size in building_types.items():
             image = self.load_image(self.BUILDINGS_PATH / f"{building_type.lower()}.png")
             self.building_images[building_type] = pygame.transform.scale(image, size)
+            
 
         # Load background
         self.background_texture = self.load_image(self.BACKGROUND_PATH / "background.png")
-        
+        self.load_resources()
+        self.load_villager_animations()
         # Load unit images
-        self.villager_image_1 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk001.png")
-        self.villager_image_2 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk002.png")
-        self.villager_image_3 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk003.png")
-        self.villager_image_4 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk004.png")
-        self.villager_image_5 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk005.png")
-        self.villager_image_6 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk006.png")
-        self.villager_image_7 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk007.png")
-        self.villager_image_8 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk008.png")
-        self.villager_image_9 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk009.png")
-        self.villager_image_10 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk010.png")
-        self.villager_image_11 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk011.png")
-        self.villager_image_12 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk012.png")
-        self.villager_image_13 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk013.png")
-        self.villager_image_14 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk014.png")
-        self.villager_image_15 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "walk" / "Villagerwalk015.png")
 
-        self.liste_villager_walking_animation = [
-            self.villager_image_1,self.villager_image_2,self.villager_image_3,self.villager_image_4,self.villager_image_5,
-            self.villager_image_6,self.villager_image_7,self.villager_image_8,self.villager_image_9,self.villager_image_10,self.villager_image_11,
-            self.villager_image_12,self.villager_image_13,self.villager_image_14,self.villager_image_15
-        ]
-        
-        self.villager_image_act1 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract001.png")
-        self.villager_image_act2 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract002.png")
-        self.villager_image_act3 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract003.png")
-        self.villager_image_act4 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract004.png")
-        self.villager_image_act5 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract005.png")
-        self.villager_image_act6 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract006.png")
-        self.villager_image_act7 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract007.png")
-        self.villager_image_act8 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract008.png")
-        self.villager_image_act9 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract009.png")
-        self.villager_image_act10 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract010.png")
-        self.villager_image_act11 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract011.png")
-        self.villager_image_act12 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract012.png")
-        self.villager_image_act13 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract013.png")
-        self.villager_image_act14 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract014.png")
-        self.villager_image_act15 = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "miner" / "Villageract015.png")
+#############################################################################################################################
+        self.villager_image_immobile = self.load_image(self.BASE_PATH / "assets" / "units" / "villager" / "Villager.png")
+        self.liste_villager_immobile_animation = [self.villager_image_immobile]
+
+########################################################################################################################
+        #Bouger en haut 
       
-   
- 
-        self.liste_villager_acting_animation = [
-            self.villager_image_act1,self.villager_image_act2,self.villager_image_act3,self.villager_image_act4,self.villager_image_act5,
-            self.villager_image_act6,self.villager_image_act7,self.villager_image_act8,self.villager_image_act9,self.villager_image_act10,
-            self.villager_image_act11,self.villager_image_act12,self.villager_image_act13,self.villager_image_act14,self.villager_image_act15
+    
+
+    def load_villager_animations(self):
+            # Load walking animations
+
+
+            self.liste_villager_walking_en_bas_animation = [
+               self.load_image(f"C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_bas/walking_en_bas/Villagerwalk0{i:02d}.png")
+                 for i in range(1, 16)
+            ]
+
+
+
+            self.liste_villager_walking_en_bas_a_gauche_animation = [
+                self.load_image(f"C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_bas/walking_en_bas_à_gauche/Villagerwalk0{i:02d}.png")
+                for i in range(16, 31)]
+            # Invert images for walking right
+
+            self.liste_villager_walking_en_bas_a_droite_animation = [
+                pygame.image.fromstring(
+                    Image.open(f"C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_bas/walking_en_bas_à_gauche/Villagerwalk0{i:02d}.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                )
+                for i in range(16, 31)
+            ]
+
+
+
+            self.liste_villager_walking_en_haut_animation = [
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut/Villagerwalk061.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut/Villagerwalk062.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut/Villagerwalk063.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut/Villagerwalk064.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut/Villagerwalk065.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut/Villagerwalk066.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut/Villagerwalk067.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut/Villagerwalk068.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut/Villagerwalk069.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut/Villagerwalk070.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut/Villagerwalk071.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut/Villagerwalk072.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut/Villagerwalk073.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut/Villagerwalk074.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut/Villagerwalk075.png"),
+            ]
+            self.liste_villager_walking_en_haut_a_gauche_animation = [
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk046.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk047.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk048.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk049.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk050.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk051.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk052.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk053.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk054.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk055.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk056.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk057.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk058.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk059.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk060.png"),
+            ]
+            # Invert images for walking right
+            self.liste_villager_walking_en_haut_a_droite_animation = [
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk046.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                ),
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk047.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                ),
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk048.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                ),
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk049.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                ),
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk050.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                ),
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk051.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                ),
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk052.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                ),
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk053.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                ),
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk054.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                ),
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk055.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                ),
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk056.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                ),
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk057.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                ),
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk058.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                ),
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk059.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                ),
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_haut/walking_en_haut_à_gauche/Villagerwalk060.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                )
+            ]
+            self.liste_villager_walking_a_gauche_animation = [
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk031.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk032.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk033.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk034.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk035.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk036.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk037.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk038.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk039.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk040.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk041.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk042.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk043.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk044.png"),
+                self.load_image("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk045.png"),
+            ]
+            self.liste_villager_walking_a_droite_animation = [
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk031.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                ),
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk032.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                ),
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk033.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                ),
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk034.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                ),
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk035.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                ),
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk036.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                ),
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk037.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                ),
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk038.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                ),
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk039.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                ),
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk040.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                ),
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk041.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                ),
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk042.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                ),
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk043.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                ),
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk044.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                ),
+                pygame.image.fromstring(
+                    Image.open("C:/Users/Asus/Desktop/Python-Project/assets/units/villager/walk/walk_gauche/walking_a_gauche/Villagerwalk045.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                    (self.TILE_WIDTH, self.TILE_HEIGHT),
+                    'RGBA'
+                )
+            ]
+            self.liste_villager_dying_animation = [
+                self.load_image(f"C:/Users/Asus/Desktop/Python-Project/assets/units/villager/die/Villagerdie0{i:02d}.png")
+                for i in range(1, 75)
+            ] 
+            self.liste_villager_miner_animation = [
+                self.load_image(f"C:/Users/Asus/Desktop/Python-Project/assets/units/villager/mine/Villagermine0{i:02d}.png")
+                for i in range(1, 15)
+            ]
+            self.liste_villager_attack_en_bas_animation = [
+                self.load_image(f"C:/Users/Asus/Desktop/Python-Project/assets/units/villager/attack/attack_bas/attacking_en_bas/Villagerattack0{i:02d}.png")
+                for i in range(1, 15)               
+            ]
+
+            self.liste_villager_attack_en_bas_a_gauche_animation = [
+                self.load_image(f"C:/Users/Asus/Desktop/Python-Project/assets/units/villager/attack/attack_bas/attacking_en_bas_à_gauche/Villagerattack0{i:02d}.png")
+                for i in range(16, 32) 
+            ]
+            self.liste_villager_attack_en_bas_a_droite_animation = [
+              pygame.image.fromstring(Image.open(f"C:/Users/Asus/Desktop/Python-Project/assets/units/villager/attack/attack_bas/attacking_en_bas_à_gauche/Villagerattack0{i:02d}.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                (self.TILE_WIDTH, self.TILE_HEIGHT),
+                'RGBA'
+            )
+            for i in range(16, 32)
+            ]
+            self.liste_villager_attack_en_haut_animation = [
+                self.load_image(f"C:/Users/Asus/Desktop/Python-Project/assets/units/villager/attack/attack_haut/attacking_en_haut/Villagerattack0{i:02d}.png")
+                for i in range(61, 75)
+            ]
+            self.liste_villager_attack_en_haut_a_gauche_animation = [
+                self.load_image(f"C:/Users/Asus/Desktop/Python-Project/assets/units/villager/attack/attack_haut/attacking_en_haut_à_gauche/Villagerattack0{i:02d}.png")
+                for i in range(47, 60) 
+            ] 
+            self.liste_villager_attack_en_haut_a_droite_animation = [
+                pygame.image.fromstring(Image.open(f"C:/Users/Asus/Desktop/Python-Project/assets/units/villager/attack/attack_haut/attacking_en_haut_à_gauche/Villagerattack0{i:02d}.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                (self.TILE_WIDTH, self.TILE_HEIGHT),
+                'RGBA'
+                )
+                for i in range(47, 60)
+            ]   
+            self.liste_villager_attack_a_gauche_animation = [
+                self.load_image(f"C:/Users/Asus/Desktop/Python-Project/assets/units/villager/attack/attack_gauche/attacking_a_gauche/Villagerattack0{i:02d}.png")
+                for i in range(32, 46)
+            ]
+            self.liste_villager_attack_a_droite_animation = [
+                pygame.image.fromstring(
+                Image.open(f"C:/Users/Asus/Desktop/Python-Project/assets/units/villager/attack/attack_gauche/attacking_a_gauche/Villagerattack0{i:02d}.png").transpose(Image.FLIP_LEFT_RIGHT).tobytes(),
+                (self.TILE_WIDTH, self.TILE_HEIGHT),
+                'RGBA'
+                )
+                for i in range(32, 46)
+            ]
+
+
+
+            self.swordman_image_1 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" /"walkswordman" / "Halbadierwalk001.png")
+            self.swordman_image_2 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walkswordman" / "Halbadierwalk002.png")
+            self.swordman_image_3 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walkswordman" /  "Halbadierwalk003.png")
+            self.swordman_image_4 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" /"walkswordman" /  "Halbadierwalk004.png")
+            self.swordman_image_5 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" /"walkswordman" /  "Halbadierwalk005.png")
+            self.swordman_image_6 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walkswordman" / "Halbadierwalk006.png")
+            self.swordman_image_7 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walkswordman" / "Halbadierwalk007.png")
+            self.swordman_image_8 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" /"walkswordman" /  "Halbadierwalk008.png")
+            self.swordman_image_9 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walkswordman" / "Halbadierwalk009.png")
+            self.swordman_image_10 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" /"walkswordman" /  "Halbadierwalk010.png")
+            self.swordman_image_11 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walkswordman" / "Halbadierwalk011.png")
+            self.swordman_image_12 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walkswordman" / "Halbadierwalk012.png")
+            self.swordman_image_13 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walkswordman" /  "Halbadierwalk013.png")
+            self.swordman_image_14 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walkswordman" / "Halbadierwalk014.png")
+            self.swordman_image_15 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walkswordman" /  "Halbadierwalk015.png")
+
+            self.liste_swordman_walking_animation = [self.swordman_image_1,self.swordman_image_2,self.swordman_image_3, self.swordman_image_4,self.swordman_image_5,
+                                                    self.swordman_image_6,self.swordman_image_7,self.swordman_image_8,self.swordman_image_9,self.swordman_image_10,self.swordman_image_11,
+                                                    self.swordman_image_12,self.swordman_image_13,self.swordman_image_14,self.swordman_image_15]
             
-        ]
-        self.swordman_image_1 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk001.png")
-        self.swordman_image_2 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk002.png")
-        self.swordman_image_3 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk003.png")
-        self.swordman_image_4 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk004.png")
-        self.swordman_image_5 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk005.png")
-        self.swordman_image_6 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk006.png")
-        self.swordman_image_7 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk007.png")
-        self.swordman_image_8 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk008.png")
-        self.swordman_image_9 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk009.png")
-        self.swordman_image_10 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk010.png")
-        self.swordman_image_11 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk011.png")
-        self.swordman_image_12 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk012.png")
-        self.swordman_image_13 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk013.png")
-        self.swordman_image_14 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk014.png")
-        self.swordman_image_15 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierwalk015.png")
+            self.swordman_image_act1 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "attack_bas" /"attacking_en_bas"/ "Halbadierattack001.png")
+            self.swordman_image_act2 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "attack_bas" /"attacking_en_bas"/ "Halbadierattack002.png")
+            self.liste_swordman_attacking_animation = [
+                self.swordman_image_act1,self.swordman_image_act2
+                ]
 
-        self.liste_swordman_walking_animation = [self.swordman_image_1,self.swordman_image_2,self.swordman_image_3, self.swordman_image_4,self.swordman_image_5,
-                                                 self.swordman_image_6,self.swordman_image_7,self.swordman_image_8,self.swordman_image_9,self.swordman_image_10,self.swordman_image_11,
-                                                 self.swordman_image_12,self.swordman_image_13,self.swordman_image_14,self.swordman_image_15]
+
+
+            self.archer_image = self.load_image(self.BASE_PATH / "assets" / "units" / "archer" /"walkarcher"/ "Archerwalk001.png")
+                
+            
+            self.horseman_image_walk1 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "walkhorseman"/ "Cavalierwalk001.png")
+            self.horseman_image_walk2 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "walkhorseman"/ "Cavalierwalk002.png")
+            self.horseman_image_walk3 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "walkhorseman"/ "Cavalierwalk003.png")
+            self.horseman_image_walk4 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "walkhorseman"/ "Cavalierwalk004.png")
+            self.horseman_image_walk5 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "walkhorseman"/ "Cavalierwalk005.png")
+            self.horseman_image_wakl6 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "walkhorseman"/ "Cavalierwalk006.png")
+            self.horseman_image_walk7 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "walkhorseman"/ "Cavalierwalk007.png")
+            self.horseman_image_walk8 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "walkhorseman"/ "Cavalierwalk008.png")
+            self.horseman_image_walk9 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "walkhorseman"/ "Cavalierwalk009.png")
+            self.horseman_image_wakk10 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "walkhorseman"/"Cavalierwalk010.png")
+
+            
+
+            self.liste_horseman_walking_animation = [
+                self.horseman_image_walk1, self.horseman_image_walk2, self.horseman_image_walk3, self.horseman_image_walk4, self.horseman_image_walk5,
+                self.horseman_image_wakl6, self.horseman_image_walk7, self.horseman_image_walk8, self.horseman_image_walk9, self.horseman_image_wakk10,
+            ]
+
+            self.horseman_image_die1 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "diehorseman"/ "Cavalierdie001.png")
+            self.horseman_image_die2 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "diehorseman"/ "Cavalierdie002.png")
+            self.horseman_image_die3 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "diehorseman"/ "Cavalierdie003.png")
+            self.horseman_image_die4 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "diehorseman"/ "Cavalierdie004.png")
+            self.horseman_image_die5 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "diehorseman"/ "Cavalierdie005.png")
+            self.horseman_image_die6 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "diehorseman"/ "Cavalierdie006.png")
+            self.horseman_image_die7 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "diehorseman"/ "Cavalierdie007.png")
+            self.horseman_image_die8 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "diehorseman"/ "Cavalierdie008.png")
+            self.horseman_image_die9 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "diehorseman"/ "Cavalierdie009.png")
+            self.horseman_image_die10 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "diehorseman"/"Cavalierdie010.png")
+
+            self.liste_horseman_dying_animation = [
+                self.horseman_image_die1, self.horseman_image_die2, self.horseman_image_die3, self.horseman_image_die4, self.horseman_image_die5,
+                self.horseman_image_die6, self.horseman_image_die7, self.horseman_image_die8, self.horseman_image_die9, self.horseman_image_die10,
+            ]
+            self.horseman_image_attacking_en_bas1 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas" / "Cavalierattack001.png")
+            self.horseman_image_attacking_en_bas2 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas" / "Cavalierattack002.png")
+            self.horseman_image_attacking_en_bas3 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas" / "Cavalierattack003.png")
+            self.horseman_image_attacking_en_bas4 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas" / "Cavalierattack004.png")
+            self.horseman_image_attacking_en_bas5 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas" / "Cavalierattack005.png")
+            self.horseman_image_attacking_en_bas6 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas" / "Cavalierattack006.png")
+            self.horseman_image_attacking_en_bas7 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas" / "Cavalierattack007.png")
+            self.horseman_image_attacking_en_bas8 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas" / "Cavalierattack008.png")
+            self.horseman_image_attacking_en_bas9 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas" / "Cavalierattack009.png")
+            self.horseman_image_attacking_en_bas10 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas" / "Cavalierattack010.png")
         
-        self.swordman_image_att_1 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierattack001.png")
-        self.swordman_image_att_2 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierattack002.png")
-        self.swordman_image_att_3 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierattack003.png")
-        self.swordman_image_att_4 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierattack004.png")
-        self.swordman_image_att_5 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierattack005.png")
-        self.swordman_image_att_6 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierattack006.png")
-        self.swordman_image_att_7 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierattack007.png")
-        self.swordman_image_att_8 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierattack008.png")
-        self.swordman_image_att_9 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierattack009.png")
-        self.swordman_image_att_10 = self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Halbadierattack010.png")
 
-        self.liste_swordman_attacking_animation = [self.swordman_image_att_1,self.swordman_image_att_2,self.swordman_image_att_3,self.swordman_image_att_4,self.swordman_image_att_5,
-                                                    self.swordman_image_att_6,self.swordman_image_att_7,self.swordman_image_att_8,self.swordman_image_att_9,self.swordman_image_att_10]
 
-        self.archer_image = self.load_image(self.BASE_PATH / "assets" / "units" / "archer" / "Archerwalk001.png")
-        self.horseman_image = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "Cavalierwalk001.png")
+            self.liste_horseman_attacking_en_bas_animation = [
+                self.horseman_image_attacking_en_bas1, self.horseman_image_attacking_en_bas2, self.horseman_image_attacking_en_bas3, self.horseman_image_attacking_en_bas4, self.horseman_image_attacking_en_bas5,
+                self.horseman_image_attacking_en_bas6, self.horseman_image_attacking_en_bas7, self.horseman_image_attacking_en_bas8, self.horseman_image_attacking_en_bas9, self.horseman_image_attacking_en_bas10,
 
-        # Scale gold and tree images
-        self.IMAGES["Gold"] = pygame.transform.scale(self.IMAGES["Gold"], (self.TILE_WIDTH, self.TILE_HEIGHT))
-        for i in range(len(self.IMAGES["Wood"])):
-            scaled_width = int(self.TILE_WIDTH * 1.5)  # Augmenter la largeur de 50%
-            scaled_height = int(self.TILE_HEIGHT * 1.5)  # Augmenter la hauteur de 50%
-            self.IMAGES["Wood"][i] = pygame.transform.scale(self.IMAGES["Wood"][i], (scaled_width, scaled_height))
+            ]
+
+            self.horseman_image_attacking_en_bas_droite_1 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_droite"/ "Cavalierattack020r.png")
+            self.horseman_image_attacking_en_bas_droite_2 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_droite"/ "Cavalierattack020r (2).png")
+            self.horseman_image_attacking_en_bas_droite_3 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_droite"/ "Cavalierattack020r (3).png")
+            self.horseman_image_attacking_en_bas_droite_4 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_droite"/ "Cavalierattack020r (4).png")
+            self.horseman_image_attacking_en_bas_droite_5 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_droite"/ "Cavalierattack020r (5).png")
+            self.horseman_image_attacking_en_bas_droite_6 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_droite"/ "Cavalierattack020r (6).png")
+            self.horseman_image_attacking_en_bas_droite_7 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_droite"/ "Cavalierattack020r (7).png")
+            self.horseman_image_attacking_en_bas_droite_8 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_droite"/ "Cavalierattack020r (8).png")
+            self.horseman_image_attacking_en_bas_droite_9 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_droite"/ "Cavalierattack020r (9).png")
+            self.horseman_image_attacking_en_bas_droite_10 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_droite"/ "Cavalierattack020r (10).png")
+
+            self.liste_horseman_attacking_en_bas_a_droite_animation = [
+                self.horseman_image_attacking_en_bas_droite_1, self.horseman_image_attacking_en_bas_droite_2, self.horseman_image_attacking_en_bas_droite_3, self.horseman_image_attacking_en_bas_droite_4, self.horseman_image_attacking_en_bas_droite_5,
+                self.horseman_image_attacking_en_bas_droite_6, self.horseman_image_attacking_en_bas_droite_7, self.horseman_image_attacking_en_bas_droite_8, self.horseman_image_attacking_en_bas_droite_9, self.horseman_image_attacking_en_bas_droite_10,
+            ]
+            
+            self.horseman_image_attacking_en_bas_gauche_1 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_gauche"/ "Cavalierattack011.png")
+            self.horseman_image_attacking_en_bas_gauche_2 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" /"attack_bas"/ "attacking_en_bas_à_gauche"/ "Cavalierattack012.png")
+            self.horseman_image_attacking_en_bas_gauche_3 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_gauche"/ "Cavalierattack013.png")
+            self.horseman_image_attacking_en_bas_gauche_4 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_gauche"/ "Cavalierattack014.png")
+            self.horseman_image_attacking_en_bas_gauche_5 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_gauche"/ "Cavalierattack015.png")
+            self.horseman_image_attacking_en_bas_gauche_6 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/  "attacking_en_bas_à_gauche"/ "Cavalierattack016.png")
+            self.horseman_image_attacking_en_bas_gauche_7 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_gauche"/ "Cavalierattack017.png")
+            self.horseman_image_attacking_en_bas_gauche_8 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_gauche"/ "Cavalierattack018.png")
+            self.horseman_image_attacking_en_bas_gauche_9 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_gauche"/ "Cavalierattack019.png")
+            self.horseman_image_attacking_en_bas_gauche_10 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_bas"/ "attacking_en_bas_à_gauche"/ "Cavalierattack020.png")
+        
+            self.liste_horseman_attacking_en_bas_a_gauche_animation = [
+                self.horseman_image_attacking_en_bas_gauche_1, self.horseman_image_attacking_en_bas_gauche_2, self.horseman_image_attacking_en_bas_gauche_3, self.horseman_image_attacking_en_bas_gauche_4, self.horseman_image_attacking_en_bas_gauche_5,
+                self.horseman_image_attacking_en_bas_gauche_6, self.horseman_image_attacking_en_bas_gauche_7, self.horseman_image_attacking_en_bas_gauche_8, self.horseman_image_attacking_en_bas_gauche_9, self.horseman_image_attacking_en_bas_gauche_10,
+            ]
+
+        
+            self.horseman_image_attacking_en_haut1 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut"/ "Cavalierattack041.png")
+            self.horseman_image_attacking_en_haut2 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut"/ "Cavalierattack042.png")
+            self.horseman_image_attacking_en_haut3 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut"/ "Cavalierattack043.png")
+            self.horseman_image_attacking_en_haut4 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut"/ "Cavalierattack044.png")
+            self.horseman_image_attacking_en_haut5 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut"/ "Cavalierattack045.png")
+            self.horseman_image_attacking_en_haut6 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut"/ "Cavalierattack046.png")
+            self.horseman_image_attacking_en_haut7 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut"/ "Cavalierattack047.png")
+            self.horseman_image_attacking_en_haut8 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut"/ "Cavalierattack048.png")
+            self.horseman_image_attacking_en_haut9 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut"/ "Cavalierattack049.png")
+            self.horseman_image_attacking_en_haut10 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut"/"Cavalierattack050.png")
+
+            self.liste_horseman_attacking_en_haut_animation = [
+                self.horseman_image_attacking_en_haut1, self.horseman_image_attacking_en_haut2, self.horseman_image_attacking_en_haut3, self.horseman_image_attacking_en_haut4, self.horseman_image_attacking_en_haut5,
+                self.horseman_image_attacking_en_haut6, self.horseman_image_attacking_en_haut7, self.horseman_image_attacking_en_haut8, self.horseman_image_attacking_en_haut9, self.horseman_image_attacking_en_haut10,
+            ]
+
+            self.horseman_image_attacking_en_haut_droite_1 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_droite"/ "Cavalierattack031r (1).png")
+            self.horseman_image_attacking_en_haut_droite_2 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_droite"/ "Cavalierattack031r (2).png")
+            self.horseman_image_attacking_en_haut_droite_3 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_droite"/ "Cavalierattack031r (3).png")
+            self.horseman_image_attacking_en_haut_droite_4 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_droite"/ "Cavalierattack031r (4).png")
+            self.horseman_image_attacking_en_haut_droite_5 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_droite"/ "Cavalierattack031r (5).png")
+            self.horseman_image_attacking_en_haut_droite_6 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_droite"/ "Cavalierattack031r (6).png")
+            self.horseman_image_attacking_en_haut_droite_7 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_droite"/ "Cavalierattack031r (7).png")
+            self.horseman_image_attacking_en_haut_droite_8 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_droite"/ "Cavalierattack031r (8).png")
+            self.horseman_image_attacking_en_haut_droite_9 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/  "attacking_en_haut_à_droite"/ "Cavalierattack031r (9).png")
+            self.horseman_image_attacking_en_haut_droite_10 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_droite"/ "Cavalierattack031r (10).png")
+
+            self.liste_horseman_attacking_en_haut_a_droite_animation = [
+                self.horseman_image_attacking_en_haut_droite_1, self.horseman_image_attacking_en_haut_droite_2, self.horseman_image_attacking_en_haut_droite_3, self.horseman_image_attacking_en_haut_droite_4, self.horseman_image_attacking_en_haut_droite_5,
+                self.horseman_image_attacking_en_haut_droite_6, self.horseman_image_attacking_en_haut_droite_7, self.horseman_image_attacking_en_haut_droite_8, self.horseman_image_attacking_en_haut_droite_9, self.horseman_image_attacking_en_haut_droite_10,
+            ]
+
+            self.horseman_image_attacking_en_haut_gauche_1 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_gauche"/ "Cavalierattack031.png")
+            self.horseman_image_attacking_en_haut_gauche_2 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_gauche"/ "Cavalierattack032.png")
+            self.horseman_image_attacking_en_haut_gauche_3 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_gauche"/ "Cavalierattack033.png")
+            self.horseman_image_attacking_en_haut_gauche_4 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_gauche"/ "Cavalierattack034.png")
+            self.horseman_image_attacking_en_haut_gauche_5 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_gauche"/ "Cavalierattack035.png")
+            self.horseman_image_attacking_en_haut_gauche_6 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_gauche"/ "Cavalierattack036.png")
+            self.horseman_image_attacking_en_haut_gauche_7 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_gauche"/ "Cavalierattack037.png")
+            self.horseman_image_attacking_en_haut_gauche_8 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/  "attacking_en_haut_à_gauche"/ "Cavalierattack038.png")
+            self.horseman_image_attacking_en_haut_gauche_9 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_gauche"/ "Cavalierattack039.png")
+            self.horseman_image_attacking_en_haut_gauche_10 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attack_haut"/ "attacking_en_haut_à_gauche"/ "Cavalierattack040.png")
+
+            self.liste_horseman_attacking_en_haut_a_gauche_animation = [
+                self.horseman_image_attacking_en_haut_gauche_1, self.horseman_image_attacking_en_haut_gauche_2, self.horseman_image_attacking_en_haut_gauche_3, self.horseman_image_attacking_en_haut_gauche_4, self.horseman_image_attacking_en_haut_gauche_5,
+                self.horseman_image_attacking_en_haut_gauche_6, self.horseman_image_attacking_en_haut_gauche_7, self.horseman_image_attacking_en_haut_gauche_8, self.horseman_image_attacking_en_haut_gauche_9, self.horseman_image_attacking_en_haut_gauche_10,
+            ]
+
+            self.horseman_image_attacking_a_droit_1 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_droit" / "Cavalierattack030r (1).png")
+            self.horseman_image_attacking_a_droit_2 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_droit" / "Cavalierattack030r (2).png")
+            self.horseman_image_attacking_a_droit_3 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_droit" / "Cavalierattack030r (3).png")
+            self.horseman_image_attacking_a_droit_4 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_droit" / "Cavalierattack030r (4).png")
+            self.horseman_image_attacking_a_droit_5 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_droit" / "Cavalierattack030r (5).png")
+            self.horseman_image_attacking_a_droit_6 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_droit" / "Cavalierattack030r (6).png")
+            self.horseman_image_attacking_a_droit_7 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_droit" / "Cavalierattack030r (7).png")
+            self.horseman_image_attacking_a_droit_8 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_droit" / "Cavalierattack030r (8).png")
+            self.horseman_image_attacking_a_droit_9 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_droit" / "Cavalierattack030r (9).png")
+            self.horseman_image_attacking_a_droit_10 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_droit" / "Cavalierattack030r (10).png")
+
+            self.liste_horseman_attacking_a_droit_animation = [
+                self.horseman_image_attacking_a_droit_1, self.horseman_image_attacking_a_droit_2, self.horseman_image_attacking_a_droit_3, self.horseman_image_attacking_a_droit_4, self.horseman_image_attacking_a_droit_5,
+                self.horseman_image_attacking_a_droit_6, self.horseman_image_attacking_a_droit_7, self.horseman_image_attacking_a_droit_8, self.horseman_image_attacking_a_droit_9, self.horseman_image_attacking_a_droit_10,
+            ]
+            
+            self.horseman_image_attacking_a_gauche_1 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_gauche" / "Cavalierattack021.png")
+            self.horseman_image_attacking_a_gauche_2 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_gauche" / "Cavalierattack022.png")
+            self.horseman_image_attacking_a_gauche_3 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_gauche" / "Cavalierattack023.png")
+            self.horseman_image_attacking_a_gauche_4 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_gauche" / "Cavalierattack024.png")
+            self.horseman_image_attacking_a_gauche_5 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_gauche" / "Cavalierattack025.png")
+            self.horseman_image_attacking_a_gauche_6 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_gauche" / "Cavalierattack026.png")
+            self.horseman_image_attacking_a_gauche_7 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_gauche" / "Cavalierattack027.png")
+            self.horseman_image_attacking_a_gauche_8 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_gauche" / "Cavalierattack028.png")
+            self.horseman_image_attacking_a_gauche_9 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_gauche" / "Cavalierattack029.png")
+            self.horseman_image_attacking_a_gauche_10 = self.load_image(self.BASE_PATH / "assets" / "units" / "horseman" / "attacking_droit_gauche"/ "attacking_à_gauche" / "Cavalierattack030.png")
+
+            self.liste_horseman_attacking_a_gauche_animation = [
+                self.horseman_image_attacking_a_gauche_1, self.horseman_image_attacking_a_gauche_2, self.horseman_image_attacking_a_gauche_3, self.horseman_image_attacking_a_gauche_4, self.horseman_image_attacking_a_gauche_5,
+                self.horseman_image_attacking_a_gauche_6, self.horseman_image_attacking_a_gauche_7, self.horseman_image_attacking_a_gauche_8, self.horseman_image_attacking_a_gauche_9, self.horseman_image_attacking_a_gauche_10,
+            ]
+
+            # Scale gold and tree images
+            self.IMAGES["Gold"] = pygame.transform.scale(self.IMAGES["Gold"], (self.TILE_WIDTH, self.TILE_HEIGHT))
+            for i in range(len(self.IMAGES["Wood"])):
+                scaled_width = int(self.TILE_WIDTH * 1.5)  # Augmenter la largeur de 50%
+                scaled_height = int(self.TILE_HEIGHT * 1.5)  # Augmenter la hauteur de 50%
+                self.IMAGES["Wood"][i] = pygame.transform.scale(self.IMAGES["Wood"][i], (scaled_width, scaled_height))
 
     def cart_to_iso(self, cart_x, cart_y):
         iso_x = (cart_x - cart_y) * (self.TILE_WIDTH // 2)
@@ -211,7 +627,6 @@ class GUI(threading.Thread):
         
         for y in range(self.game_data.map.height):
             for x in range(self.game_data.map.width):
-                tile = self.game_data.map.grid[y][x]
                 
                 soil_image = self.IMAGES['Soil']
                 iso_x, iso_y = self.cart_to_iso(x, y)
@@ -221,25 +636,29 @@ class GUI(threading.Thread):
                 if 0 <= screen_x < self.WINDOW_WIDTH and 0 <= screen_y < self.WINDOW_HEIGHT:
                     self.screen.blit(soil_image, (screen_x, screen_y))
 
-
     def draw_buildings(self, buildings):
-            for building in sorted(buildings, key=lambda b: (b.position[1] + b.size - 1, b.position[0])):
-                bottom_right_x = building.position[0] + building.size - 1
-                bottom_right_y = building.position[1] + building.size - 1
-                iso_x, iso_y = self.cart_to_iso(bottom_right_x, bottom_right_y)
+        for building in sorted(buildings, key=lambda b: (b.position[1] + b.size - 1, b.position[0])):
+            bottom_right_x = building.position[0] + building.size - 1
+            bottom_right_y = building.position[1] + building.size - 1
+            iso_x, iso_y = self.cart_to_iso(bottom_right_x, bottom_right_y)
 
-                screen_x = (GUI_size.x // 2) + iso_x - self.offset_x
-                screen_y = (GUI_size.y // 4) + iso_y - self.offset_y
+            screen_x = (GUI_size.x // 2) + iso_x - self.offset_x
+            screen_y = (GUI_size.y // 4) + iso_y - self.offset_y
 
-                building_type = building.name.replace(" ", "")
-                if building_type in self.building_images:
-                    building_image = self.building_images[building_type]
-                    building_adjusted_y = screen_y - building_image.get_height()
-                    screen_x += self.TILE_WIDTH * (2 - building.size) // 2
-                    if building.size == 3:
-                        building_adjusted_y += (self.TILE_HEIGHT // 2)
-                    if 0 <= screen_x < self.WINDOW_WIDTH and 0 <= screen_y < self.WINDOW_HEIGHT:
-                        self.screen.blit(building_image, (screen_x, building_adjusted_y))
+            building_type = building.name.replace(" ", "")
+            if building_type in self.building_images:
+                building_image = self.building_images[building_type]
+                building_adjusted_y = screen_y - building_image.get_height()
+                screen_x += self.TILE_WIDTH * (2 - building.size) // 2
+                if building.size == 3:
+                    building_adjusted_y += (self.TILE_HEIGHT // 2)
+
+                # Apply tint based on player color with transparency
+                player_color = self.PLAYER_COLORS[building.player.id]
+                tinted_image = self.tint_image(building_image, player_color, alpha=128)
+
+                if 0 <= screen_x < self.WINDOW_WIDTH and 0 <= screen_y < self.WINDOW_HEIGHT:
+                    self.screen.blit(tinted_image, (screen_x, building_adjusted_y))
 
     def draw_resources(self):
         for y in range(self.game_data.map.height):
@@ -265,8 +684,8 @@ class GUI(threading.Thread):
                             if 0 <= screen_x < self.WINDOW_WIDTH and 0 <= screen_y < self.WINDOW_HEIGHT:
                                 self.screen.blit(self.IMAGES["Gold"], (screen_x + self.TILE_WIDTH//2, screen_y_adjusted))
 
-    def draw_villagers(self, villagers):
-        animation_speed = 10  # Vitesse de l'animation
+    def draw_villagers(self, villagers, buildings):
+        animation_speed = 5 
         position_count = {}
         for villager in villagers:
             pos = (villager.position[0], villager.position[1])
@@ -279,20 +698,54 @@ class GUI(threading.Thread):
                 villager_x, villager_y = villager.position
                 iso_villager_x, iso_villager_y = self.cart_to_iso(villager_x, villager_y)
                 screen_x, screen_y = self.adjust_villager_position(
-                    (GUI_size.x // 2) + iso_villager_x - self.offset_x + 3*self.TILE_WIDTH//4,
-                    (GUI_size.y // 4) + iso_villager_y - self.offset_y - self.villager_image_1.get_height(),
+                    (GUI_size.x // 2) + iso_villager_x - self.offset_x + 3 * self.TILE_WIDTH // 4,
+                    (GUI_size.y // 4) + iso_villager_y - self.offset_y - self.villager_image_1.get_height() if self.villager_image_1 else 0,
                     len(villagers_at_pos), index)
 
                 current_time = pygame.time.get_ticks() // (1000 // animation_speed)
                 if villager.task == "gathering":
-                    animation_frames = self.liste_villager_acting_animation
+                    animation_frames = self.liste_villager_miner_animation
+                elif villager.task == "attacking":
+                    if villager.direction == "en_bas":
+                        animation_frames = self.liste_villager_attack_en_bas_animation
+                    elif villager.direction == "en_bas_a_gauche":
+                        animation_frames = self.liste_villager_attack_en_bas_a_gauche_animation
+                    elif villager.direction == "en_bas_a_droite":
+                        animation_frames = self.liste_villager_attack_en_bas_a_droite_animation
+                    elif villager.direction == "en_haut":
+                        animation_frames = self.liste_villager_attack_en_haut_animation
+                    elif villager.direction == "en_haut_a_gauche":
+                        animation_frames = self.liste_villager_attack_en_haut_a_gauche_animation
+                    elif villager.direction == "en_haut_a_droite":
+                        animation_frames = self.liste_villager_attack_en_haut_a_droite_animation
+                elif villager.task == "dying":
+                    animation_frames = self.liste_villager_dying_animation
+                elif villager.task == "walking":
+                    if villager.direction == "en_bas":
+                        animation_frames = self.liste_villager_walking_en_bas_animation
+                    elif villager.direction == "en_bas_a_gauche":
+                        animation_frames = self.liste_villager_walking_en_bas_a_gauche_animation
+                    elif villager.direction == "en_bas_a_droite":
+                        animation_frames = self.liste_villager_walking_en_bas_a_droite_animation
+                    elif villager.direction == "en_haut":
+                        animation_frames = self.liste_villager_walking_en_haut_animation
+                    elif villager.direction == "en_haut_a_gauche":
+                        animation_frames = self.liste_villager_walking_en_haut_a_gauche_animation
+                    elif villager.direction == "en_haut_a_droite":
+                        animation_frames = self.liste_villager_walking_en_haut_a_droite_animation
                 else:
-                    animation_frames = self.liste_villager_walking_animation
+                    animation_frames = self.liste_villager_immobile_animation
+
                 current_frame = current_time % len(animation_frames)
                 villager_image = animation_frames[current_frame]
+
+                # Apply tint based on player color with transparency
+                player_color = self.PLAYER_COLORS[villager.player.id]
+                tinted_image = self.tint_image(villager_image, player_color, alpha=128)
+
                 if 0 <= screen_x < self.WINDOW_WIDTH and 0 <= screen_y < self.WINDOW_HEIGHT:
-                    self.screen.blit(villager_image, (screen_x, screen_y))
-        
+                    self.screen.blit(tinted_image, (screen_x, screen_y))
+
     def adjust_villager_position(self, screen_x, screen_y, count, index):
         offset = 10  # Décalage en pixels entre chaque villageois
         # Calculer le décalage pour chaque villageois pour éviter la superposition
@@ -354,13 +807,65 @@ class GUI(threading.Thread):
             if 0 <= screen_x < self.WINDOW_WIDTH and 0 <= screen_y < self.WINDOW_HEIGHT:
                 self.screen.blit(self.archer_image, (screen_x, screen_y))
 
+
+
+    def tint_image(self, image, color, alpha=128):
+        """Apply a transparent tint to an image."""
+        tinted_image = image.copy()
+        tint = pygame.Surface(tinted_image.get_size(), pygame.SRCALPHA)
+        tint.fill((*color, alpha))
+        tinted_image.blit(tint, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+        return tinted_image
+    
+
     def draw_horseman(self, horsemans):
+        animation_speed = 2  # 2 frames per second (0.5 seconds per frame)
         for horseman in horsemans:
             iso_x, iso_y = self.cart_to_iso(horseman.position[0], horseman.position[1])
             screen_x = iso_x - self.offset_x
-            screen_y = iso_y - self.offset_y - self.horseman_image.get_height()
+            screen_y = iso_y - self.offset_y - self.horseman_image_die1.get_height()
+
+            current_time = pygame.time.get_ticks() // (1000 // animation_speed)
+            if horseman.task == "dying":
+                animation_frames = self.liste_horseman_dying_animation
+            elif horseman.task == "attacking":
+                if horseman.direction == "en_bas":
+                    animation_frames = self.liste_horseman_attacking_en_bas_animation
+                elif horseman.direction == "en_haut":
+                    animation_frames = self.liste_horseman_attacking_en_haut_animation
+                elif horseman.direction == "bas_droit":
+                    animation_frames = self.liste_horseman_attacking_en_bas_a_droite_animation
+                elif horseman.direction == "bas_gauche":
+                    animation_frames = self.liste_horseman_attacking_en_bas_a_gauche_animation
+                elif horseman.direction == "haut_gauche":
+                    animation_frames = self.liste_horseman_attacking_en_haut_a_gauche_animation
+                elif horseman.direction == "haut_droite":
+                    animation_frames = self.liste_horseman_attacking_en_haut_a_droite_animation
+                elif horseman.direction == "droit":
+                    animation_frames = self.liste_horseman_attacking_a_droit_animation
+                elif horseman.direction == "gauche":
+                    animation_frames = self.liste_horseman_attacking_a_gauche_animation
+            else:
+                if horseman.direction == "en_bas" :
+                    animation_frames = self.liste_horseman_walking_animation
+                
+                
+                #elif horseman.direction == "en_haut":
+                #    animation_frames = self.liste_horseman_walking_en_haut_animation
+                #elif horseman.direction == "droit":
+                #    animation_frames = self.liste_horseman_walking_droit_animation
+                #elif horseman.direction == "gauche":
+                #    animation_frames = self.liste_horseman_walking_gauche_animation
+
+            current_frame = current_time % len(animation_frames)
+            horseman_image = animation_frames[current_frame]
+
+            # Apply tint based on player color with transparency
+            player_color = self.PLAYER_COLORS[horseman.player.id]
+            tinted_image = self.tint_image(horseman_image, player_color, alpha=128)
+
             if 0 <= screen_x < self.WINDOW_WIDTH and 0 <= screen_y < self.WINDOW_HEIGHT:
-                self.screen.blit(self.horseman_image, (screen_x, screen_y))
+                self.screen.blit(tinted_image, (screen_x, screen_y))
 
     def draw_mini_map(self):
         mini_map_width = 200
@@ -506,6 +1011,7 @@ class GUI(threading.Thread):
                 self.running = False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_F12:
+                    print("F12 pressed, stopping the application.")
                     self.running = False
                 elif event.key == pygame.K_F2:
                     self.show_resources = not self.show_resources
@@ -527,21 +1033,20 @@ class GUI(threading.Thread):
         
         # Draw units for all players
         if hasattr(self.game_data, 'players'):
+            self.draw_resources()
             for player in self.game_data.players:
+                self.draw_buildings(player.buildings)
                 for unit in player.units:
                     unit_type = type(unit).__name__
                     if unit_type == "Villager":
-                        self.draw_villagers([unit])
+                        self.draw_villagers([unit],player.buildings)
                     elif unit_type == "Swordsman":
                         self.draw_swordman([unit])
                     elif unit_type == "Archer":
                         self.draw_archer([unit])
                     elif unit_type == "Horseman":
                         self.draw_horseman([unit])
-
-
-                self.draw_resources()
-                self.draw_buildings(player.buildings)
+                
     
         
         # Draw mini-map

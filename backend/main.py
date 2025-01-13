@@ -1,5 +1,3 @@
-# main.py
-
 import curses
 import os
 import sys
@@ -12,16 +10,15 @@ sys.path.append(project_root)
 from Game_Engine import GameEngine
 from backend.Starter_File import players, map_size
 
-
 def main(stdscr, save_file=None):
     # Initialiser curses
     curses.curs_set(0)  # Masquer le curseur
     stdscr.clear()
     if save_file:
-        game_engine = GameEngine(players, map_size,True)
+        game_engine = GameEngine(players, map_size, True)
         game_engine.load_game(save_file)
-    else :
-        game_engine = GameEngine(players, map_size,False)
+    else:
+        game_engine = GameEngine(players, map_size, False)
         print("Aucun fichier de sauvegarde fourni. Démarrage d'une nouvelle partie.")
 
     # Lancer le jeu
