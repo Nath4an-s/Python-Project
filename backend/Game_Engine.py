@@ -95,7 +95,7 @@ class GameEngine:
     def stop_gui_thread(self):
         """Stop the GUI thread safely"""
         if self.gui_thread:
-            self.gui_thread.stop()
+            #self.gui_thread.stop()
             self.gui_thread = None
             self.gui_running = False
 
@@ -215,7 +215,10 @@ class GameEngine:
                 elif key == ord('o'):
                     self.debug_print(self.map.grid[0][0].resource.amount)
                 elif key == ord('l'):
-                    self.debug_print(self.map.grid[1][0].resource.amount)
+                    if self.map.grid[1][0].resource is not None:
+                        self.debug_print(self.map.grid[1][0].resource.amount)
+                    else:
+                        self.debug_print("No resource at this location")
                 elif key == ord('m'):
                     self.debug_print(self.map.grid[1][1].resource.amount)
                 elif key == ord('r'):
