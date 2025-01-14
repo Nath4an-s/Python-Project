@@ -71,6 +71,7 @@ class IA:
             }
     
     def run(self):
+        self.adjust_priorities()
         building_villagers, gathering_villagers, inactive_troops = self.get_inactive_units()
         
         #if building_villagers : self.debug_print(f"Build villageois : {[villager.name for villager in building_villagers]}")
@@ -174,6 +175,41 @@ class IA:
                             Unit.train_unit(Horseman, new_x, new_y, self.player, building, self.game_map, self.current_time_called)
                             #self.debug_print(f"{self.player.name} : Training horseman at ({new_x}, {new_y})")
                             return
+
+    def adjust_priorities(self):
+        """
+        Ajuste dynamiquement les priorités en fonction de l'état actuel du jeu.
+        """
+        # Analyse des ressources
+        food = self.player.owned_resources["Food"]
+        wood = self.player.owned_resources["Wood"]
+        gold = self.player.owned_resources["Gold"]
+        total_population = self.player.population
+        max_population = self.player.max_population
+
+        # Analyse des forces et des menaces
+        total_villagers = len([u for u in self.player.units if isinstance(u, Villager)])
+        total_military = len([u for u in self.player.units if isinstance(u, (Swordsman, Archer, Horseman))])
+        enemy_threat_level = sum(len(p.units) + len(p.buildings) for p in self.players if p != self.player)
+
+        # Ajustement des priorités de construction
+        if food < 100:
+            self.priorities["villager_ratio"] = 0.8  # Augmenter la priorité aux villageois
+            self.priorities["military_ratio"] = 0.2  # Réduire la production militaire
+        elif wood < 100 or gold < 50:
+            self.priorities["villager_ratio"] = 0.7
+            self.priorities["military_ratio"] = 0.3
+        elif enemy_threat_level > total_military:
+            self.priorities["villager_ratio"] = 0.5
+            self.priorities["military_ratio"] = 0.5
+        else:
+            self.priorities = self.set_priorities()  # Rétablir les priorités par défaut
+
+        # Gestion des limites de population
+        if total_population >= max_population - 5:
+            self.priorities["build_house"] = True
+        else:
+            self.priorities["build_house"] = False
 
     def gather_resources(self, villagers):
         #if villagers : self.debug_print(f"Farm : {[villager.name for villager in villagers]}")

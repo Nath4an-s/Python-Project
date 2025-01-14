@@ -223,11 +223,12 @@ class GameEngine:
                         self.debug_print(self.players)
                         self.debug_print(self.players)
                 elif key == ord('a'):
-                    action.go_battle(self.players[2].units[0], self.players[1].units[1], self.get_current_time())
+                    Building.spawn_building(self.players[2], 2, 2, House, self.map)
+                    Unit.spawn_unit(Archer, 4, 2, self.players[2], self.map)
                 elif key == ord('b'):
                     action.go_battle(self.players[1].units[1], self.players[2].units[0], self.get_current_time())
                 elif key == ord('e'):
-                    action.move_unit(self.players[1].units[1],2,2, self.get_current_time())
+                    action.go_battle(self.players[2].units[-1], self.players[1].units[0], self.get_current_time())
                 elif key == ord('f'):
                     Building.kill_building(self.players[2], self.players[2].buildings[-1], self.map)
                 elif key == ord('y'):

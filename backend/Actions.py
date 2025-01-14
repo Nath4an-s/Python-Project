@@ -369,6 +369,12 @@ class Action:
 
     
     def _attack(self, unit, enemy_unit, current_time_called):
+        if hasattr(unit, 'path'):
+            del unit.path
+        if hasattr(unit, 'last_move_time'):
+            del unit.last_move_time
+        if unit.target_position is not None:
+            unit.target_position = None
         if not enemy_unit or enemy_unit.hp <= 0:
             unit.task = None
             return
