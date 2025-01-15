@@ -205,6 +205,7 @@ class Villager(Unit):
         self.is_acting = None
         self.position = position
         self.direction = direction
+        self.sprite = "villager"
 
 
 
@@ -217,6 +218,7 @@ class Swordsman(Unit):
         self.task = None
         self.name = "Swordsman"
         self.is_acting = None
+        self.sprite = "swordman"
        
 
 
@@ -231,6 +233,7 @@ class Horseman(Unit):
         self.is_acting = None
         self.position = position
         self.direction = direction
+        self.sprite = "horseman"
        
 
 
@@ -243,4 +246,5 @@ class Archer(Unit):
         self.task = None
         self.name = "Archer"
         self.is_acting = None
+        self.sprite = "archer"
 

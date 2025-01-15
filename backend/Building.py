@@ -105,6 +105,7 @@ class TownCenter(Building):
         self.symbol = 'T'
         self.population_increase = 5
         self.training_queue = []
+        self.sprite = "towncenter"
 
     def spawn_villager(self):
         if self.built:
@@ -131,6 +132,7 @@ class House(Building):
         super().__init__(player, "House", hp=200, build_time=25, cost={"Wood": 25}, size=2)
         self.symbol = 'H'
         self.population_increase = 5
+        self.sprite = "house"
 
     def is_walkable(self):
         return False
@@ -141,6 +143,7 @@ class Camp(Building):
     def __init__(self, player):
         super().__init__(player, "Camp", hp=200, build_time=25, cost={"Wood": 100}, size=2)
         self.symbol = 'C'
+        self.sprite = "camp"
 
     def drop_point(self, unit, resource_type):
         # Camp acts as a drop point for resources
@@ -162,6 +165,7 @@ class Farm(Building):
         self.symbol = 'F'
         self.food = 300  # Contains 300 Food
         self.is_farmed = False
+        self.sprite = "farm"
 
     def is_walkable(self):
         return True
@@ -172,6 +176,7 @@ class Barracks(Building):
         super().__init__(player, "Barracks", hp=500, build_time=50, cost={"Wood": 175}, size=3)
         self.symbol = 'B'
         self.training_queue = []
+        self.sprite = "barracks"
 
     def spawn_swordsman(self):
         if self.built:
@@ -187,6 +192,7 @@ class Stable(Building):
         super().__init__(player, "Stable", hp=500, build_time=50, cost={"Wood": 175}, size=3)
         self.symbol = 'S'
         self.training_queue = []
+        self.sprite = "stable"
 
     def spawn_horseman(self):
         if self.built:
@@ -202,6 +208,7 @@ class ArcheryRange(Building):
         super().__init__(player, "Archery Range", hp=500, build_time=50, cost={"Wood": 175}, size=3)
         self.symbol = 'A'
         self.training_queue = []
+        self.sprite = "archeryrange"
 
     def spawn_archer(self):
         if self.built:
@@ -218,6 +225,7 @@ class Keep(Building):
         self.symbol = 'K'
         self.attack = 5
         self.range = 8
+        self.sprite = "keep"
 
     def fire_arrows(self, enemy_unit):
         if self.built:
