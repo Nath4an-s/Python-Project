@@ -174,23 +174,7 @@ class GameEngine:
                 elif key == ord('g'):  # When 'g' is pressed, test for the functions
                     Unit.kill_unit(self.players[2], self.players[2].units[0], self.map)
                 elif key == ord('b'):  # When 'b' is pressed, test for the functions
-                    Building.spawn_building(self.players[2], 4, 4, House, self.map)
-                    Building.spawn_building(self.players[2], 6, 6, House, self.map)
-                    Unit.spawn_unit(Swordsman, 2, 2, self.players[2], self.map)
-                    
-                    Unit.spawn_unit(Swordsman, 2, 2, self.players[2], self.map)
-
-                    Unit.spawn_unit(Swordsman, 2, 2, self.players[2], self.map)
-
-                    Unit.spawn_unit(Swordsman, 2, 2, self.players[2], self.map)
-
-                    Unit.spawn_unit(Swordsman, 2, 2, self.players[2], self.map)
-
-                    Unit.spawn_unit(Swordsman, 2, 2, self.players[2], self.map)
-
-                    Unit.spawn_unit(Swordsman, 2, 2, self.players[2], self.map)
-
-                    Unit.spawn_unit(Swordsman, 2, 2, self.players[2], self.map)
+                    action.gather_resources(self.players[1].units[0], "Wood", self.get_current_time())
 
 
                 elif key == ord('\t'):  # TAB key
@@ -222,9 +206,7 @@ class GameEngine:
                 elif key == ord('m'):
                     self.debug_print(self.map.grid[1][1].resource.amount)
                 elif key == ord('r'):
-                    for ia in self.ias:
-                        self.debug_print(self.players)
-                        self.debug_print(self.players)
+                    self.debug_print(self.ias[1].decided_builds)
                 elif key == ord('a'):
                     Building.spawn_building(self.players[2], 2, 2, House, self.map)
                     Unit.spawn_unit(Archer, 4, 2, self.players[2], self.map)
@@ -235,16 +217,7 @@ class GameEngine:
                 elif key == ord('f'):
                     Building.kill_building(self.players[2], self.players[2].buildings[-1], self.map)
                 elif key == ord('y'):
-                    Building.spawn_building(self.players[0], 60, 60, Barracks, self.map)
-                    Building.spawn_building(self.players[0], 63, 63, House, self.map)
-                    Unit.spawn_unit(Swordsman, 59, 59, self.players[0], self.map)
-                    Unit.spawn_unit(Swordsman, 59, 59, self.players[0], self.map)
-                    Unit.spawn_unit(Swordsman, 59, 59, self.players[0], self.map)
-                    Unit.spawn_unit(Swordsman, 59, 59, self.players[0], self.map)
-                    Unit.spawn_unit(Swordsman, 59, 59, self.players[0], self.map)
-                    self.players[0].owned_resources["Food"] = 1000
-                    self.players[0].owned_resources["Wood"] = 1000
-                    self.players[0].owned_resources["Gold"] = 1000
+                    Building.kill_building(self.players[1], self.players[1].buildings[-1], self.map)
                 elif key == ord('p'):
                     self.is_paused = not self.is_paused
                     if self.is_paused:

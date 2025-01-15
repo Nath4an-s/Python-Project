@@ -2,7 +2,6 @@ import os
 import webbrowser
 from Units import *
 from Building import *
-from logger import debug_print
 
 def generate_html_report(players):
     # Calculate total units for proportion diagram

@@ -345,19 +345,25 @@ class Action:
                         del unit.last_move_time
             else:
                 self.debug_print("No valid building found for resource return.")
+                unit.task = None
 
     def go_battle(self, unit, enemy_unit, current_time_called):
         unit.task = "going_to_battle"
         unit.target_attack = enemy_unit
         
         # Get the current position of the enemy
-        target_x, target_y = enemy_unit.position
+        if enemy_unit is not None:
+            target_x, target_y = enemy_unit.position
+        else:
+            unit.task = None
+            unit.target_attack = None
+            return
         # Check if the target position has changed
         if unit.target_position != (target_x, target_y):
             unit.path = None  # Reset path if target position has changed
 
         # Check if the unit is within range to attack
-        if (abs(unit.position[0] - target_x) < unit.range and abs(unit.position[1] - target_y) < unit.range) or (isinstance(enemy_unit, Building) and abs(unit.position[0] - target_x) <= enemy_unit.size and abs(unit.position[1] - target_y) <= enemy_unit.size):
+        if ((unit.position[0] - target_x)**2 + (unit.position[1] - target_y)**2)**0.5 <= unit.range + 0.25: # Add a small threshold to ensure the unit is within range
             unit.task = "attacking"
             if not isinstance(enemy_unit, Building):
                 enemy_unit.is_attacked_by = unit
@@ -377,8 +383,10 @@ class Action:
             unit.target_position = None
         if not enemy_unit or enemy_unit.hp <= 0:
             unit.task = None
+            unit.target_attack = None
             return
-        if abs(unit.position[0] - enemy_unit.position[0]) < unit.range and abs(unit.position[1] - enemy_unit.position[1]) < unit.range or isinstance(enemy_unit, Building):
+        distance = ((unit.position[0] - enemy_unit.position[0])**2 + (unit.position[1] - enemy_unit.position[1])**2)**0.5
+        if distance <= unit.range + 0.25: # Add a small threshold to ensure the unit is within range
             if not hasattr(unit, 'last_hit_time'):
                 unit.last_hit_time = 0
 
@@ -401,8 +409,8 @@ class Action:
 
                 unit.last_hit_time = current_time_called
         else:
-            self.debug_print("Enemy unit not in range, moving closer...")
-            self.go_battle(unit, enemy_unit, current_time_called)
+            unit.task = "going_to_battle"  # Reset to movement phase
+            self.debug_print(f"not entering attack phase, distance: {distance}")
 
     def construct_building(self, unit, building_type, x, y, player, current_time_called):
         if not self.map.is_area_free(x, y, building_type(player).size):

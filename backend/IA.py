@@ -1,6 +1,5 @@
 #IA
 from Actions import *
-from frontend.Terrain import Map
 from logger import debug_print
 from Building import *
 from Units import *
@@ -18,8 +17,10 @@ class IA:
         self.attack_cooldown = 30  # Minimum time between strategic attacks
         self.last_attack_time = 0
         self.decided_builds = [] # Store the decided building positions to avoid overlap --> stored for whole game
-        self.defending_units = []  # Track units assigned to defense
         self.target_player = None  # Targeted player for attacks
+
+
+#### PRIORITIES and UNIT_RESOURCES ####
 
     def get_inactive_units(self):
         inactive_villagers = []
@@ -69,63 +70,110 @@ class IA:
                 "min_defenders": 2,     # minimum units for defense
                 "attack_threshold": 5    # minimum units for attack
             }
-    
+
+    def adjust_priorities(self):
+        """
+        Ajuste dynamiquement les priorités en fonction de l'état actuel du jeu.
+        """
+        # Analyse des ressources
+        food = self.player.owned_resources["Food"]
+        wood = self.player.owned_resources["Wood"]
+        gold = self.player.owned_resources["Gold"]
+        total_population = self.player.population
+        max_population = self.player.max_population
+
+        # Analyse des forces et des menaces
+        total_villagers = len([u for u in self.player.units if isinstance(u, Villager)])
+        total_military = len([u for u in self.player.units if isinstance(u, (Swordsman, Archer, Horseman))])
+        enemy_threat_level = sum(len(p.units) + len(p.buildings) for p in self.players if p != self.player)
+
+        # Ajustement des priorités de construction
+        if food < 100:
+            self.priorities["villager_ratio"] = 0.8  # Augmenter la priorité aux villageois
+            self.priorities["military_ratio"] = 0.2  # Réduire la production militaire
+        elif wood < 100 or gold < 50:
+            self.priorities["villager_ratio"] = 0.7
+            self.priorities["military_ratio"] = 0.3
+        elif enemy_threat_level > total_military:
+            self.priorities["villager_ratio"] = 0.5
+            self.priorities["military_ratio"] = 0.5
+        else:
+            self.priorities = self.set_priorities()  # Rétablir les priorités par défaut
+
+        # Gestion des limites de population
+        if total_population >= max_population - 5:
+            self.priorities["build_house"] = True
+        else:
+            self.priorities["build_house"] = False
+
+
+#### MAIN LOOP ####
+
     def run(self):
         self.adjust_priorities()
         building_villagers, gathering_villagers, inactive_troops = self.get_inactive_units()
         
-        #if building_villagers : self.debug_print(f"Build villageois : {[villager.name for villager in building_villagers]}")
         self.build_structures(list(set(building_villagers)))
         
-        # Any remaining building villagers who couldn't build (due to lack of resources)
-        # will be added to gathering villagers
         _, remaining_builders, _ = self.get_inactive_units()
         remaining_builders = [v for v in remaining_builders if v not in building_villagers]
         gathering_villagers.extend(remaining_builders)
         
-        # Then gather resources with remaining villagers
-        gathering_villagers = list(set(gathering_villagers))  # Ensure no duplicates
+        gathering_villagers = list(set(gathering_villagers))
         self.gather_resources(gathering_villagers)
         
-        defending_troops = self.assign_defenders(inactive_troops)
-        self.defending_units = defending_troops 
-
-        remaining_troops = [t for t in inactive_troops if t not in defending_troops]
-
+        # Check for nearby enemies for all units
+        for unit in self.player.units:
+            nearby_enemies = self.find_nearby_enemies(5, unit.position)  # 5 tile radius
+            if nearby_enemies:
+                closest_enemy = min(nearby_enemies, 
+                    key=lambda e: self.calculate_distance(unit.position, e.position))
+                Action(self.game_map).go_battle(unit, closest_enemy, self.current_time_called)
         
-        self.defend(list(set(defending_troops)))
-        # Handle military units based on the selected mode
-        if self.mode == "defensive":
-            self.defend(list(set(remaining_troops)))
-        
+        # Handle remaining military strategy
         if self.mode == "aggressive":
-            self.strategic_attack(list(set(remaining_troops)))
+            self.strategic_attack(list(set(inactive_troops)))
         
-        # Train new units
         self.train_units()
 
-    def train_units(self):
-        if (self.player.population + len(self.player.training_units) >= self.player.max_population or 
-                self.player.population + len(self.player.training_units) >= sum(building.population_increase for building in self.player.buildings)):
-            return  # Population limit reached, cannot train more units
 
-        total_units = len(self.player.units) + len(self.player.training_units)
-        current_villagers = len([u for u in self.player.units if isinstance(u, Villager)]) + len([u for u in self.player.training_units if isinstance(u, Villager)])
-        current_military = len([u for u in self.player.units if isinstance(u, (Swordsman, Archer, Horseman))]) + len([u for u in self.player.training_units if isinstance(u, (Swordsman, Archer, Horseman))])
-        
-        desired_villagers = max(1,int(total_units * self.priorities["villager_ratio"]))
-        desired_military = max(1,int(total_units * self.priorities["military_ratio"]))
-        
-        if current_villagers < desired_villagers and self.player.owned_resources["Food"] > 50:
-            self.train_villagers()
-        elif current_military < desired_military and (
-                self.player.owned_resources["Wood"] > 50 and 
-                self.player.owned_resources["Gold"] > 50 and 
-                self.player.owned_resources["Food"] > 100 and 
-                any(type(building).__name__ in ["Barracks", "Stable", "ArcheryRange"] for building in self.player.buildings)):
-            self.train_troops()
-        elif self.player.owned_resources["Food"] > 50:
-            self.train_villagers()
+#### TRAINING STRATEGY ####
+
+    def train_units(self):
+
+        if (self.player.owned_resources["Food"] >= 2000 and 
+            self.player.owned_resources["Wood"] >= 2000 and 
+            self.player.owned_resources["Gold"] >= 2000 and 
+            any(type(building).__name__ in ["Barracks", "Stable", "ArcheryRange"] for building in self.player.buildings) and 
+            self.mode == "aggressive"):
+            for unit in self.player.units:
+                if isinstance(unit, Villager):
+                    Unit.kill_unit(self.player, unit, self.game_map)
+            free_slots = max(self.player.max_population - self.player.population - len(self.player.training_units), sum(building.population_increase for building in self.player.buildings) - self.player.population - len(self.player.training_units))
+            for _ in range(free_slots):
+                self.train_troops()
+        else:
+            if (self.player.population + len(self.player.training_units) >= self.player.max_population or 
+                    self.player.population + len(self.player.training_units) >= sum(building.population_increase for building in self.player.buildings)):
+                return  # Population limit reached, cannot train more units
+
+            total_units = len(self.player.units) + len(self.player.training_units)
+            current_villagers = len([u for u in self.player.units if isinstance(u, Villager)]) + len([u for u in self.player.training_units if isinstance(u, Villager)])
+            current_military = len([u for u in self.player.units if isinstance(u, (Swordsman, Archer, Horseman))]) + len([u for u in self.player.training_units if isinstance(u, (Swordsman, Archer, Horseman))])
+            
+            desired_villagers = max(1,int(total_units * self.priorities["villager_ratio"]))
+            desired_military = max(1,int(total_units * self.priorities["military_ratio"]))
+            
+            if current_villagers < desired_villagers and self.player.owned_resources["Food"] > 50:
+                self.train_villagers()
+            elif current_military < desired_military and (
+                    self.player.owned_resources["Wood"] > 50 and 
+                    self.player.owned_resources["Gold"] > 50 and 
+                    self.player.owned_resources["Food"] > 100 and 
+                    any(type(building).__name__ in ["Barracks", "Stable", "ArcheryRange"] for building in self.player.buildings)):
+                self.train_troops()
+            elif self.player.owned_resources["Food"] > 50:
+                self.train_villagers()
 
     def train_villagers(self):
         for building in self.player.buildings:
@@ -176,40 +224,8 @@ class IA:
                             #self.debug_print(f"{self.player.name} : Training horseman at ({new_x}, {new_y})")
                             return
 
-    def adjust_priorities(self):
-        """
-        Ajuste dynamiquement les priorités en fonction de l'état actuel du jeu.
-        """
-        # Analyse des ressources
-        food = self.player.owned_resources["Food"]
-        wood = self.player.owned_resources["Wood"]
-        gold = self.player.owned_resources["Gold"]
-        total_population = self.player.population
-        max_population = self.player.max_population
 
-        # Analyse des forces et des menaces
-        total_villagers = len([u for u in self.player.units if isinstance(u, Villager)])
-        total_military = len([u for u in self.player.units if isinstance(u, (Swordsman, Archer, Horseman))])
-        enemy_threat_level = sum(len(p.units) + len(p.buildings) for p in self.players if p != self.player)
-
-        # Ajustement des priorités de construction
-        if food < 100:
-            self.priorities["villager_ratio"] = 0.8  # Augmenter la priorité aux villageois
-            self.priorities["military_ratio"] = 0.2  # Réduire la production militaire
-        elif wood < 100 or gold < 50:
-            self.priorities["villager_ratio"] = 0.7
-            self.priorities["military_ratio"] = 0.3
-        elif enemy_threat_level > total_military:
-            self.priorities["villager_ratio"] = 0.5
-            self.priorities["military_ratio"] = 0.5
-        else:
-            self.priorities = self.set_priorities()  # Rétablir les priorités par défaut
-
-        # Gestion des limites de population
-        if total_population >= max_population - 5:
-            self.priorities["build_house"] = True
-        else:
-            self.priorities["build_house"] = False
+#### GATHERING STRATEGY ####
 
     def gather_resources(self, villagers):
         #if villagers : self.debug_print(f"Farm : {[villager.name for villager in villagers]}")
@@ -249,6 +265,9 @@ class IA:
                 
         return True
 
+
+#### BUILDING STRATEGY ####
+
     def build_structures(self, villagers):
         if not villagers:
             return
@@ -271,70 +290,68 @@ class IA:
         for building in self.player.buildings:
             building_counts[type(building).__name__] += 1
 
+        if building_counts["TownCenter"] == 0 and self.player.owned_resources["Wood"] >= 350:
+            least_constructed_building = "TownCenter"
         # Check if food is low and prioritize building a Farm
-        if self.player.owned_resources["Food"] < 50:
+        elif self.player.owned_resources["Food"] < 50 and self.player.owned_resources["Wood"] >= 60:
             least_constructed_building = "Farm"
         # Check if population limit is reached and prioritize building a House
-        elif self.player.population >= self.player.max_population or self.player.population >= sum(building.population_increase for building in self.player.buildings):
+        elif self.player.population >= self.player.max_population or self.player.population >= sum(building.population_increase for building in self.player.buildings) and self.player.owned_resources["Wood"] >= 25:
             least_constructed_building = "House"
         else:
             # Identify the building type that is least constructed
-            least_constructed_building = min(building_counts, key=building_counts.get)
+            # Filter buildings that can be constructed based on available resources
+            constructable_buildings = [
+                b_name for b_name, costs in building_costs.items()
+                if all(self.player.owned_resources[resource] >= amount 
+                      for resource, amount in costs.items())
+            ]
+            
+            # Find the least constructed among constructable buildings
+            least_constructed_building = min(
+                constructable_buildings,
+                key=lambda b: building_counts[b],
+                default="Farm"  # Default to Farm if no buildings are constructable
+            )
         
         building_class = eval(least_constructed_building)
-
         # Check if the player has enough resources to construct the identified building
-        required_resources = building_costs[least_constructed_building]
-        if all(self.player.owned_resources[resource] >= amount for resource, amount in required_resources.items()):
-            build_position = None
-            for existing_building in self.player.buildings:
-                x, y = existing_building.position
-                for radius in range(5, 15): # buildings not too close to each other nor too far
-                    for dx in range(-radius, radius + 1):
-                        for dy in range(-radius, radius + 1):
-                            new_x = x + dx
-                            new_y = y + dy
-                            
-                            if self.is_position_valid(new_x, new_y, building_class(self.player).size, is_building=True):
-                                build_position = (new_x, new_y)
-                                break
-                        if build_position:
+        build_position = None
+        for existing_building in self.player.buildings:
+            x, y = existing_building.position
+            for radius in range(5, 15): # buildings not too close to each other nor too far
+                for dx in range(-radius, radius + 1):
+                    for dy in range(-radius, radius + 1):
+                        new_x = x + dx
+                        new_y = y + dy
+                        
+                        if self.is_position_valid(new_x, new_y, building_class(self.player).size, is_building=True):
+                            build_position = (new_x, new_y)
                             break
                     if build_position:
                         break
                 if build_position:
                     break
-
             if build_position:
-                for villager in villagers:
-                    Action(self.game_map).construct_building(
-                        villager, 
-                        building_class,
-                        build_position[0], 
-                        build_position[1],
-                        self.player,
-                        self.current_time_called
-                    )
+                break
+
+        if build_position:
+            self.debug_print(f"{self.player.name} : Building {building_class.__name__} at {build_position}")
+            for villager in villagers:
+                Action(self.game_map).construct_building(
+                    villager, 
+                    building_class,
+                    build_position[0], 
+                    build_position[1],
+                    self.player,
+                    self.current_time_called
+                )
+                if build_position not in self.decided_builds:
                     self.decided_builds.append(build_position)
-                    if len(villagers) > 1 :
-                        for additional_villager in villagers:
-                            if additional_villager != villager:
-                                Action(self.game_map).construct_building(
-                                    additional_villager, 
-                                    building_class,
-                                    build_position[0], 
-                                    build_position[1],
-                                    self.player,
-                                    self.current_time_called
-                                )
-                                self.decided_builds.append(build_position)
-                                break
-                    return
-    
 
 
+#### ATTACK STRATEGY ####
 
-# ATTACK STRATEGY    
     def strategic_attack(self, troops):
         if not troops or len(troops) < self.priorities["attack_threshold"]:
             return
@@ -382,26 +399,23 @@ class IA:
     def calculate_distance(self, pos1, pos2):
         return ((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2) ** 0.5
     
-    def find_nearby_enemies(self, max_distance):
+    def find_nearby_enemies(self, max_distance, unit_position):
         enemies = []
-        base_pos = self.get_base_position()
-        
-        # Get enemy units directly from all players
         for player in self.players:
             if player != self.player:
-                for unit in player.units:
-                    dist = self.calculate_distance(base_pos, unit.position)
+                for enemy in player.units:
+                    dist = self.calculate_distance(unit_position, enemy.position)
                     if dist <= max_distance:
-                        enemies.append(unit)
-                # Include enemy buildings in defensive consideration
+                        enemies.append(enemy)
                 for building in player.buildings:
-                    dist = self.calculate_distance(base_pos, building.position)
+                    dist = self.calculate_distance(unit_position, building.position)
                     if dist <= max_distance:
                         enemies.append(building)
-        
         return enemies
 
-# DEFENSE STRATEGY
+
+#### DEFENSE STRATEGY ####
+
     def assign_defenders(self, troops):
         defensive_troops = list(self.defending_units)  # Maintain existing defenders
         needed_defenders = self.priorities["min_defenders"] - len(defensive_troops)
@@ -424,20 +438,17 @@ class IA:
         patrol_y = y
         
         # Use the existing move_unit method from Actions class
-        Action(self.game_map).move_unit(unit, patrol_x, patrol_y, self.current_time_called)
+        if unit.target_position is None:
+            Action(self.game_map).move_unit(unit, patrol_x, patrol_y, self.current_time_called)
+            self.defend(unit)
 
-    def defend(self, troops):
-        if not troops:
-            return
-            
-        troops = list(set(troops))  # Ensure no duplicates
-        
+    def defend(self, unit):
+                    
         # Find closest enemy units or buildings
         enemies = self.find_nearby_enemies(max_distance=15)
         if enemies:
-            for troop in troops:
-                closest_enemy = min(enemies, key=lambda e: self.calculate_distance(troop.position, e.position))
-                Action(self.game_map).go_battle(troop, closest_enemy, self.current_time_called)
+            closest_enemy = min(enemies, key=lambda e: self.calculate_distance(unit.position, e.position))
+            Action(self.game_map).go_battle(unit, closest_enemy, self.current_time_called)
 
     def get_base_position(self):
         # Find the position of the main base (TownCenter)
