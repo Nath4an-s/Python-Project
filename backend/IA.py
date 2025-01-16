@@ -14,8 +14,6 @@ class IA:
         self.debug_print = debug_print
         self.current_time_called = current_time_called
         self.priorities = self.set_priorities()
-        self.attack_cooldown = 30  # Minimum time between strategic attacks
-        self.last_attack_time = 0
         self.decided_builds = [] # Store the decided building positions to avoid overlap --> stored for whole game
         self.target_player = None  # Targeted player for attacks
 
@@ -296,7 +294,9 @@ class IA:
         elif self.player.owned_resources["Food"] < 50 and self.player.owned_resources["Wood"] >= 60:
             least_constructed_building = "Farm"
         # Check if population limit is reached and prioritize building a House
-        elif self.player.population >= self.player.max_population or self.player.population >= sum(building.population_increase for building in self.player.buildings) and self.player.owned_resources["Wood"] >= 25:
+        elif (self.player.population >= self.player.max_population 
+              or self.player.population >= sum(building.population_increase for building in self.player.buildings) 
+              and self.player.owned_resources["Wood"] >= 25) and sum(building.population_increase for building in self.player.buildings) - self.player.population - len(self.player.training_units):
             least_constructed_building = "House"
         else:
             # Identify the building type that is least constructed

@@ -484,27 +484,33 @@ class GUI(threading.Thread):
 
         for y in range(self.game_data.map.height):
             for x in range(self.game_data.map.width):
+                # Convertir en coordonnées isométriques
                 iso_x, iso_y = self.cart_to_iso(x, y)
                 tile_x = iso_x + (self.game_data.map.width * self.TILE_WIDTH // 2)
-                tile_y = iso_y 
+                tile_y = iso_y
+
+                # Dessiner les tuiles
                 transformed_polygon = [
                     (tile_x + point[0], tile_y + point[1]) for point in self.tile_polygon
                 ]
                 pygame.draw.polygon(self.pre_rendered_map, (0, 124, 0), transformed_polygon)
                 pygame.draw.lines(self.pre_rendered_map, (200, 200, 200), True, transformed_polygon, 1)
 
-                tile = self.game_data.map.grid[y][x]  # Assuming there's a method to get the tile
+                # Récupérer les informations de la tuile
+                tile = self.game_data.map.grid[y][x]
                 if tile and tile.resource:
-                    screen_x = tile_x
-                    screen_y = tile_y
+                    # Ajuster les coordonnées pour placer les ressources
+                    screen_x = tile_x - self.TILE_WIDTH // 2  # Ajustement pour centrer horizontalement
+                    screen_y = tile_y - self.TILE_HEIGHT // 2  # Ajustement pour l'altitude
 
                     if tile.resource.type == "Wood":
                         image = self.IMAGES["Wood"]
-                        self.pre_rendered_map.blit(image, (screen_x + self.TILE_WIDTH, screen_y))
+                        self.pre_rendered_map.blit(image, (screen_x, screen_y))
 
                     elif tile.resource.type == "Gold":
                         image = self.IMAGES["Gold"]
-                        self.pre_rendered_map.blit(image, (screen_x + self.TILE_WIDTH, screen_y))
+                        self.pre_rendered_map.blit(image, (screen_x, screen_y))
+
 
     def render_isometric_map(self):
         if not self.pre_rendered_map:
@@ -529,8 +535,8 @@ class GUI(threading.Thread):
                     entities.append((unit_x, unit_y, "unit", unit))
 
             for building in player.buildings:
-                bottom_right_x = building.position[0] + building.size - 1
-                bottom_right_y = building.position[1] + building.size - 1
+                bottom_right_x = building.position[0] + building.size - 2
+                bottom_right_y = building.position[1] + building.size
 
                 iso_x, iso_y = self.cart_to_iso(bottom_right_x, bottom_right_y)
                 building_x = iso_x + (self.game_data.map.width * self.TILE_WIDTH // 2)

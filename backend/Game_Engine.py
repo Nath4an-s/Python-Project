@@ -310,24 +310,24 @@ class GameEngine:
             self.is_paused = True
             self.debug_print("Game paused.")
         
-        # Générer un nom de fichier si aucun n'est fourni
+        # Generate a filename if none is provided
         if filename is None:
-            for i in range(10):  # Limite à 10 sauvegardes automatiques
+            for i in range(10):  # Limit to 10 auto-saves
                 filename = f"../assets/annex/game_save{i}.dat"
-                if not os.path.exists(filename):  # Vérifie si le fichier existe
+                if not os.path.exists(filename):  # Check if the file exists
                     break
             else:
                 self.debug_print("No available slots to save the game.")
                 return
         else:
-            # Si un nom est fourni, ajoute un suffixe unique si nécessaire
+            # If a filename is provided, add a unique suffix if necessary
             base, ext = os.path.splitext(filename)
             counter = 1
             while os.path.exists(filename):
                 filename = f"{base}_{counter}{ext}"
                 counter += 1
 
-        # Sauvegarde de l'état du jeu
+        # Save the game state
         try:
             with open(filename, 'wb') as f:
                 game_state = {
@@ -335,7 +335,8 @@ class GameEngine:
                     'map': self.map,
                     'turn': self.turn,
                     'is_paused': self.is_paused,
-                    'changed_tiles': self.changed_tiles
+                    'changed_tiles': self.changed_tiles,
+                    'ias': self.ias  # Add self.ias to the saved state
                 }
                 pickle.dump(game_state, f)
             self.debug_print(f"Game saved to {filename}.")
@@ -344,7 +345,7 @@ class GameEngine:
 
 
     def load_game(self, filename):
-        if self.is_paused == False:
+        if not self.is_paused:
             self.is_paused = True
             self.debug_print("Game paused.")
         try:
@@ -355,6 +356,7 @@ class GameEngine:
                 self.turn = game_state['turn']
                 self.is_paused = game_state['is_paused']
                 self.changed_tiles = game_state['changed_tiles']
+                self.ias = game_state.get('ias', None)  # Load self.ias or set it to None if missing
                 self.current_time = time.time()
             self.debug_print(f"Game loaded from {filename}.")
         except Exception as e:
