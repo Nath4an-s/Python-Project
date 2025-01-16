@@ -19,6 +19,9 @@ class Unit:
         self.is_attacked_by = None
         self.spawn_building = None
         self.spawn_position = None
+        self.direction = "south"
+        self.current_frame = 0  # Initialiser à 0 si absent
+        self.frame_counter = 0 
 
     def __str__(self):
         return self.symbol  # Ensure the building is represented by just the symbol
@@ -188,7 +191,7 @@ class Villager(Unit):
             debug_print(f"Le fichier {fichier} n'a pas été trouvé.")
             return ["Villager"]  # in case file not found
 
-    def __init__(self, player,position, direction="en_bas", name = None):
+    def __init__(self, player,position, name = None):
         if name is None:
             noms_disponibles = self.lire_noms_fichier()
             name = random.choice(noms_disponibles)
@@ -204,7 +207,6 @@ class Villager(Unit):
         self.range = 0.99
         self.is_acting = None
         self.position = position
-        self.direction = direction
         self.sprite = "villager"
 
 

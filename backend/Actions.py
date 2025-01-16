@@ -12,6 +12,16 @@ class Action:
         self.map = game_map
         self.debug_print = debug_print
 
+    def get_direction(self,start_x, start_y, target_x, target_y):
+
+        dx = target_x - start_x
+        dy = target_y - start_y
+
+        if abs(dx) > abs(dy):  # Priorité à l'axe horizontal
+            return "east" if dx > 0 else "west"
+        else:  # Priorité à l'axe vertical
+            return "south" if dy > 0 else "north"
+
     def move_unit(self, unit, target_x, target_y, current_time_called):
         # Check if the target destination is valid
         if not self._is_within_bounds(target_x, target_y) or (not self.map.is_tile_free_for_unit(int(target_x), int(target_y)) and not isinstance(self.map.grid[target_y][target_x].building, Building)):
@@ -20,6 +30,7 @@ class Action:
         # Get current/starting position of the unit
         start_x, start_y = int(unit.position[0]), int(unit.position[1])
         unit.target_position = (target_x, target_y)
+        unit.direction = self.get_direction(start_x, start_y, target_x, target_y)
 
         # If the target is a building, find an adjacent tile
         if isinstance(self.map.grid[target_y][target_x].building, Building) and not type(self.map.grid[target_y][target_x].building).__name__ == "Farm":
@@ -274,6 +285,9 @@ class Action:
 
     def _gather(self, unit, resource_type, current_time_called):
         tile = self.map.grid[unit.target_resource[1]][unit.target_resource[0]] if unit.target_resource is not None else None
+        
+        unit.direction = self.get_direction(unit.position[0], unit.position[1], unit.target_resource[0], unit.target_resource[1])
+
         # Check if there is a resource on the target tile and it's the correct type
         if (tile and tile.resource and tile.resource.type == resource_type) or (resource_type == "Food" and tile.building and tile.building.name == "Farm"):
             if resource_type == "Food":

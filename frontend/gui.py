@@ -127,22 +127,306 @@ class GUI(threading.Thread):
             image = self.load_image(self.BUILDINGS_PATH / f"{building_type.lower()}.png")
             self.building_images[building_type] = pygame.transform.scale(image, size)
 
+
         # Load unit images
+        # Load unit images with separation by direction and named directions
         self.villager_images = {
-            "walking": [
-                self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "walk" / f"Villagerwalk{i:03}.png")
-                for i in range(1, 16)
+            "walking": {
+                "south": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "walk" / f"Villagerwalk{i:03}.png")
+                    for i in range(1, 15)
+                ],
+                "north": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "walk" / f"Villagerwalk{i:03}.png")
+                    for i in range(61, 75)
+                ],
+                "west": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "walk" / f"Villagerwalk{i:03}.png")
+                    for i in range(31, 45)
+                ],
+                "east": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "walk" / f"Villagerwalk{i:03}.png")
+                    )
+                    for i in range(31, 45)
+                ],
+            },
+            "attacking": {
+                "north": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "FarmingVillager" / "Mine" / "Attack" / f"Villagerattack{i:03}.png")
+                    for i in range(1, 6)
+                ],
+                "east": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "FarmingVillager" / "Mine" / "Attack" / f"Villagerattack{i:03}.png")
+                    for i in range(6, 9)
+                ],
+                "south": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "FarmingVillager" / "Mine" / "Attack" / f"Villagerattack{i:03}.png")
+                    for i in range(9, 13)
+                ],
+                "west": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "FarmingVillager" / "Mine" / "Attack" / f"Villagerattack{i:03}.png")
+                    for i in range(13, 16)
+                ],
+            },
+            "dying": [
+                self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "Die" / f"Villagerdie{i:03}.png")
+                for i in range(1, 15)
             ],
-            "attacking": [
-                self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "FarmingVillager" / "Mine"/ "Attack" / f"Villagerattack{i:03}.png")
-                for i in range(1, 16)
-            ],
+            "gathering": {
+                "north": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "FarmingVillager" / "Farm" / "Attack" / f"Villageract{i:03}.png")
+                    for i in range(61, 75)
+                ],
+                "south": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "FarmingVillager" / "Farm" / "Attack" / f"Villageract{i:03}.png")
+                    for i in range(1, 15)
+                ],
+                "west": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "FarmingVillager" / "Farm" / "Attack" / f"Villageract{i:03}.png")
+                    for i in range(31, 45)
+                ],
+                "east": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "FarmingVillager" / "Farm" / "Attack" / f"Villageract{i:03}.png")
+                    )
+                    for i in range(31, 45)
+                ],
+            },
+            "idle": {
+                "south": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "Stand" / f"Villagerstand{i:03}.png")
+                    for i in range(17, 30)
+                    ],
+                },
+            },
+        
+        """
+        self.swordman_images = {
+            "walking": {
+                "north": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Walk" / f"Swordmanwalk{i:03}.png")
+                    for i in range(1, 6)
+                ],
+                "east": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Walk" / f"Swordmanwalk{i:03}.png")
+                    for i in range(6, 9)
+                ],
+                "south": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Walk" / f"Swordmanwalk{i:03}.png")
+                    for i in range(9, 13)
+                ],
+                "west": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Walk" / f"Swordmanwalk{i:03}.png")
+                    for i in range(13, 16)
+                ],
+            },
+            "attacking": {
+                "north": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Attack" / f"Swordmanattack{i:03}.png")
+                    for i in range(1, 6)
+                ],
+                "east": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Attack" / f"Swordmanattack{i:03}.png")
+                    for i in range(6, 9)
+                ],
+                "south": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Attack" / f"Swordmanattack{i:03}.png")
+                    for i in range(9, 13)
+                ],
+                "west": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Attack" / f"Swordmanattack{i:03}.png")
+                    for i in range(13, 16)
+                ],
+            },
+            "dying": {
+                "north": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Die" / f"Swordmandie{i:03}.png")
+                    for i in range(1, 6)
+                ],
+                "east": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Die" / f"Swordmandie{i:03}.png")
+                    for i in range(6, 9)
+                ],
+                "south": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Die" / f"Swordmandie{i:03}.png")
+                    for i in range(9, 13)
+                ],
+                "west": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Die" / f"Swordmandie{i:03}.png")
+                    for i in range(13, 16)
+                ],
+            },
+            "idle": {
+                "north": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Stand" / f"Swordmanstand{i:03}.png")
+                    for i in range(1, 6)
+                ],
+                "east": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Stand" / f"Swordmanstand{i:03}.png")
+                    for i in range(6, 9)
+                ],
+                "south": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Stand" / f"Swordmanstand{i:03}.png")
+                    for i in range(9, 13)
+                ],
+                "west": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Stand" / f"Swordmanstand{i:03}.png")
+                    for i in range(13, 16)
+                ],
+            },
+        }
+            
+        self.archer_images = {
+            "walking": {
+                "north": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Walk" / f"Archerwalk{i:03}.png")
+                    for i in range(1, 6)
+                ],
+                "east": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Walk" / f"Archerwalk{i:03}.png")
+                    for i in range(6, 9)
+                ],
+                "south": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Walk" / f"Archerwalk{i:03}.png")
+                    for i in range(9, 13)
+                ],
+                "west": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Walk" / f"Archerwalk{i:03}.png")
+                    for i in range(13, 16)
+                ],
+            },
+            "attacking": {
+                "north": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Attack" / f"Archerattack{i:03}.png")
+                    for i in range(1, 6)
+                ],
+                "east": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Attack" / f"Archerattack{i:03}.png")
+                    for i in range(6, 9)
+                ],
+                "south": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Attack" / f"Archerattack{i:03}.png")
+                    for i in range(9, 13)
+                ],
+                "west": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Attack" / f"Archerattack{i:03}.png")
+                    for i in range(13, 16)
+                ],
+            },
+            "dying": {
+                "north": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Die" / f"Archerdie{i:03}.png")
+                    for i in range(1, 6)
+                ],
+                "east": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Die" / f"Archerdie{i:03}.png")
+                    for i in range(6, 9)
+                ],
+                "south": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Die" / f"Archerdie{i:03}.png")
+                    for i in range(9, 13)
+                ],
+                "west": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Die" / f"Archerdie{i:03}.png")
+                    for i in range(13, 16)
+                ],
+            },
+            "idle": {
+                "north": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Stand" / f"Archerstand{i:03}.png")
+                    for i in range(1, 6)
+                ],
+                "east": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Stand" / f"Archerstand{i:03}.png")
+                    for i in range(6, 9)
+                ],
+                "south": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Stand" / f"Archerstand{i:03}.png")
+                    for i in range(9, 13)
+                ],
+                "west": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Stand" / f"Archerstand{i:03}.png")
+                    for i in range(13, 16)
+                ],
+            },
         }
 
-        self.swordman_image = self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" /"Stand"/ "Axethrowerstand001.png")
-        self.archer_image = self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Stand" /"Archerstand001.png" )
-        self.horseman_image = self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Stand" / "Scoutstand001.png")
-
+        self.horseman_images = {
+            "walking": {
+                "north": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Walk" / f"Horsemanwalk{i:03}.png")
+                    for i in range(1, 6)
+                ],
+                "east": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Walk" / f"Horsemanwalk{i:03}.png")
+                    for i in range(6, 9)
+                ],
+                "south": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Walk" / f"Horsemanwalk{i:03}.png")
+                    for i in range(9, 13)
+                ],
+                "west": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Walk" / f"Horsemanwalk{i:03}.png")
+                    for i in range(13, 16)
+                ],
+            },
+            "attacking": {
+                "north": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Attack" / f"Horsemanattack{i:03}.png")
+                    for i in range(1, 6)
+                ],
+                "east": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Attack" / f"Horsemanattack{i:03}.png")
+                    for i in range(6, 9)
+                ],
+                "south": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Attack" / f"Horsemanattack{i:03}.png")
+                    for i in range(9, 13)
+                ],
+                "west": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Attack" / f"Horsemanattack{i:03}.png")
+                    for i in range(13, 16)
+                ],
+            },
+            "dying": {
+                "north": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Die" / f"Horsemandie{i:03}.png")
+                    for i in range(1, 6)
+                ],
+                "east": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Die" / f"Horsemandie{i:03}.png")
+                    for i in range(6, 9)
+                ],
+                "south": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Die" / f"Horsemandie{i:03}.png")
+                    for i in range(9, 13)
+                ],
+                "west": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Die" / f"Horsemandie{i:03}.png")
+                    for i in range(13, 16)
+                ],
+            },
+            "idle": {
+                "north": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Stand" / f"Horsemanstand{i:03}.png")
+                    for i in range(1, 6)
+                ],
+                "east": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Stand" / f"Horsemanstand{i:03}.png")
+                    for i in range(6, 9)
+                ],
+                "south": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Stand" / f"Horsemanstand{i:03}.png")
+                    for i in range(9, 13)
+                ],
+                "west": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Stand" / f"Horsemanstand{i:03}.png")
+                    for i in range(13, 16)
+                ],
+            },
+        }
+        """
         self.iconwod = self.load_image(self.RESOURCES_PATH / "iconwood.png")
         self.icongold = self.load_image(self.RESOURCES_PATH / "icongold.png")
 
@@ -259,20 +543,45 @@ class GUI(threading.Thread):
         entities.sort(key=lambda e: e[0] + e[1])
 
         # Render all entities
+# Render all entities
         for x, y, entity_type, obj in entities:
             screen_x = x - self.camera.offset_x
             screen_y = y - self.camera.offset_y
             image = None
+
             if entity_type == "unit":
-                    if unit.sprite == "villager":
-                        image = self.villager_images["walking"][0]
-                    elif unit.sprite == "swordman" :
-                        image = self.swordman_image
-                    elif unit.sprite == "archer":
-                        image = self.archer_image
-                    if image:
-                        self.screen.blit(image, (screen_x, screen_y))
-                    
+                # Assurez-vous que chaque unité a un attribut `sprite`, `state`, et `direction`
+                unit_type = obj.sprite  # Le type d'unité (ex. "villager", "swordman", "archer")
+                state = obj.task  # Par exemple, "idle" comme état par défaut
+                direction = obj.direction  # La direction de l'unité (ex. "north", "south", "west", "east")
+                if state is None:
+                    state = "idle"
+                if state == "marching" or  state == "going_to_battle" or  state == "going_to_construction_site":
+                    state = "walking"   
+
+                # Ralentir l'animation (par exemple, changer de frame tous les 5 rendus)
+                animation_speed = 100  # Ajustez cette valeur pour contrôler la vitesse
+                obj.frame_counter += 1
+                if obj.frame_counter >= animation_speed:
+                    obj.current_frame += 1  # Passe à la frame suivante
+                    obj.frame_counter = 0  # Réinitialise le compteur
+
+                # Attribution du sprite correspondant à chaque type d'unité
+                if unit_type == "villager":
+                    if state in self.villager_images[0] and direction in self.villager_images[0][state]:
+                        #images = self.villager_images[0][state][direction]
+                        #image = images[obj.current_frame % len(images)]
+                        radius = 10  # Rayon du cercle (ajustez selon vos besoins)
+                        pygame.draw.circle(self.screen, (255, 0, 0), (screen_x, screen_y), radius)
+                elif unit_type == "swordman":
+                    image = self.swordman_image  # Un sprite unique pour "swordman"
+                elif unit_type == "archer":
+                    image = self.archer_image    # Un sprite unique pour "archer"
+
+                # Affichage du sprite sur l'écran
+                if image:
+                    self.screen.blit(image, (screen_x, screen_y))
+          
             elif entity_type == "building":
                 # Adjust sprite rendering based on building size
                 building_type = obj.name.replace(" ", "")
@@ -536,3 +845,12 @@ class GUI(threading.Thread):
 
             if buildings_y + font.get_height() + padding <= y_position + hud_height:
                 self.screen.blit(buildings_surface, (buildings_x, buildings_y))
+
+    def flip_image_horizontally(self, image):
+        """
+        Inverse une image horizontalement.
+        :param image: L'image à inverser.
+        :return: L'image inversée horizontalement.
+        """
+        import pygame
+        return pygame.transform.flip(image, True, False)
