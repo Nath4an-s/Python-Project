@@ -31,6 +31,7 @@ class Action:
         start_x, start_y = int(unit.position[0]), int(unit.position[1])
         unit.target_position = (target_x, target_y)
         unit.direction = self.get_direction(start_x, start_y, target_x, target_y)
+        unit.is_moving = True
 
         # If the target is a building, find an adjacent tile
         if isinstance(self.map.grid[target_y][target_x].building, Building) and not type(self.map.grid[target_y][target_x].building).__name__ == "Farm":
@@ -91,6 +92,7 @@ class Action:
                         del unit.path
                     if hasattr(unit, 'last_move_time'):
                         del unit.last_move_time
+                    unit.is_moving = False
                     #self.debug_print("Reached target!")
                     return True
             else:

@@ -560,10 +560,14 @@ class GUI(threading.Thread):
                 unit_type = obj.sprite  # Le type d'unité (ex. "villager", "swordman", "archer")
                 state = obj.task  # Par exemple, "idle" comme état par défaut
                 direction = obj.direction  # La direction de l'unité (ex. "north", "south", "west", "east")
-                if state is None:
-                    state = "idle"
-                if state == "marching" or  state == "going_to_battle" or  state == "going_to_construction_site":
-                    state = "walking"   
+                if obj.is_moving == True:
+                    state = "walking"  
+                else :
+                    if state is None:
+                        obj.direction = "south"
+                        state = "idle"
+                    if state == "marching" or  state == "going_to_battle" or  state == "going_to_construction_site" or obj.is_moving == True:
+                        state = "walking"   
 
                 # Ralentir l'animation (par exemple, changer de frame tous les 5 rendus)
                 animation_speed = 100  # Ajustez cette valeur pour contrôler la vitesse
@@ -575,10 +579,10 @@ class GUI(threading.Thread):
                 # Attribution du sprite correspondant à chaque type d'unité
                 if unit_type == "villager":
                     if state in self.villager_images[0] and direction in self.villager_images[0][state]:
-                        #images = self.villager_images[0][state][direction]
-                        #image = images[obj.current_frame % len(images)]
-                        radius = 10  # Rayon du cercle (ajustez selon vos besoins)
-                        pygame.draw.circle(self.screen, (255, 0, 0), (screen_x, screen_y), radius)
+                        images = self.villager_images[0][state][direction]
+                        image = images[obj.current_frame % len(images)]
+                        #radius = 10  # Rayon du cercle (ajustez selon vos besoins)
+                        #pygame.draw.circle(self.screen, (255, 0, 0), (screen_x, screen_y), radius)
                 elif unit_type == "swordman":
                     image = self.swordman_image  # Un sprite unique pour "swordman"
                 elif unit_type == "archer":

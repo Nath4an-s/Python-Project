@@ -22,6 +22,7 @@ class Unit:
         self.direction = "south"
         self.current_frame = 0  # Initialiser à 0 si absent
         self.frame_counter = 0 
+        self.is_moving = False
 
     def __str__(self):
         return self.symbol  # Ensure the building is represented by just the symbol
