@@ -170,7 +170,7 @@ class GameEngine:
                 elif key == ord('h'):  # When 'h' is pressed, test for the functions
                     #for unit in self.players[2].units:             #Takes time to calculates all paths but is perfectly smooth after that
                         #action.move_unit(unit, 50, 60, current_time)
-                    action.move_unit(self.players[2].units[0], 2, 2, self.get_current_time()) # Move the first unit to (0, 0)
+                    action.move_unit(self.players[0].units[0], 2, 2, self.get_current_time()) # Move the first unit to (0, 0)
                 elif key == ord('g'):  # When 'g' is pressed, test for the functions
                     Unit.kill_unit(self.players[2], self.players[2].units[0], self.map)
                 elif key == ord('b'):  # When 'b' is pressed, test for the functions

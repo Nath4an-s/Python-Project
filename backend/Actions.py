@@ -72,7 +72,7 @@ class Action:
             direction_x = next_step[0] - unit.position[0]
             direction_y = next_step[1] - unit.position[1]
             distance_to_next_step = (direction_x**2 + direction_y**2) ** 0.5
-
+            unit.direction = self.get_direction(unit.position[0], unit.position[1],next_step[0], next_step[1])
             # If within reach of the next step, move directly there
             if distance_to_move >= distance_to_next_step:
                 unit.position = next_step
