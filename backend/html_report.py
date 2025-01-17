@@ -172,9 +172,11 @@ def generate_html_report(players):
         max_population_build = sum(building.population_increase for building in player.buildings)
         
         # Generate player section
+        # Ajouter une icône de tête de mort si le joueur n'a ni unités ni bâtiments
+        icon = "💀" if not player.units and not player.buildings else ""
         html_content += f'''
         <div class="player-section">
-            <h2>{player.name}</h2>
+            <h2>{player.name} {icon}</h2>
             <div class="info">
                 <p>Population: {player.population}/{max_population_build}</p>
                 <div class="progress-bar">
@@ -184,6 +186,7 @@ def generate_html_report(players):
             </div>
             <button class="collapsible">Show Units</button>
             <div class="content">
+
         '''
 
         # Generate unit sections
@@ -242,7 +245,7 @@ def generate_html_report(players):
 
     # Write to file and open in browser
     report_file = "../assets/annex/game_units_report.html"
-    with open(report_file, "w") as file:
+    with open(report_file, "w", encoding="utf-8") as file:
         file.write(html_content)
 
     print("HTML report generated: game_units_report.html")

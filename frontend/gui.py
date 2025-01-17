@@ -1,5 +1,6 @@
 import pygame
 from pygame.locals import FULLSCREEN
+from pygame.locals import HIDDEN
 import threading
 import queue as Queue
 from pathlib import Path
@@ -615,7 +616,7 @@ class GUI(threading.Thread):
 
     def initialize_pygame(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((self.WINDOW_WIDTH, self.WINDOW_HEIGHT), FULLSCREEN)
+        self.screen = pygame.display.set_mode((self.WINDOW_WIDTH, self.WINDOW_HEIGHT))
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(None, 36)
         self.setup_paths()

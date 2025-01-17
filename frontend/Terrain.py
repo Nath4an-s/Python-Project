@@ -8,7 +8,7 @@ class Map:
     def __init__(self, width, height):
         self.width = width
         self.height = height
-        self.grid = [[Tile(x, y) for y in range(height)] for x in range(width)]  # Ensure this is correct
+        self.grid = [[Tile(x, y) for x in range(width)] for y in range(height)] # THis order for N*M maps to work
         self.resources = {"Gold": [], "Wood": []}
         self.buildings = []
         self.generate_map()

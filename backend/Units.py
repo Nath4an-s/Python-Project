@@ -2,9 +2,11 @@ import random
 import math
 from Building import TownCenter
 from logger import debug_print
+from Starter_File import global_speedS
 
 # Unit Class
 class Unit:
+    global_speed = global_speedS
     def __init__(self, player, hp, cost, attack, speed, symbol="u", training_time=0, position=(0.0, 0.0)):
         self.player = player
         self.hp = hp
@@ -197,10 +199,10 @@ class Villager(Unit):
             noms_disponibles = self.lire_noms_fichier()
             name = random.choice(noms_disponibles)
 
-        super().__init__(player, hp=25, cost={"Food": 50}, attack=2, speed=8, symbol="v", training_time=3) #TODO : speed 0.8
+        super().__init__(player, hp=25, cost={"Food": 50}, attack=2, speed=0.8 * Unit.global_speed, symbol="v", training_time = 3 / Unit.global_speed)
         self.carrying = {"Wood": 0, "Food": 0, "Gold": 0}
         self.carry_capacity = 20  # Can carry up to 20 of any resource
-        self.gather_rate = 25/60  # 25 resources per minute (in resources per second) #TODO : 25 / 60
+        self.gather_rate = 25/60 * Unit.global_speed  # 25 resources per minute (in resources per second)
         self.name = name
         self.task = None
         self.last_gathered = None
@@ -216,7 +218,7 @@ class Villager(Unit):
 class Swordsman(Unit):
     cost = {"Wood": 50, "Gold": 20}
     def __init__(self, player):
-        super().__init__(player, hp=40, cost={"Food": 50, "Gold": 20}, attack=4, speed=9, symbol="s", training_time=20) #TODO : speed 0.9
+        super().__init__(player, hp=40, cost={"Food": 50, "Gold": 20}, attack=4, speed=0.9 * Unit.global_speed, symbol="s", training_time=20 / Unit.global_speed)
         self.range = 0.99
         self.task = None
         self.name = "Swordsman"
@@ -229,7 +231,7 @@ class Swordsman(Unit):
 class Horseman(Unit):
     cost = {"Wood": 80, "Gold": 60}
     def __init__(self, player,position, direction="en_bas"):
-        super().__init__(player, hp=45, cost={"Food": 80, "Gold": 20}, attack=4, speed=12, symbol="h", training_time=30) #TODO : speed 1.2
+        super().__init__(player, hp=45, cost={"Food": 80, "Gold": 20}, attack=4, speed=1.2 * Unit.global_speed, symbol="h", training_time=30 / Unit.global_speed)
         self.range = 0.99
         self.task = None
         self.name = "Horseman"
@@ -244,7 +246,7 @@ class Horseman(Unit):
 class Archer(Unit):
     cost = {"Wood": 30, "Gold": 40}
     def __init__(self, player):
-        super().__init__(player, hp=30, cost={"Wood": 25, "Gold": 45}, attack=4, speed=10, symbol="a", training_time=35) #TODO : speed 1
+        super().__init__(player, hp=30, cost={"Wood": 25, "Gold": 45}, attack=4, speed=1 * Unit.global_speed, symbol="a", training_time=35 / Unit.global_speed)
         self.range = 4  # Archers have a range of 4 tiles
         self.task = None
         self.name = "Archer"

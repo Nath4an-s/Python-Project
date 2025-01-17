@@ -147,7 +147,7 @@ class IA:
             for unit in self.player.units:
                 if isinstance(unit, Villager):
                     Unit.kill_unit(self.player, unit, self.game_map)
-            free_slots = max(self.player.max_population - self.player.population - len(self.player.training_units), sum(building.population_increase for building in self.player.buildings) - self.player.population - len(self.player.training_units))
+            free_slots = min(self.player.max_population - self.player.population - len(self.player.training_units), sum(building.population_increase for building in self.player.buildings) - self.player.population - len(self.player.training_units))
             for _ in range(free_slots):
                 self.train_troops()
         else:
