@@ -41,7 +41,7 @@ class Unit:
             town_centers = [building for building in player.buildings if isinstance(building, TownCenter)]
             
             if not town_centers:
-                debug_print(f"No town centers found for {player.name}. Skipping unit placement.")
+                debug_print(f"No town centers found for {player.name}. Skipping unit placement.", 'Yellow')
                 continue
                 
             town_center = town_centers[0]  # Use the first town center
@@ -54,7 +54,7 @@ class Unit:
             else:
                 num_villagers = 3
                 
-            debug_print(f"Attempting to spawn {num_villagers} villagers for {player.name} around ({center_x}, {center_y})")
+            debug_print(f"Attempting to spawn {num_villagers} villagers for {player.name} around ({center_x}, {center_y})", 'Red')
 
             for _ in range(num_villagers):
                 placed = False
@@ -76,7 +76,7 @@ class Unit:
                             pass  # Try again if tile is not free
                     else:
                         pass  # Try again if out of bounds
-            debug_print(f"Spawned {num_villagers} villagers for {player.name} near the Town Center at ({center_x}, {center_y})")
+            debug_print(f"Spawned {num_villagers} villagers for {player.name} near the Town Center at ({center_x}, {center_y})", 'Red')
 
 
     @classmethod
@@ -107,10 +107,10 @@ class Unit:
                 game_map.place_unit(x, y, unit)
                 return unit
             else:
-                debug_print(f"Cannot place unit at ({x}, {y}): tile is not walkable.")
+                debug_print(f"Cannot place unit at ({x}, {y}): tile is not walkable.", 'Yellow')
                 return None
         else:
-            debug_print(f"Cannot place unit at ({x}, {y}): invalid position or population limit reached.")
+            debug_print(f"Cannot place unit at ({x}, {y}): invalid position or population limit reached.", 'Yellow')
             return None
 
         
@@ -119,7 +119,7 @@ class Unit:
     # Check if the player has enough resources
         for resource_type, amount in unit_to_train.cost.items():
             if player.owned_resources.get(resource_type, 0) < amount and unit_to_train not in player.training_units:
-                debug_print(f"Not enough {resource_type} to train {unit_to_train.name}.")
+                debug_print(f"Not enough {resource_type} to train {unit_to_train.name}.", 'Yellow')
                 return
         if isinstance(unit_to_train, type):
             if unit_to_train == Horseman:
@@ -136,11 +136,11 @@ class Unit:
                 unit_to_train.training_start = current_time_called
                 for resource_type, amount in unit_to_train.cost.items():
                     if player.owned_resources.get(resource_type, 0) < amount and unit_to_train not in player.training_units:
-                        debug_print(f"Not enough {resource_type} to train {unit_to_train.name} for {player.name}.")
+                        debug_print(f"Not enough {resource_type} to train {unit_to_train.name} for {player.name}.", 'Yellow')
                         return
                     player.owned_resources[resource_type] -= amount
                     
-                    debug_print(f"{player.name} spent {amount} {resource_type} to train {unit_to_train.name}.")
+                    debug_print(f"{player.name} spent {amount} {resource_type} to train {unit_to_train.name}.", 'Red')
                 player.training_units.append(unit_to_train)
                 building.training_queue.append(unit_to_train)
 
@@ -148,14 +148,14 @@ class Unit:
                 cls.spawn_unit(unit_to_train, x, y, unit_to_train.player, game_map)
                 building.training_queue.remove(unit_to_train)
                 player.training_units.remove(unit_to_train)
-                debug_print(f"Should have spawned {unit_to_train.name} at ({x}, {y})")
+                debug_print(f"Should have spawned {unit_to_train.name} at ({x}, {y})", 'Red')
                 
                 if building.training_queue:
                     next_unit = building.training_queue[0]
                     next_unit.training_start = current_time_called
-                    debug_print(f"Starting training for {next_unit.name}")
+                    debug_print(f"Starting training for {next_unit.name}", 'Red')
         else:
-            debug_print(f"Too much population or not enough resources to train {unit_to_train.name} for {player.name}.")
+            debug_print(f"Too much population or not enough resources to train {unit_to_train.name} for {player.name}.", 'Yellow')
             if building.training_queue:
                 building.training_queue.remove(unit_to_train)
                 if building.training_queue:
@@ -171,9 +171,9 @@ class Unit:
             player.population -= 1  # Decrease the player's population
             x, y = unit_to_kill.position
             game_map.remove_unit(int(x), int(y), unit_to_kill)  # Assuming game_map is a property of the player
-            debug_print(f"Unit {unit_to_kill.name} belonging to {player.name} at ({x}, {y}) killed. (RIP)")
+            debug_print(f"Unit {unit_to_kill.name} belonging to {player.name} at ({x}, {y}) killed. (RIP)", 'DarkRed')
         else:
-            debug_print(f"Unit {unit_to_kill.name} does not belong to {player.name}.")
+            debug_print(f"Unit {unit_to_kill.name} does not belong to {player.name}.", 'Yellow')
 
     @classmethod
     def get_all_units(cls, players):
@@ -191,7 +191,7 @@ class Villager(Unit):
                 noms = [ligne.strip() for ligne in f if ligne.strip()]
             return noms
         except FileNotFoundError:
-            debug_print(f"Le fichier {fichier} n'a pas été trouvé.")
+            debug_print(f"Le fichier {fichier} n'a pas été trouvé.", 'Yellow')
             return ["Villager"]  # in case file not found
 
     def __init__(self, player,position, name = None):

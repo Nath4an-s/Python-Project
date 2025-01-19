@@ -17,7 +17,18 @@ log_file_path = os.path.join(os.getenv('TEMP'), 'gamelogs.txt')
 header_printed = False
 
 # Fonction de log
-def debug_print(message):
+def debug_print(message, color='White'):
+    """
+    Fonction pour afficher un message dans la console PowerShell
+
+    :param message: Le message à afficher
+    :param color: La couleur du texte (par défaut White)
+                  Les couleurs acceptées sont :
+                  Black, DarkBlue, DarkGreen, DarkCyan,
+                  DarkRed, DarkMagenta, DarkYellow,
+                  Gray, DarkGray, Blue, Green, Cyan,
+                  Red, Magenta, Yellow, White
+    """
     global header_printed
 
     # Formater la date et l'heure actuelle
@@ -26,7 +37,7 @@ def debug_print(message):
     # Si l'en-tête n'a pas encore été imprimé
     if not header_printed:
         if debug_ps.stdin:
-            debug_ps.stdin.write(f"Write-Host 'Game Log (session: {session_date}) : '\n")
+            debug_ps.stdin.write(f"Write-Host 'Game Log (session: {session_date})' -ForegroundColor White\n")
             debug_ps.stdin.flush()
 
         # Écrire l'en-tête dans le fichier de log
@@ -37,7 +48,7 @@ def debug_print(message):
 
     # Afficher le message dans la console PowerShell
     if debug_ps.stdin:
-        debug_ps.stdin.write(f"Write-Host '>> {message}'\n")
+        debug_ps.stdin.write(f"Write-Host '>> {message}' -ForegroundColor {color}\n")
         debug_ps.stdin.flush()
 
     # Écrire le message dans le fichier de log
@@ -53,3 +64,4 @@ def close_logger():
 
 # Afficher le chemin du fichier de log
 print(f"Log file path: {log_file_path}")
+

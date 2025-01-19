@@ -70,16 +70,16 @@ class Building:
                         # Spawn the building with the map passed in
                         building_instance.spawn_building(player, new_x, new_y, building, game_map)
 
-                    debug_print(f"Placed additional buildings for {player.name} (Marines) around ({town_center_x}, {town_center_y})")
+                    debug_print(f"Placed additional buildings for {player.name} (Marines) around ({town_center_x}, {town_center_y})", 'Blue')
                 else:
-                    debug_print(f"{player.civilization} civilization does not have additional starting buildings.")
+                    debug_print(f"{player.civilization} civilization does not have additional starting buildings.", 'Yellow')
             else:
-                debug_print(f"Failed to place starting town center at ({town_center_x}, {town_center_y})")
+                debug_print(f"Failed to place starting town center at ({town_center_x}, {town_center_y})", 'Yellow')
 
     @classmethod
     def spawn_building(self, player, x, y, building_class, game_map):
         if not game_map.is_area_free(x, y, building_class(player).size):
-            debug_print(f"Cannot spawn building at ({x}, {y}): area is not free.")
+            debug_print(f"Cannot spawn building at ({x}, {y}): area is not free.", 'Yellow')
             return False
         building = building_class(player)
         building.position = (x, y)
@@ -93,9 +93,9 @@ class Building:
             player.buildings.remove(building_to_kill)  # Remove the building from the player's list of buildings
             x, y = building_to_kill.position
             game_map.remove_building(int(x), int(y), building_to_kill)  # Assuming game_map is a property of the player
-            debug_print(f"Building {building_to_kill} belonging to {player.name} at ({x}, {y}) killed.")
+            debug_print(f"Building {building_to_kill} belonging to {player.name} at ({x}, {y}) killed.", 'DarkBlue')
         else:
-            debug_print(f"Building {building_to_kill} does not belong to {player.name}.")
+            debug_print(f"Building {building_to_kill} does not belong to {player.name}.", 'Yellow')
 
 
 # TownCenter Class
@@ -117,9 +117,9 @@ class TownCenter(Building):
         if resource_type in unit.carrying:
             amount = int(unit.carrying[resource_type])
             unit.player.owned_resources[resource_type] += amount
-            debug_print(f"Town Center: {unit.player.name} dropped {amount} {resource_type}.")
+            debug_print(f"Town Center: {unit.player.name} dropped {amount} {resource_type}.", 'green')
         else:
-            debug_print("No valid resource to drop.")
+            debug_print("No valid resource to drop.", 'Yellow')
         
 
     def is_walkable(self):
@@ -151,9 +151,9 @@ class Camp(Building):
         if resource_type in unit.carrying:
             amount = int(unit.carrying[resource_type])
             unit.player.owned_resources[resource_type] += amount
-            debug_print(f"Camp: {unit.player.name} dropped {amount} {resource_type}.")
+            debug_print(f"Camp: {unit.player.name} dropped {amount} {resource_type}.", 'green')
         else:
-            debug_print("No valid resource to drop.")
+            debug_print("No valid resource to drop.", 'Yellow')
     
     def is_walkable(self):
         return False

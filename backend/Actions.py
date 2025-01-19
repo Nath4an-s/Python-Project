@@ -66,7 +66,7 @@ class Action:
                 # Recalculate path if the next step is blocked
                 unit.path = self.astar_pathfinding((int(start_x), int(start_y)), (target_x, target_y))
                 if not unit.path:
-                    self.debug_print("Path not found or obstructed")
+                    self.debug_print("Path not found or obstructed", 'Yellow')
                     return False  # No valid path found
 
             # Calculate the direction vector to the next step
@@ -244,7 +244,7 @@ class Action:
                     unit.task = "marching"
                     return True
                 else:
-                    self.debug_print("No free tile found around the resource.")
+                    self.debug_print("No free tile found around the resource.", 'Yellow')
                     return False
 
             if any(abs(unit.position[0] - tile[0]) < 0.1 and abs(unit.position[1] - tile[1]) < 0.1 for tile in adjacent_tiles):
@@ -282,7 +282,7 @@ class Action:
                 return True
 
         else:
-            self.debug_print("Invalid resource type.")
+            self.debug_print("Invalid resource type.", 'Yellow')
             return False
 
     def _gather(self, unit, resource_type, current_time_called):
@@ -360,7 +360,7 @@ class Action:
                     if hasattr(unit, 'last_move_time'):
                         del unit.last_move_time
             else:
-                self.debug_print("No valid building found for resource return.")
+                self.debug_print("No valid building found for resource return.", 'Yellow')
                 unit.task = None
 
     def go_battle(self, unit, enemy_unit, current_time_called):
@@ -412,7 +412,7 @@ class Action:
                     enemy_unit.hp = 0
                     if isinstance(enemy_unit, Building):
                         Building.kill_building(enemy_unit.player, enemy_unit, self.map)
-                        self.debug_print(f"{unit.name} has destroyed the building {enemy_unit.name}.")
+                        self.debug_print(f"{unit.name} has destroyed the building {enemy_unit.name}.", 'Red')
 
                     else:
                         Unit.kill_unit(enemy_unit.player, enemy_unit, self.map)
@@ -420,13 +420,13 @@ class Action:
                     del unit.last_hit_time
                     unit.target_attack = None
                 else:
-                    self.debug_print(f"{unit.name} is attacking {enemy_unit.name}...")
+                    self.debug_print(f"{unit.name} is attacking {enemy_unit.name}...", 'Red')
                     enemy_unit.hp -= unit.attack
 
                 unit.last_hit_time = current_time_called
         else:
             unit.task = "going_to_battle"  # Reset to movement phase
-            self.debug_print(f"not entering attack phase, distance: {distance}")
+            self.debug_print(f"not entering attack phase, distance: {distance}", 'Red')
 
     def construct_building(self, unit, building_type, x, y, player, current_time_called):
         if not self.map.is_area_free(x, y, building_type(player).size):
@@ -470,7 +470,7 @@ class Action:
 
     def _construct(self, unit, building_type, x, y, player, current_time_called):
         if not self.map.is_area_free(x, y, building_type(player).size):
-            self.debug_print(f"Cannot construct building at ({x}, {y}): area is not free anymore.")
+            self.debug_print(f"Cannot construct building at ({x}, {y}): area is not free anymore.", 'Yellow')
             unit.task = None
             return
 
@@ -501,6 +501,6 @@ class Action:
                 b for b in player.constructing_buildings if b["position"] != (x, y)
             ]
             
-            self.debug_print(f"Building {building_type.__name__} completed at ({x}, {y}).")
+            self.debug_print(f"Building {building_type.__name__} completed at ({x}, {y}).", 'Blue')
 
             return

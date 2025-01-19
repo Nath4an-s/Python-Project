@@ -289,11 +289,11 @@ class GameEngine:
                 self.turn += 1
 
             active_players = [p for p in self.players if p.units or p.buildings]
-            self.debug_print(f"Player {active_players[0].name} wins the game!")
+            self.debug_print(f"Player {active_players[0].name} wins the game!", 'Magenta')
             input("Press Enter to exit...")
 
         except KeyboardInterrupt:
-            self.debug_print("Game interrupted. Exiting...")
+            self.debug_print("Game interrupted. Exiting...", 'Yellow')
         finally:
             if self.gui_running:
                 self.stop_gui_thread()
