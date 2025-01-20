@@ -142,9 +142,9 @@ class GUI(threading.Thread):
             "House": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),
             "Rubble": (64, 64),
             "Stable": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6),
-            "ArcheryRange": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),
+            "ArcheryRange": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6),
             "Camp": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),
-            "Farm": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),
+            "Farm": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 2),
             "Keep": (64, 64),
         }
 
@@ -293,8 +293,8 @@ class GUI(threading.Thread):
         self.swordman_images = {
            "walking": {
                 "south": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walk" / f"Axethrowerwalk{i:03}.png")
-                    for i in range(1, 15)
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walk" / f"Halbadierwalk{i:03}.png")
+                    for i in range(1, 10)
                 ],
                 "north": [
                     self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walk" / f"Axethrowerwalk{i:03}.png")
@@ -364,24 +364,45 @@ class GUI(threading.Thread):
         }
 
 
-        '''
         self.archer_images = {
             "walking": {
-                "north": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Walk" / f"Archerwalk{i:03}.png")
-                    for i in range(1, 6)
-                ],
-                "east": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Walk" / f"Archerwalk{i:03}.png")
-                    for i in range(6, 9)
-                ],
                 "south": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Walk" / f"Archerwalk{i:03}.png")
-                    for i in range(9, 13)
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "walk" / f"Archerwalk{i:03}.png")
+                    for i in range(1, 10)
+                ],
+                "north": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "walk" / f"Archerwalk{i:03}.png")
+                    for i in range(41, 50)
                 ],
                 "west": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Walk" / f"Archerwalk{i:03}.png")
-                    for i in range(13, 16)
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "walk" / f"Archerwalk{i:03}.png")
+                    for i in range(21, 30)
+                ],
+                "east": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "walk" / f"Archerwalk{i:03}.png")
+                    )
+                    for i in range(21, 30)
+                ],
+                "northeast": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "walk" / f"Archerwalk{i:03}.png")
+                    )
+                    for i in range(31, 40)
+                ],
+                "northwest": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "walk" / f"Archerwalk{i:03}.png")
+                    for i in range(31, 40) #fait
+                ],
+                "southwest": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "walk" / f"Archerwalk{i:03}.png")
+                    for i in range(11, 20) #fait
+                ],
+                "southeast": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "walk" / f"Archerwalk{i:03}.png")
+                    )
+                    for i in range(11, 20)
                 ],
             },
             "attacking": {
@@ -403,43 +424,21 @@ class GUI(threading.Thread):
                 ],
             },
             "dying": {
-                "north": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Die" / f"Archerdie{i:03}.png")
-                    for i in range(1, 6)
-                ],
-                "east": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Die" / f"Archerdie{i:03}.png")
-                    for i in range(6, 9)
-                ],
+                
                 "south": [
                     self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Die" / f"Archerdie{i:03}.png")
                     for i in range(9, 13)
-                ],
-                "west": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Die" / f"Archerdie{i:03}.png")
-                    for i in range(13, 16)
                 ],
             },
             "idle": {
-                "north": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Stand" / f"Archerstand{i:03}.png")
-                    for i in range(1, 6)
-                ],
-                "east": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Stand" / f"Archerstand{i:03}.png")
-                    for i in range(6, 9)
-                ],
+               
                 "south": [
                     self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Stand" / f"Archerstand{i:03}.png")
                     for i in range(9, 13)
                 ],
-                "west": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Stand" / f"Archerstand{i:03}.png")
-                    for i in range(13, 16)
-                ],
             },
         }
-        '''
+
         '''
         self.horseman_images = {
             "walking": {
@@ -744,8 +743,44 @@ class GUI(threading.Thread):
                         # Dessiner le triangle représentant la flèche
                         pygame.draw.polygon(self.screen, arrow_color, [arrow_tip, arrow_left, arrow_right])
 
-                #elif unit_type == "archer":
-                #   archer_image image = self.    # Un sprite unique pour "archer"
+                elif unit_type == "Archer":
+                    if state in self.archer_images and direction in self.archer_images[state]:
+                        images = self.archer_images[state][direction]
+                        image = images[obj.current_frame % len(images)]
+                        
+                        # Affiche l'image du villageois (ou tout autre sprite lié)
+                        #self.screen.blit(image, (screen_x, screen_y))
+
+                        # Dessiner une flèche indiquant la direction
+                        arrow_color = (255, 0, 0)  # Rouge pour la flèche
+                        arrow_size = 2  # Taille de la flèche
+                        dx, dy = 0, 0
+
+                        # Détermine les décalages pour chaque direction
+                        if direction == "north":
+                            dx, dy = 0, -arrow_size
+                        elif direction == "south":
+                            dx, dy = 0, arrow_size
+                        elif direction == "east":
+                            dx, dy = arrow_size, 0
+                        elif direction == "west":
+                            dx, dy = -arrow_size, 0
+                        elif direction == "northeast":
+                            dx, dy = arrow_size, -arrow_size
+                        elif direction == "northwest":
+                            dx, dy = -arrow_size, -arrow_size
+                        elif direction == "southeast":
+                            dx, dy = arrow_size, arrow_size
+                        elif direction == "southwest":
+                            dx, dy = -arrow_size, arrow_size
+
+                        # Définir les points du triangle pour la flèche
+                        arrow_tip = (screen_x + dx, screen_y + dy)
+                        arrow_left = (screen_x - dy // 2, screen_y + dx // 2)
+                        arrow_right = (screen_x + dy // 2, screen_y - dx // 2)
+
+                        # Dessiner le triangle représentant la flèche
+                        pygame.draw.polygon(self.screen, arrow_color, [arrow_tip, arrow_left, arrow_right])
 
                 # Affichage du sprite sur l'écran
                 if image:
@@ -762,6 +797,10 @@ class GUI(threading.Thread):
                     adjusted_x = screen_x + self.TILE_WIDTH * (2 - obj.size) // 2
 
                     if obj.size == 3:
+                        adjusted_y += (self.TILE_HEIGHT // 2)
+                        adjusted_x -= (self.TILE_WIDTH // 2)
+
+                    if obj.size == 2:
                         adjusted_y += (self.TILE_HEIGHT // 2)
 
                     self.screen.blit(image, (adjusted_x, adjusted_y))
