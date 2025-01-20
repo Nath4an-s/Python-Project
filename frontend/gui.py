@@ -1,3 +1,6 @@
+
+#-(sprite_get_bbox_bottom(_sprite) - sprite_get_yoffset(_sprite) + _isoY + _isoZ + global.ISO_Z * _bonusZ)
+
 import pygame
 from pygame.locals import FULLSCREEN
 from pygame.locals import HIDDEN
@@ -676,18 +679,13 @@ class GUI(threading.Thread):
                 if visible_rect.collidepoint(building_x, building_y):
                     entities.append((building_x, building_y, "building", building))
 
-        current_time = time.time()
-        for (x, y), (image, end_time) in list(self.rubble.items()):
-            if current_time < end_time:
-                iso_x, iso_y = self.cart_to_iso(x, y)
-                rubble_x = iso_x + (self.game_data.map.width * self.TILE_WIDTH // 2)
-                rubble_y = iso_y
-                if visible_rect.collidepoint(rubble_x, rubble_y):
-                    entities.append((rubble_x, rubble_y, "rubble", image))
-            else:
-                del self.rubble[(x, y)]
         # Sort entities by their depth (y + x for isometric rendering)
-        entities.sort(key=lambda e: (e[0] + e[1], e[2] == "building" and isinstance(e[3], Farm)))
+        entities.sort(key=lambda e: (
+            0 if e[2] == "building" and e[3].name == "Farm" else 1,  # Fermes en premier
+            (e[1] + e[0]),  # Profondeur isométrique (y + x)
+            e[0]  # Priorité pour ceux à gauche (x plus petit en premier)
+        ))
+
 
         # Render all entities
 # Render all entities
@@ -870,20 +868,6 @@ class GUI(threading.Thread):
             elif entity_type == "rubble":
                 image = obj
                 self.screen.blit(image, (screen_x, screen_y))
-
-
-    def add_rubble(self, x, y):
-        rubble_image = self.building_images["Rubble"]
-        end_time = time.time() + 5  # Display rubble for 5 seconds
-        self.rubble[(x, y)] = (rubble_image, end_time)
-
-
-    def on_building_destroyed(self, building):
-        x, y = building.position
-        self.add_rubble(x, y)
-        # Remove the building from the game data
-        self.game_data.remove_building(building)
-
 
     def initialize_pygame(self):
         pygame.init()
