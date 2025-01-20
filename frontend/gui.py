@@ -279,15 +279,53 @@ class GUI(threading.Thread):
                     for i in range(16, 30) #fait
                 ],
             },
+            "constructing": {
+                "north": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "FarmingVillager" / "Build & Repair" / "Act" / f"Villageract{i:03}.png")
+                    for i in range(61, 75)
+                ],
+                "south": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "FarmingVillager" / "Build & Repair" / "Act" / f"Villageract{i:03}.png")
+                    for i in range(1, 15)
+                ],
+                "west": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "FarmingVillager" / "Build & Repair" / "Act" / f"Villageract{i:03}.png")
+                    for i in range(31, 45)
+                ],
+                "east": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "FarmingVillager" / "Build & Repair" / "Act" / f"Villageract{i:03}.png")
+                    )
+                    for i in range(31, 45)
+                ],
+                "northeast": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "FarmingVillager" / "Build & Repair" / "Act" / f"Villageract{i:03}.png")
+                    )
+                    for i in range(46, 60)
+                ],
+                "northwest": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "FarmingVillager" / "Build & Repair" / "Act" / f"Villageract{i:03}.png")
+                    for i in range(46, 60)
+                ],
+                "southeast": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "FarmingVillager" / "Build & Repair" / "Act" / f"Villageract{i:03}.png")
+                    )
+                    for i in range(16, 30)
+                ],
+                "southwest": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "FarmingVillager" / "Build & Repair" / "Act" / f"Villageract{i:03}.png")
+                    for i in range(16, 30) #fait
+                ],
+            },
             "idle": {
                 "south": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "Stand" / f"Villagerstand{i:03}.png")
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "Stand" /f"Villagerstand{i:03}.png")
                     for i in range(17, 30)
                 ],
             },
         }
-
-
         
         
         self.swordman_images = {
