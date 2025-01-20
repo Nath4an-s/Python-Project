@@ -137,7 +137,7 @@ class GUI(threading.Thread):
                     
         # Load and scale building images
         building_types = {
-            "TownCenter": (256, 256),
+            "TownCenter": (256, 128),
             "Barracks": (self.TILE_WIDTH * 3.5, self.TILE_HEIGHT * 6),
             "House": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),
             "Rubble": (64, 64),
