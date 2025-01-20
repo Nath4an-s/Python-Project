@@ -489,6 +489,10 @@ class Action:
                     "type": building_type,
                     "start_time": current_time_called
                 })
+            if hasattr(unit, 'path'):
+                del unit.path
+            if hasattr(unit, 'last_move_time'):
+                del unit.last_move_time
             self._construct(unit, building_type, x, y, player, current_time_called)
 
 

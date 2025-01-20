@@ -90,7 +90,9 @@ class Building:
     @classmethod
     def kill_building(cls, player, building_to_kill, game_map):
         if building_to_kill in player.buildings:
-            player.buildings.remove(building_to_kill)  # Remove the building from the player's list of buildings
+            if building_to_kill.position in player.ai.decided_builds:
+                player.buildings.remove(building_to_kill)  # Remove the building from the player's list of buildings
+            player.ai.decided_builds.remove(building_to_kill.position)
             x, y = building_to_kill.position
             game_map.remove_building(int(x), int(y), building_to_kill)  # Assuming game_map is a property of the player
             debug_print(f"Building {building_to_kill} belonging to {player.name} at ({x}, {y}) killed.", 'DarkBlue')

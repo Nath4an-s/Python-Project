@@ -75,7 +75,8 @@ class GameEngine:
             Unit.place_starting_units(self.players, self.map)  # Place starting units on the map
         self.debug_print = debug_print
         self.ias = [IA(player, player.ai_profile, self.map, time.time()) for player in self.players]  # Instantiate IA for each player
-        #self.ias = [IA(players[0], players[0].ai_profile, self.map, time.time())]
+        for i in range(len(self.players)):
+            self.players[i].ai = self.ias[i]
         self.IA_used = False
         self.current_time = time.time()
 
@@ -206,7 +207,7 @@ class GameEngine:
                 elif key == ord('m'):
                     self.debug_print(self.map.grid[1][1].resource.amount)
                 elif key == ord('r'):
-                    self.debug_print(self.ias[1].decided_builds)
+                    self.debug_print(self.ias[2].decided_builds)
                 elif key == ord('a'):
                     Building.spawn_building(self.players[2], 2, 2, House, self.map)
                     Unit.spawn_unit(Archer, 4, 2, self.players[2], self.map)
@@ -247,7 +248,7 @@ class GameEngine:
                         ia.current_time_called = self.get_current_time()  # Update the current time for each IA
                         ia.run()  # Run the AI logic for each player
                     
-                if not self.is_paused:
+                if not self.is_paused and self.turn % 10 == 0:
                     # Move units toward their target position
                     for player in self.players:
                         for unit in player.units:
@@ -299,8 +300,11 @@ class GameEngine:
                 self.stop_gui_thread()
 
     def check_victory(self):
-        active_players = [p for p in self.players if p.units or p.buildings] # Check if the player has units and buildings
-        return len(active_players) == 1 # Check if there is only one player left
+        if self.turn % 100 == 0: # Check if the game is over
+            active_players = [p for p in self.players if p.units or p.buildings] # Check if the player has units and buildings
+            return len(active_players) == 1 # Check if there is only one player left
+        else:
+            return False
 
     def pause_game(self):
         self.is_paused = not self.is_paused
