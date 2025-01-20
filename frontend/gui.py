@@ -35,6 +35,12 @@ class Camera:
         self.offset_x = max(min_x, min(self.offset_x + dx, max_x))
         self.offset_y = max(min_y, min(self.offset_y + dy, max_y))
 
+def tint_image(image, color):
+    """Tint an image with the given color."""
+    tinted_image = image.copy()
+    tinted_image.fill(color + (0,), special_flags=pygame.BLEND_RGBA_MULT)
+    return tinted_image
+
 class GUI(threading.Thread):
     def __init__(self, data_queue):
         super().__init__()
@@ -62,7 +68,8 @@ class GUI(threading.Thread):
 
         self.building_images = {}
         self.IMAGES = {}
-
+        self.villager_images = {}
+        self.swordman_images = {}
         self.show_resources = False
         
         self.PLAYER_COLORS = {
@@ -114,6 +121,20 @@ class GUI(threading.Thread):
             "Soil": self.load_image(self.RESOURCES_PATH / "soil.png"),
         }
 
+
+        for player_id, color in self.PLAYER_COLORS.items():
+            #self.PLAYER_COLORS[player_id] = color + (200,)  # Add alpha channel
+            self.villager_images[player_id] = {}
+            self.swordman_images[player_id] = {}
+            
+            for unit_type, images in self.villager_images.items():
+                for direction, frames in images.items():
+                    self.villager_images[unit_type][direction] = [tint_image(frame, self.unit_colors["villager"]) for frame in frames]
+
+            for unit_type, images in self.swordman_images.items():
+                for direction, frames in images.items():
+                    self.swordman_images[unit_type][direction] = [tint_image(frame, self.unit_colors["swordman"]) for frame in frames]
+                    
         # Load and scale building images
         building_types = {
             "TownCenter": (256, 256),
@@ -130,6 +151,8 @@ class GUI(threading.Thread):
         for building_type, size in building_types.items():
             image = self.load_image(self.BUILDINGS_PATH / f"{building_type.lower()}.png")
             self.building_images[building_type] = pygame.transform.scale(image, size)
+
+
 
         self.villager_images = {
             "walking": {
@@ -266,82 +289,104 @@ class GUI(threading.Thread):
 
 
         
-        """
+        
         self.swordman_images = {
-            "walking": {
-                "north": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Walk" / f"Swordmanwalk{i:03}.png")
-                    for i in range(1, 6)
-                ],
-                "east": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Walk" / f"Swordmanwalk{i:03}.png")
-                    for i in range(6, 9)
-                ],
+           "walking": {
                 "south": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Walk" / f"Swordmanwalk{i:03}.png")
-                    for i in range(9, 13)
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walk" / f"Axethrowerwalk{i:03}.png")
+                    for i in range(1, 15)
+                ],
+                "north": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walk" / f"Axethrowerwalk{i:03}.png")
+                    for i in range(61, 75)
                 ],
                 "west": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Walk" / f"Swordmanwalk{i:03}.png")
-                    for i in range(13, 16)
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walk" / f"Axethrowerwalk{i:03}.png")
+                    for i in range(31, 45)
+                ],
+                "east": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walk" / f"Axethrowerwalk{i:03}.png")
+                    )
+                    for i in range(31, 45)
+                ],
+                "northeast": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walk" / f"Axethrowerwalk{i:03}.png")
+                    )
+                    for i in range(46, 60)
+                ],
+                "northwest": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walk" / f"Axethrowerwalk{i:03}.png")
+                    for i in range(46, 60) #fait
+                ],
+                "southwest": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walk" / f"Axethrowerwalk{i:03}.png")
+                    for i in range(16, 30) #fait
+                ],
+                "southeast": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walk" / f"Axethrowerwalk{i:03}.png")
+                    )
+                    for i in range(16, 30)
                 ],
             },
             "attacking": {
                 "north": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Attack" / f"Swordmanattack{i:03}.png")
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Attack" / f"Axethrowerattack{i:03}.png")
                     for i in range(1, 6)
                 ],
                 "east": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Attack" / f"Swordmanattack{i:03}.png")
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Attack" / f"Axethrowerattack{i:03}.png")
                     for i in range(6, 9)
                 ],
                 "south": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Attack" / f"Swordmanattack{i:03}.png")
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Attack" / f"Axethrowerattack{i:03}.png")
                     for i in range(9, 13)
                 ],
                 "west": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Attack" / f"Swordmanattack{i:03}.png")
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Attack" / f"Axethrowerattack{i:03}.png")
                     for i in range(13, 16)
                 ],
             },
             "dying": {
                 "north": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Die" / f"Swordmandie{i:03}.png")
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Die" / f"Axethrowerdie{i:03}.png")
                     for i in range(1, 6)
                 ],
                 "east": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Die" / f"Swordmandie{i:03}.png")
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Die" / f"Axethrowerdie{i:03}.png")
                     for i in range(6, 9)
                 ],
                 "south": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Die" / f"Swordmandie{i:03}.png")
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Die" / f"Axethrowerdie{i:03}.png")
                     for i in range(9, 13)
                 ],
                 "west": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Die" / f"Swordmandie{i:03}.png")
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Die" / f"Axethrowerdie{i:03}.png")
                     for i in range(13, 16)
                 ],
             },
             "idle": {
                 "north": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Stand" / f"Swordmanstand{i:03}.png")
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Stand" / f"Axethrowerstand{i:03}.png")
                     for i in range(1, 6)
                 ],
                 "east": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Stand" / f"Swordmanstand{i:03}.png")
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Stand" / f"Axethrowerstand{i:03}.png")
                     for i in range(6, 9)
                 ],
                 "south": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Stand" / f"Swordmanstand{i:03}.png")
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Stand" / f"Axethrowerstand{i:03}.png")
                     for i in range(9, 13)
                 ],
                 "west": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Stand" / f"Swordmanstand{i:03}.png")
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Stand" / f"Axethrowerstand{i:03}.png")
                     for i in range(13, 16)
                 ],
             },
         }
-            
+        '''
         self.archer_images = {
             "walking": {
                 "north": [
@@ -416,7 +461,8 @@ class GUI(threading.Thread):
                 ],
             },
         }
-
+        '''
+        '''
         self.horseman_images = {
             "walking": {
                 "north": [
@@ -491,7 +537,7 @@ class GUI(threading.Thread):
                 ],
             },
         }
-        """
+        '''
         self.iconwod = self.load_image(self.RESOURCES_PATH / "iconwood.png")
         self.icongold = self.load_image(self.RESOURCES_PATH / "icongold.png")
 
@@ -652,7 +698,7 @@ class GUI(threading.Thread):
 
                         # Dessiner une flèche indiquant la direction
                         arrow_color = (255, 0, 0)  # Rouge pour la flèche
-                        arrow_size = 20  # Taille de la flèche
+                        arrow_size = 2  # Taille de la flèche
                         dx, dy = 0, 0
 
                         # Détermine les décalages pour chaque direction
@@ -682,9 +728,46 @@ class GUI(threading.Thread):
                         pygame.draw.polygon(self.screen, arrow_color, [arrow_tip, arrow_left, arrow_right])
 
                 elif unit_type == "swordman":
-                    image = self.swordman_image  # Un sprite unique pour "swordman"
-                elif unit_type == "archer":
-                    image = self.archer_image    # Un sprite unique pour "archer"
+                    if state in self.swordman_images and direction in self.swordman_images[state]:
+                        images = self.swordman_images[state][direction]
+                        image = images[obj.current_frame % len(images)]
+                        
+                        # Affiche l'image du villageois (ou tout autre sprite lié)
+                        #self.screen.blit(image, (screen_x, screen_y))
+
+                        # Dessiner une flèche indiquant la direction
+                        arrow_color = (255, 0, 0)  # Rouge pour la flèche
+                        arrow_size = 2  # Taille de la flèche
+                        dx, dy = 0, 0
+
+                        # Détermine les décalages pour chaque direction
+                        if direction == "north":
+                            dx, dy = 0, -arrow_size
+                        elif direction == "south":
+                            dx, dy = 0, arrow_size
+                        elif direction == "east":
+                            dx, dy = arrow_size, 0
+                        elif direction == "west":
+                            dx, dy = -arrow_size, 0
+                        elif direction == "northeast":
+                            dx, dy = arrow_size, -arrow_size
+                        elif direction == "northwest":
+                            dx, dy = -arrow_size, -arrow_size
+                        elif direction == "southeast":
+                            dx, dy = arrow_size, arrow_size
+                        elif direction == "southwest":
+                            dx, dy = -arrow_size, arrow_size
+
+                        # Définir les points du triangle pour la flèche
+                        arrow_tip = (screen_x + dx, screen_y + dy)
+                        arrow_left = (screen_x - dy // 2, screen_y + dx // 2)
+                        arrow_right = (screen_x + dy // 2, screen_y - dx // 2)
+
+                        # Dessiner le triangle représentant la flèche
+                        pygame.draw.polygon(self.screen, arrow_color, [arrow_tip, arrow_left, arrow_right])
+
+                #elif unit_type == "archer":
+                #   archer_image image = self.    # Un sprite unique pour "archer"
 
                 # Affichage du sprite sur l'écran
                 if image:
