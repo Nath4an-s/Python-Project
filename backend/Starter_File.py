@@ -49,7 +49,7 @@ class StartMenu:
     def draw(self):
         self.screen.fill(self.colors['background'])
         
-        title = self.font.render("AIge of Yuki", True, self.colors['text'])
+        title = self.font.render("AIge of Empire", True, self.colors['text'])
         title_rect = title.get_rect(center=(400, 150))
         self.screen.blit(title, title_rect)
         
