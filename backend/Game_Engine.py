@@ -192,7 +192,7 @@ class GameEngine:
                 elif key == ord('t'):
                     action.move_unit(self.players[2].units[0], 4, 8, self.get_current_time())
                     action.move_unit(self.players[2].units[2], 3, 6, self.get_current_time())
-                    action.construct_building(self.players[2].units[1], TownCenter, 4, 4, self.players[2], self.get_current_time())
+                    action.construct_building(self.players[2].units[1], Keep, 4, 4, self.players[2], self.get_current_time())
                 elif key == ord('k'):
                     action.gather_resources(self.players[2].units[1], "Food", self.get_current_time())
                     action.gather_resources(self.players[2].units[2], "Wood", self.get_current_time())

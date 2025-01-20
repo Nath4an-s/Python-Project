@@ -152,7 +152,7 @@ class GUI(threading.Thread):
             image = self.load_image(self.BUILDINGS_PATH / f"{building_type.lower()}.png")
             self.building_images[building_type] = pygame.transform.scale(image, size)
 
-
+        self.rubble = {}
 
         self.villager_images = {
             "walking": {
@@ -671,6 +671,16 @@ class GUI(threading.Thread):
                 if visible_rect.collidepoint(building_x, building_y):
                     entities.append((building_x, building_y, "building", building))
 
+        current_time = time.time()
+        for (x, y), (image, end_time) in list(self.rubble.items()):
+            if current_time < end_time:
+                iso_x, iso_y = self.cart_to_iso(x, y)
+                rubble_x = iso_x + (self.game_data.map.width * self.TILE_WIDTH // 2)
+                rubble_y = iso_y
+                if visible_rect.collidepoint(rubble_x, rubble_y):
+                    entities.append((rubble_x, rubble_y, "rubble", image))
+            else:
+                del self.rubble[(x, y)]
         # Sort entities by their depth (y + x for isometric rendering)
         entities.sort(key=lambda e: e[0] + e[1])
 
@@ -838,7 +848,7 @@ class GUI(threading.Thread):
                     adjusted_y = screen_y - image.get_height()
                     adjusted_x = screen_x + self.TILE_WIDTH * (2 - obj.size) // 2
 
-                    if obj.size == 3:
+                    if obj.size == 3 or obj.size == 4:
                         adjusted_y += (self.TILE_HEIGHT // 2)
                         adjusted_x -= (self.TILE_WIDTH // 2)
 
@@ -852,6 +862,23 @@ class GUI(threading.Thread):
                         (150, 150, 150),
                         pygame.Rect(screen_x, screen_y, self.TILE_WIDTH, self.TILE_HEIGHT)
                     )
+            elif entity_type == "rubble":
+                image = obj
+                self.screen.blit(image, (screen_x, screen_y))
+
+
+    def add_rubble(self, x, y):
+        rubble_image = self.building_images["Rubble"]
+        end_time = time.time() + 5  # Display rubble for 5 seconds
+        self.rubble[(x, y)] = (rubble_image, end_time)
+
+
+    def on_building_destroyed(self, building):
+        x, y = building.position
+        self.add_rubble(x, y)
+        # Remove the building from the game data
+        self.game_data.remove_building(building)
+
 
     def initialize_pygame(self):
         pygame.init()
