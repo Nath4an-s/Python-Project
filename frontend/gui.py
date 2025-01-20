@@ -101,10 +101,12 @@ class GUI(threading.Thread):
     def setup_paths(self):
         self.BASE_PATH = Path(__file__).resolve().parent.parent
         self.RESOURCES_PATH = self.BASE_PATH / "assets" / "resources"
-        self.BUILDINGS_PATH = self.BASE_PATH / "assets" / "buildings"
+        self.BUILDINGS_PATH = self.BASE_PATH / "assets" / "buildings" 
+        self.IMG_PATH = self.BASE_PATH / "assets" / "img"
 
         assert self.RESOURCES_PATH.exists(), f"Resources directory {self.RESOURCES_PATH} does not exist."
         assert self.BUILDINGS_PATH.exists(), f"Buildings directory {self.BUILDINGS_PATH} does not exist."
+        assert self.IMG_PATH.exists(), f"Buildings directory {self.IMG_PATH} does not exist."
 
     def load_image(self, file_path):
         try:

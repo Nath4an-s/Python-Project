@@ -2,6 +2,7 @@ import curses
 import time
 import pickle
 import os
+import tkinter as tk
 
 from queue import Queue
 from frontend.gui import GUI
@@ -305,6 +306,21 @@ class GameEngine:
             return len(active_players) == 1 # Check if there is only one player left
         else:
             return False
+
+    #condition de victoire: être le dernier joueur avec des bâtiments
+    def victory():
+    
+        def big_text(text):
+            root = tk.Tk()
+            root.title("Texte en gros")
+            label = tk.Label(root, text=text, font=("Arial", 48), padx=20, pady=20)
+            label.pack(expand=True)
+            root.mainloop()
+
+        if GameEngine.check_victory(GameEngine.self) ==True:
+            time.stop()
+            GUI.load_image(GUI.IMG_PATH / "victory.png")
+            big_text(f"Player {GameEngine.active_players[0].name} wins the game!")
 
     def pause_game(self):
         self.is_paused = not self.is_paused
