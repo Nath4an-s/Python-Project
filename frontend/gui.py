@@ -142,9 +142,9 @@ class GUI(threading.Thread):
             "House": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),
             "Rubble": (64, 64),
             "Stable": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6),
-            "ArcheryRange": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),
+            "ArcheryRange": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6),
             "Camp": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),
-            "Farm": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),
+            "Farm": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 2),
             "Keep": (64, 64),
         }
 
@@ -800,6 +800,10 @@ class GUI(threading.Thread):
                     adjusted_x = screen_x + self.TILE_WIDTH * (2 - obj.size) // 2
 
                     if obj.size == 3:
+                        adjusted_y += (self.TILE_HEIGHT // 2)
+                        adjusted_x -= (self.TILE_WIDTH // 2)
+
+                    if obj.size == 2:
                         adjusted_y += (self.TILE_HEIGHT // 2)
 
                     self.screen.blit(image, (adjusted_x, adjusted_y))
