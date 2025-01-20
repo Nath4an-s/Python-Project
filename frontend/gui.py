@@ -7,6 +7,8 @@ from pathlib import Path
 import time
 import traceback
 
+from backend.Building import Farm
+
 class Camera:
     def __init__(self, width, height):
         self.width = width
@@ -684,7 +686,7 @@ class GUI(threading.Thread):
             else:
                 del self.rubble[(x, y)]
         # Sort entities by their depth (y + x for isometric rendering)
-        entities.sort(key=lambda e: e[0] + e[1])
+        entities.sort(key=lambda e: (e[0] + e[1], e[2] == "building" and isinstance(e[3], Farm)))
 
         # Render all entities
 # Render all entities
