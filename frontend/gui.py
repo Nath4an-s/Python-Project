@@ -561,7 +561,7 @@ class GUI(threading.Thread):
         self.icongold = self.load_image(self.RESOURCES_PATH / "icongold.png")
 
         self.IMAGES["Gold"] = pygame.transform.scale(self.IMAGES["Gold"], (self.TILE_WIDTH, self.TILE_HEIGHT))
-        self.IMAGES["Wood"] = pygame.transform.scale(self.IMAGES["Wood"], (self.TILE_WIDTH, self.TILE_HEIGHT))
+        self.IMAGES["Wood"] = pygame.transform.scale(self.IMAGES["Wood"], (int(self.TILE_WIDTH * 2), int(self.TILE_HEIGHT * 2.5)))
 
     def cart_to_iso(self, cart_x, cart_y):
         iso_x = (cart_x - cart_y) * (self.TILE_WIDTH // 2)
@@ -633,9 +633,10 @@ class GUI(threading.Thread):
                     screen_x = tile_x - self.TILE_WIDTH // 2  # Ajustement pour centrer horizontalement
                     screen_y = tile_y - self.TILE_HEIGHT // 2  # Ajustement pour l'altitude
 
+
                     if tile.resource.type == "Wood":
                         image = self.IMAGES["Wood"]
-                        self.pre_rendered_map.blit(image, (screen_x, screen_y))
+                        self.pre_rendered_map.blit(image, (tile_x - (self.IMAGES["Wood"].get_width() // 2), tile_y - self.IMAGES["Wood"].get_height() + (self.TILE_HEIGHT // 2)))
 
                     elif tile.resource.type == "Gold":
                         image = self.IMAGES["Gold"]
