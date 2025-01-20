@@ -532,3 +532,13 @@ class Action:
             self.debug_print(f"Building {building_type.__name__} completed at ({x}, {y}).", 'Blue')
 
             return
+    def attack_target(self, building, target, current_time_called, game_map):
+        if target is not None:
+            if current_time_called - building.last_attack_time >= 1:
+                building.last_attack_time = current_time_called
+                if building.attack >= target.hp:
+                    target.hp = 0
+                    Unit.kill_unit(target.player, target, game_map)
+                else:
+                    target.hp -= building.attack
+                return True

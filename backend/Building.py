@@ -1,6 +1,7 @@
 #Bulding.py
 
 from Units import *
+
 import random
 import math
 
@@ -91,8 +92,8 @@ class Building:
     def kill_building(cls, player, building_to_kill, game_map):
         if building_to_kill in player.buildings:
             if building_to_kill.position in player.ai.decided_builds:
-                player.buildings.remove(building_to_kill)  # Remove the building from the player's list of buildings
-            player.ai.decided_builds.remove(building_to_kill.position)
+                player.ai.decided_builds.remove(building_to_kill.position)
+            player.buildings.remove(building_to_kill)
             x, y = building_to_kill.position
             game_map.remove_building(int(x), int(y), building_to_kill)  # Assuming game_map is a property of the player
             debug_print(f"Building {building_to_kill} belonging to {player.name} at ({x}, {y}) killed.", 'DarkBlue')
@@ -228,21 +229,7 @@ class Keep(Building):
         self.attack = 5
         self.range = 8
         self.sprite = "keep"
-
-    def fire_arrows(self, enemy_unit):
-        if self.built:
-            # Logic for firing arrows at enemy_unit within range
-            if self.in_range(enemy_unit):
-                enemy_unit.hp -= self.attack
-
-    def in_range(self, enemy_unit):
-        # Check if the enemy_unit is within range
-        distance = self.calculate_distance(enemy_unit)
-        return distance <= self.range
-
-    def calculate_distance(self, enemy_unit):
-        # Placeholder logic to calculate distance from the Keep to an enemy unit
-        pass
+        self.last_attack_time = 0            
 
     def is_walkable(self):
         return False

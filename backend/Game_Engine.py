@@ -2,6 +2,7 @@ import curses
 import time
 import pickle
 import os
+import tkinter as tk
 
 from queue import Queue
 from frontend.gui import GUI
@@ -214,7 +215,8 @@ class GameEngine:
                 elif key == ord('b'):
                     action.go_battle(self.players[1].units[1], self.players[2].units[0], self.get_current_time())
                 elif key == ord('e'):
-                    action.go_battle(self.players[2].units[-1], self.players[1].units[0], self.get_current_time())
+                    Building.spawn_building(self.players[2], 2, 2, Keep, self.map)
+                    action.move_unit(self.players[0].units[0], 4, 5, self.get_current_time())
                 elif key == ord('f'):
                     Building.kill_building(self.players[2], self.players[2].buildings[-1], self.map)
                 elif key == ord('y'):
@@ -273,6 +275,12 @@ class GameEngine:
                             if hasattr(building, 'training_queue') and building.training_queue != []:
                                 unit = building.training_queue[0]
                                 Unit.train_unit(unit, unit.spawn_position[0], unit.spawn_position[1], player, unit.spawn_building, self.map, self.get_current_time())
+                            if type(building).__name__ == "Keep":
+                                nearby_enemies = IA.find_nearby_enemies(building.player.ai, max_distance=building.range, unit_position=building.position)  # 5 tile radius
+                                if nearby_enemies:
+                                    closest_enemy = min(nearby_enemies, 
+                                        key=lambda e: IA.calculate_distance(building.player.ai, pos1=unit.position, pos2=e.position))
+                                    action.attack_target(building, target=closest_enemy, current_time_called=self.current_time, game_map=self.map)
 
                 # Clear the screen and display the new part of the map after moving
                 stdscr.clear()
@@ -305,6 +313,21 @@ class GameEngine:
             return len(active_players) == 1 # Check if there is only one player left
         else:
             return False
+
+    #condition de victoire: être le dernier joueur avec des bâtiments
+    def victory():
+    
+        def big_text(text):
+            root = tk.Tk()
+            root.title("Texte en gros")
+            label = tk.Label(root, text=text, font=("Arial", 48), padx=20, pady=20)
+            label.pack(expand=True)
+            root.mainloop()
+
+        if GameEngine.check_victory(GameEngine.self) ==True:
+            time.stop()
+            GUI.load_image(GUI.IMG_PATH / "victory.png")
+            big_text(f"Player {GameEngine.active_players[0].name} wins the game!")
 
     def pause_game(self):
         self.is_paused = not self.is_paused
