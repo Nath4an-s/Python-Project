@@ -88,6 +88,9 @@ class GUI(threading.Thread):
         # Initialize mini-map surface
         self.mini_map_surface = None
 
+    def flip_image_horizontally(self, image):
+        return pygame.transform.flip(image, True, False)
+
     def setup_paths(self):
         self.BASE_PATH = Path(__file__).resolve().parent.parent
         self.RESOURCES_PATH = self.BASE_PATH / "assets" / "resources"
@@ -114,7 +117,7 @@ class GUI(threading.Thread):
         # Load and scale building images
         building_types = {
             "TownCenter": (256, 256),
-            "Barracks": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6),
+            "Barracks": (self.TILE_WIDTH * 3.5, self.TILE_HEIGHT * 6),
             "House": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),
             "Rubble": (64, 64),
             "Stable": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6),
@@ -128,9 +131,6 @@ class GUI(threading.Thread):
             image = self.load_image(self.BUILDINGS_PATH / f"{building_type.lower()}.png")
             self.building_images[building_type] = pygame.transform.scale(image, size)
 
-
-        # Load unit images
-        # Load unit images with separation by direction and named directions
         self.villager_images = {
             "walking": {
                 "south": [
@@ -151,23 +151,65 @@ class GUI(threading.Thread):
                     )
                     for i in range(31, 45)
                 ],
+                "northeast": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "walk" / f"Villagerwalk{i:03}.png")
+                    )
+                    for i in range(46, 60)
+                ],
+                "northwest": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "walk" / f"Villagerwalk{i:03}.png")
+                    for i in range(46, 60) #fait
+                ],
+                "southwest": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "walk" / f"Villagerwalk{i:03}.png")
+                    for i in range(16, 30) #fait
+                ],
+                "southeast": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "walk" / f"Villagerwalk{i:03}.png")
+                    )
+                    for i in range(16, 30)
+                ],
             },
             "attacking": {
                 "north": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "FarmingVillager" / "Mine" / "Attack" / f"Villagerattack{i:03}.png")
-                    for i in range(1, 6)
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "Attack" / f"Villagerattack{i:03}.png")
+                    for i in range(61, 75)
                 ],
                 "east": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "FarmingVillager" / "Mine" / "Attack" / f"Villagerattack{i:03}.png")
-                    for i in range(6, 9)
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "Attack" / f"Villagerattack{i:03}.png")
+                    )
+                    for i in range(31, 45)
                 ],
                 "south": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "FarmingVillager" / "Mine" / "Attack" / f"Villagerattack{i:03}.png")
-                    for i in range(9, 13)
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "Attack" / f"Villagerattack{i:03}.png")
+                    for i in range(1, 15)
                 ],
                 "west": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "FarmingVillager" / "Mine" / "Attack" / f"Villagerattack{i:03}.png")
-                    for i in range(13, 16)
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "Attack" / f"Villagerattack{i:03}.png")
+                    for i in range(31, 45)
+                ],
+                "northeast": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "Attack" / f"Villagerattack{i:03}.png")
+                    )
+                    for i in range(46, 60)
+                ],
+                "northwest": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "Attack" / f"Villagerattack{i:03}.png")
+                    for i in range(46, 60)
+                ],
+                "southeast": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "Attack" / f"Villagerattack{i:03}.png")
+                    )
+                    for i in range(16, 30)
+                ],
+                "southwest": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "Attack" / f"Villagerattack{i:03}.png")
+                    for i in range(16, 30)
                 ],
             },
             "dying": [
@@ -193,14 +235,36 @@ class GUI(threading.Thread):
                     )
                     for i in range(31, 45)
                 ],
+                "northeast": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "FarmingVillager" / "Farm" / "Attack" / f"Villageract{i:03}.png")
+                    )
+                    for i in range(46, 60)
+                ],
+                "northwest": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "FarmingVillager" / "Farm" / "Attack" / f"Villageract{i:03}.png")
+                    for i in range(46, 60)
+                ],
+                "southeast": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "FarmingVillager" / "Farm" / "Attack" / f"Villageract{i:03}.png")
+                    )
+                    for i in range(16, 30)
+                ],
+                "southwest": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "FarmingVillager" / "Farm" / "Attack" / f"Villageract{i:03}.png")
+                    for i in range(16, 30) #fait
+                ],
             },
             "idle": {
                 "south": [
                     self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "Stand" / f"Villagerstand{i:03}.png")
                     for i in range(17, 30)
-                    ],
-                },
+                ],
             },
+        }
+
+
         
         """
         self.swordman_images = {
@@ -579,11 +643,44 @@ class GUI(threading.Thread):
 
                 # Attribution du sprite correspondant à chaque type d'unité
                 if unit_type == "villager":
-                    if state in self.villager_images[0] and direction in self.villager_images[0][state]:
-                        images = self.villager_images[0][state][direction]
+                    if state in self.villager_images and direction in self.villager_images[state]:
+                        images = self.villager_images[state][direction]
                         image = images[obj.current_frame % len(images)]
-                        #radius = 10  # Rayon du cercle (ajustez selon vos besoins)
-                        #pygame.draw.circle(self.screen, (255, 0, 0), (screen_x, screen_y), radius)
+                        
+                        # Affiche l'image du villageois (ou tout autre sprite lié)
+                        #self.screen.blit(image, (screen_x, screen_y))
+
+                        # Dessiner une flèche indiquant la direction
+                        arrow_color = (255, 0, 0)  # Rouge pour la flèche
+                        arrow_size = 20  # Taille de la flèche
+                        dx, dy = 0, 0
+
+                        # Détermine les décalages pour chaque direction
+                        if direction == "north":
+                            dx, dy = 0, -arrow_size
+                        elif direction == "south":
+                            dx, dy = 0, arrow_size
+                        elif direction == "east":
+                            dx, dy = arrow_size, 0
+                        elif direction == "west":
+                            dx, dy = -arrow_size, 0
+                        elif direction == "northeast":
+                            dx, dy = arrow_size, -arrow_size
+                        elif direction == "northwest":
+                            dx, dy = -arrow_size, -arrow_size
+                        elif direction == "southeast":
+                            dx, dy = arrow_size, arrow_size
+                        elif direction == "southwest":
+                            dx, dy = -arrow_size, arrow_size
+
+                        # Définir les points du triangle pour la flèche
+                        arrow_tip = (screen_x + dx, screen_y + dy)
+                        arrow_left = (screen_x - dy // 2, screen_y + dx // 2)
+                        arrow_right = (screen_x + dy // 2, screen_y - dx // 2)
+
+                        # Dessiner le triangle représentant la flèche
+                        pygame.draw.polygon(self.screen, arrow_color, [arrow_tip, arrow_left, arrow_right])
+
                 elif unit_type == "swordman":
                     image = self.swordman_image  # Un sprite unique pour "swordman"
                 elif unit_type == "archer":
@@ -591,7 +688,7 @@ class GUI(threading.Thread):
 
                 # Affichage du sprite sur l'écran
                 if image:
-                    self.screen.blit(image, (screen_x, screen_y))
+                    self.screen.blit(image, (screen_x - 10, screen_y - 15))
           
             elif entity_type == "building":
                 # Adjust sprite rendering based on building size
@@ -857,11 +954,4 @@ class GUI(threading.Thread):
             if buildings_y + font.get_height() + padding <= y_position + hud_height:
                 self.screen.blit(buildings_surface, (buildings_x, buildings_y))
 
-    def flip_image_horizontally(self, image):
-        """
-        Inverse une image horizontalement.
-        :param image: L'image à inverser.
-        :return: L'image inversée horizontalement.
-        """
-        import pygame
-        return pygame.transform.flip(image, True, False)
+

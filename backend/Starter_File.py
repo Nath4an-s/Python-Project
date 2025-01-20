@@ -21,4 +21,4 @@ players = [
     Player('Player 3', "Marines", "aggressive", player_id=3),
 ]
 
-global_speedS = 10
+global_speedS = 1

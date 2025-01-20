@@ -1,26 +1,50 @@
 #Actions.py
 
 import heapq
+import math
 
 from frontend.Terrain import *
 from logger import debug_print
 from Units import *
 from Building import *
 
+
 class Action:
     def __init__(self, game_map):
         self.map = game_map
         self.debug_print = debug_print
 
-    def get_direction(self,start_x, start_y, target_x, target_y):
 
+    def get_direction(self, start_x, start_y, target_x, target_y):
+        # Calculer les différences
         dx = target_x - start_x
         dy = target_y - start_y
 
-        if abs(dx) > abs(dy):  # Priorité à l'axe horizontal
-            return "east" if dx > 0 else "west"
-        else:  # Priorité à l'axe vertical
-            return "south" if dy > 0 else "north"
+        # Calcul de l'angle en radians, converti en degrés
+        angle = math.degrees(math.atan2(dy, dx))
+        if angle < 0:
+            angle += 360
+
+        # Adapter pour une carte isométrique et inverser l'orientation si nécessaire
+        # Définition des plages pour une carte isométrique
+        if 337.5 <= angle or angle < 22.5:  # Droite -> Sud-Est
+            return "southeast"
+        elif 22.5 <= angle < 67.5:  # Bas-droit -> Sud
+            return "south"
+        elif 67.5 <= angle < 112.5:  # Bas-gauche -> Sud-Ouest
+            return "southwest"
+        elif 112.5 <= angle < 157.5:  # Gauche -> Ouest
+            return "west"
+        elif 157.5 <= angle < 202.5:  # Haut-gauche -> Nord-Ouest
+            return "northwest"
+        elif 202.5 <= angle < 247.5:  # Haut -> Nord
+            return "north"
+        elif 247.5 <= angle < 292.5:  # Haut-droit -> Nord-Est
+            return "northeast"
+        elif 292.5 <= angle < 337.5:  # Droite -> Est
+            return "east"
+
+
 
     def move_unit(self, unit, target_x, target_y, current_time_called):
         # Check if the target destination is valid
