@@ -350,42 +350,20 @@ class GUI(threading.Thread):
                 ],
             },
             "dying": {
-                "north": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Die" / f"Axethrowerdie{i:03}.png")
-                    for i in range(1, 6)
-                ],
-                "east": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Die" / f"Axethrowerdie{i:03}.png")
-                    for i in range(6, 9)
-                ],
                 "south": [
                     self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Die" / f"Axethrowerdie{i:03}.png")
                     for i in range(9, 13)
-                ],
-                "west": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Die" / f"Axethrowerdie{i:03}.png")
-                    for i in range(13, 16)
                 ],
             },
             "idle": {
-                "north": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Stand" / f"Axethrowerstand{i:03}.png")
-                    for i in range(1, 6)
-                ],
-                "east": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Stand" / f"Axethrowerstand{i:03}.png")
-                    for i in range(6, 9)
-                ],
                 "south": [
                     self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Stand" / f"Axethrowerstand{i:03}.png")
-                    for i in range(9, 13)
-                ],
-                "west": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Stand" / f"Axethrowerstand{i:03}.png")
-                    for i in range(13, 16)
+                    for i in range(9, 13)  
                 ],
             },
         }
+
+
         '''
         self.archer_images = {
             "walking": {
