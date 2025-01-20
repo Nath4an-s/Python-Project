@@ -1,6 +1,7 @@
 #Bulding.py
 
 from Units import *
+
 import random
 import math
 
@@ -228,21 +229,7 @@ class Keep(Building):
         self.attack = 5
         self.range = 8
         self.sprite = "keep"
-
-    def fire_arrows(self, enemy_unit):
-        if self.built:
-            # Logic for firing arrows at enemy_unit within range
-            if self.in_range(enemy_unit):
-                enemy_unit.hp -= self.attack
-
-    def in_range(self, enemy_unit):
-        # Check if the enemy_unit is within range
-        distance = self.calculate_distance(enemy_unit)
-        return distance <= self.range
-
-    def calculate_distance(self, enemy_unit):
-        # Placeholder logic to calculate distance from the Keep to an enemy unit
-        pass
+        self.last_attack_time = 0            
 
     def is_walkable(self):
         return False

@@ -21,11 +21,11 @@ GUI_size.y = 600
 #Civilizations are either Leans, Means or Marines
 players = [
     Player('Player 1', "Means", "aggressive", player_id=1),
-
+    Player('Player 2', "Leans", "aggressive", player_id=2),
     Player('Player 3', "Marines", "aggressive", player_id=3),
 ]
 
-global_speedS = 50
+global_speedS = 100
 
 class StartMenu:
     def __init__(self, screen_width=800, screen_height=600):
