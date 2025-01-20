@@ -3,6 +3,7 @@
 import pygame
 import sys
 import curses
+import os
 from Players import *
 
 # Game Mode
@@ -36,15 +37,25 @@ class StartMenu:
             'background': (50, 50, 50),
             'button': (100, 100, 100),
             'button_hover': (150, 150, 150),
-            'text': (255, 255, 255)
+            'text': (255, 255, 255),
+            'disabled': (80, 80, 80)  # Color for disabled buttons
         }
         
         self.buttons = [
-            {'text': 'Start Game', 'rect': pygame.Rect(300, 250, 200, 50)},
-            {'text': 'Settings', 'rect': pygame.Rect(300, 320, 200, 50)},
-            {'text': 'Exit', 'rect': pygame.Rect(300, 390, 200, 50)}
+            {'text': 'Start Game', 'rect': pygame.Rect(300, 220, 200, 50)},
+            {'text': 'Load Game', 'rect': pygame.Rect(300, 290, 200, 50)},
+            {'text': 'Settings', 'rect': pygame.Rect(300, 360, 200, 50)},
+            {'text': 'Exit', 'rect': pygame.Rect(300, 430, 200, 50)}
         ]
         self.font = pygame.font.Font(None, 48)
+        
+        # Check for save files
+        self.has_saves = self.check_save_files()
+    
+    def check_save_files(self):
+        save_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'assets', 'annex')
+        save_files = [f for f in os.listdir(save_dir) if f.startswith('game_save') and f.endswith('.dat')]
+        return len(save_files) > 0
     
     def draw(self):
         self.screen.fill(self.colors['background'])
@@ -55,7 +66,12 @@ class StartMenu:
         
         mouse_pos = pygame.mouse.get_pos()
         for button in self.buttons:
-            color = self.colors['button_hover'] if button['rect'].collidepoint(mouse_pos) else self.colors['button']
+            # Disable Load Game button if no saves exist
+            if button['text'] == 'Load Game' and not self.has_saves:
+                color = self.colors['disabled']
+            else:
+                color = self.colors['button_hover'] if button['rect'].collidepoint(mouse_pos) else self.colors['button']
+            
             pygame.draw.rect(self.screen, color, button['rect'], border_radius=5)
             
             text = self.font.render(button['text'], True, self.colors['text'])
@@ -85,7 +101,14 @@ def start_menu(save_file=None):
     
     if action == 'Start Game':
         from Game_Engine import GameEngine
-        curses.wrapper(lambda stdscr: start_game(stdscr, save_file))
+        curses.wrapper(lambda stdscr: start_game(stdscr, None))
+    elif action == 'Load Game' and menu.has_saves:
+        from Game_Engine import GameEngine
+        save_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'assets', 'annex')
+        save_files = sorted([f for f in os.listdir(save_dir) if f.startswith('game_save') and f.endswith('.dat')])
+        if save_files:
+            save_path = os.path.join(save_dir, save_files[-1])
+            curses.wrapper(lambda stdscr: start_game(stdscr, save_path))
     elif action == 'Settings':
         print("Settings menu (Pas encore fait)")
         sys.exit()
