@@ -714,7 +714,7 @@ class GUI(threading.Thread):
 
                         # Dessiner une flèche indiquant la direction
                         arrow_color = (255, 0, 0)  # Rouge pour la flèche
-                        arrow_size = 2  # Taille de la flèche
+                        arrow_size = 20  # Taille de la flèche
                         dx, dy = 0, 0
 
                         # Détermine les décalages pour chaque direction
@@ -787,7 +787,11 @@ class GUI(threading.Thread):
 
                 # Affichage du sprite sur l'écran
                 if image:
-                    self.screen.blit(image, (screen_x - 10, screen_y - 15))
+                    if state in ["gathering","constructing","attacking"]:
+                        self.screen.blit(image, (screen_x - 60, screen_y - 60))
+                    else :
+                        self.screen.blit(image, (screen_x - 10, screen_y - 15))
+
           
             elif entity_type == "building":
                 # Adjust sprite rendering based on building size
