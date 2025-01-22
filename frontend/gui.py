@@ -1,6 +1,3 @@
-
-#-(sprite_get_bbox_bottom(_sprite) - sprite_get_yoffset(_sprite) + _isoY + _isoZ + global.ISO_Z * _bonusZ)
-
 import pygame
 from pygame.locals import FULLSCREEN
 from pygame.locals import HIDDEN
@@ -11,6 +8,68 @@ import time
 import traceback
 
 from backend.Building import Farm
+
+def get_unit_offsets(state, direction):
+ 
+    offsets = {
+        "idle": {
+            "south": (-9, -27),
+        },
+        "walking": {
+            "north": (-22, -43),
+            "south": (-21, -41),
+            "west": (-18, -38),
+            "east": (-13, -41),
+            "northwest": (-17, -41),
+            "northeast": (-13, -38),
+            "southwest": (-20, -38),
+            "southeast": (-10, -40),
+        },
+        "attacking": {
+            "north": (0, -20),
+            "south": (0, 20),
+            "west": (-20, 0),
+            "east": (20, 0),
+            "northwest": (-20, -20),
+            "northeast": (20, -20),
+            "southwest": (-20, 20),
+            "southeast": (20, 20),
+        },
+        "gathering": {
+            "north": (-63, -67),
+            "south": (-62, -72),
+            "west": (-61, -67),
+            "east": (-22, -70),
+            "northwest": (-59, -65),
+            "northeast": (-26, -67),
+            "southwest": (-62, -69),
+            "southeast": (-19, -69),
+        },
+        "constructing": {
+            "north": (-38, -28),
+            "south": (-37, 37),
+            "west": (-29, -40),
+            "east": (-28, -40),
+            "northwest": (-30, -33),
+            "northeast": (-27, -34),
+            "southwest": (-27, -40),
+            "southeast": (-29, -43),
+        },
+        "dying": {
+            "north": (0, -5),
+            "south": (0, 5),
+            "west": (-5, 0),
+            "east": (5, 0),
+            "northwest": (-5, -5),
+            "northeast": (5, -5),
+            "southwest": (-5, 5),
+            "southeast": (5, 5),
+        },
+    }
+
+    # Retourne les décalages correspondants, ou (0, 0) si état/direction inconnu
+    return offsets.get(state, {}).get(direction, (0, 0))
+
 
 class Camera:
     def __init__(self, width, height):
@@ -144,15 +203,15 @@ class GUI(threading.Thread):
                     
         # Load and scale building images
         building_types = {
-            "TownCenter": (256, 256),
-            "Barracks": (self.TILE_WIDTH * 3.5, self.TILE_HEIGHT * 6),
-            "House": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),
-            "Rubble": (64, 64),
-            "Stable": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6),
-            "ArcheryRange": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6),
-            "Camp": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),
-            "Farm": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 2),
-            "Keep": (64, 64),
+            "TownCenter": (256, 256),  # Taille : (256, 256)
+            "Barracks": (self.TILE_WIDTH * 3.5, self.TILE_HEIGHT * 6),  # Taille : (224, 192)
+            "House": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),  # Taille : (128, 128)
+            "Rubble": (64, 64),  # Taille : (64, 64)
+            "Stable": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6),  # Taille : (192, 192)
+            "ArcheryRange": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6),  # Taille : (192, 192)
+            "Camp": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),  # Taille : (128, 128)
+            "Farm": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 2),  # Taille : (128, 64)
+            "Keep": (64, 64),  # Taille : (64, 64)
         }
 
         for building_type, size in building_types.items():
@@ -680,15 +739,21 @@ class GUI(threading.Thread):
                     entities.append((building_x, building_y, "building", building))
 
         # Sort entities by their depth (y + x for isometric rendering)
+        #Tri 1 
+        """   
         entities.sort(key=lambda e: (
             0 if e[2] == "building" and e[3].name == "Farm" else 1,  # Fermes en premier
             (e[1] + e[0]),  # Profondeur isométrique (y + x)
-            e[0]  # Priorité pour ceux à gauche (x plus petit en premier)
         ))
-
-
+        """
+        #Tri 2
+        
+        entities.sort(key=lambda e: (
+            0 if e[2] == "building" and e[3].name == "Farm" else 1,  # Priorité des fermes
+            -((e[3].bbox_bottom - e[3].z) + e[1] + e[0])  # Inclut la hauteur `z`
+        ))
+        
         # Render all entities
-# Render all entities
         for x, y, entity_type, obj in entities:
             screen_x = x - self.camera.offset_x
             screen_y = y - self.camera.offset_y
@@ -699,17 +764,18 @@ class GUI(threading.Thread):
                 unit_type = obj.sprite  # Le type d'unité (ex. "villager", "swordman", "archer")
                 state = obj.task  # Par exemple, "idle" comme état par défaut
                 direction = obj.direction  # La direction de l'unité (ex. "north", "south", "west", "east")
+
                 if obj.is_moving == True:
                     state = "walking"  
                 else :
                     if state is None:
                         obj.direction = "south"
                         state = "idle"
-                    if state == "marching" or  state == "going_to_battle" or  state == "going_to_construction_site" or obj.is_moving == True:
+                    if state == "marching" or  state == "returning" or state == "going_to_battle" or  state == "going_to_construction_site" or obj.is_moving == True:
                         state = "walking"   
 
                 # Ralentir l'animation (par exemple, changer de frame tous les 5 rendus)
-                animation_speed = 100  # Ajustez cette valeur pour contrôler la vitesse
+                animation_speed = 40  # Ajustez cette valeur pour contrôler la vitesse
                 obj.frame_counter += 1
                 if obj.frame_counter >= animation_speed:
                     obj.current_frame += 1  # Passe à la frame suivante
@@ -833,12 +899,12 @@ class GUI(threading.Thread):
                         # Dessiner le triangle représentant la flèche
                         pygame.draw.polygon(self.screen, arrow_color, [arrow_tip, arrow_left, arrow_right])
 
+                offset_x, offset_y = get_unit_offsets(state, direction)
+                screen_x = x - self.camera.offset_x + offset_x
+                screen_y = y - self.camera.offset_y + offset_y
                 # Affichage du sprite sur l'écran
                 if image:
-                    if state in ["gathering","constructing","attacking"]:
-                        self.screen.blit(image, (screen_x - 60, screen_y - 60))
-                    else :
-                        self.screen.blit(image, (screen_x - 10, screen_y - 15))
+                    self.screen.blit(image, (screen_x, screen_y))
 
           
             elif entity_type == "building":
@@ -865,9 +931,7 @@ class GUI(threading.Thread):
                         (150, 150, 150),
                         pygame.Rect(screen_x, screen_y, self.TILE_WIDTH, self.TILE_HEIGHT)
                     )
-            elif entity_type == "rubble":
-                image = obj
-                self.screen.blit(image, (screen_x, screen_y))
+
 
     def initialize_pygame(self):
         pygame.init()

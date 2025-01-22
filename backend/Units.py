@@ -211,8 +211,12 @@ class Villager(Unit):
         self.is_acting = None
         self.position = position
         self.sprite = "villager"
+        self.sprite_height = 50
+        self.z = 0
 
-
+    @property
+    def bbox_bottom(self):
+        return self.position[1] + self.sprite_height
 
 # Swordsman Class
 class Swordsman(Unit):
@@ -224,7 +228,11 @@ class Swordsman(Unit):
         self.name = "Swordsman"
         self.is_acting = None
         self.sprite = "swordman"
-       
+        self.sprite_height = 52
+        self.z = 64
+    @property
+    def bbox_bottom(self):
+        return self.position[1] + self.sprite_height
 
 
 # Horseman Class
@@ -239,7 +247,11 @@ class Horseman(Unit):
         self.position = position
         self.direction = direction
         self.sprite = "horseman"
-       
+        self.sprite_height = 90
+        self.z = 64
+    @property
+    def bbox_bottom(self):
+        return self.position[1] + self.sprite_height
 
 
 # Archer Class
@@ -252,4 +264,8 @@ class Archer(Unit):
         self.name = "Archer"
         self.is_acting = None
         self.sprite = "archer"
-
+        self.sprite_height = 54
+        self.z = 64
+    @property
+    def bbox_bottom(self):
+        return self.position[1] + self.sprite_height

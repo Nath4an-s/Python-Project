@@ -475,6 +475,7 @@ class Action:
 
         if unit.target_position is None:
             unit.task = "constructing"
+            unit.direction = self.get_direction(unit.position[0], unit.position[1], x, y)
             for building in player.constructing_buildings:
                 if building["position"] == (x, y):
                     if unit not in building.get("workers", []):  # Évite les doublons
@@ -532,6 +533,7 @@ class Action:
             self.debug_print(f"Building {building_type.__name__} completed at ({x}, {y}).", 'Blue')
 
             return
+        
     def attack_target(self, building, target, current_time_called, game_map):
         if target is not None:
             if current_time_called - building.last_attack_time >= 1:

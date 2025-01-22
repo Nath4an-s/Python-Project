@@ -25,7 +25,7 @@ players = [
     Player('Player 3', "Marines", "aggressive", player_id=3),
 ]
 
-global_speedS = 100
+global_speedS = 1
 
 class StartMenu:
     def __init__(self, screen_width=800, screen_height=600):
