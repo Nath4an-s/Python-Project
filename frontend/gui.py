@@ -747,6 +747,8 @@ class GUI(threading.Thread):
                         state = "idle"
                     if state == "marching" or  state == "returning" or state == "going_to_battle" or  state == "going_to_construction_site" or obj.is_moving == True:
                         state = "walking"   
+                    if state == "attacking" or state == "is_attacked":
+                        state = "attacking"
 
                 # Ralentir l'animation (par exemple, changer de frame tous les 5 rendus)
                 animation_speed = 40  # Ajustez cette valeur pour contrôler la vitesse

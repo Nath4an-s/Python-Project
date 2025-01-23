@@ -416,8 +416,6 @@ class Action:
 
     
     def _attack(self, unit, enemy_unit, current_time_called):
-        if unit.task != "attacking":
-            unit.task = "attacking"
         if hasattr(unit, 'path'):
             del unit.path
         if hasattr(unit, 'last_move_time'):
