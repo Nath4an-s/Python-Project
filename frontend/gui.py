@@ -181,14 +181,14 @@ class GUI(threading.Thread):
         # Load and scale building images
         building_types = {
             "TownCenter": (256, 256),  # Taille : (256, 256)
-            "Barracks": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6 * 511 // 666),  # Taille : (666, 511)
-            "House": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),  # Taille : (128, 128)
-            "Rubble": (64, 64),  # Taille : (64, 64)
             "Stable": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6 * 471 // 612),  # Taille : (612, 471)
             "ArcheryRange": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6 * 595 // 648),  # Taille : (648, 595)
-            "Camp": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),  # Taille : (128, 128)
-            "Farm": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 2),  # Taille : (128, 64)
+            "Barracks": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6 * 511 // 666),  # Taille : (666, 511)
+            "House": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4 * 356 // 384),  # Taille : (384, 356)
+            "Camp": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4 * 245 // 364),  # Taille : (364, 245)
+            "Farm": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4 * 64 // 128),  # Taille : (128, 64)
             "Keep": (64, 64*481//310),  # Taille : (64, 64)
+            "Rubble": (64, 64),  # Taille : (64, 64)
         }
 
         for building_type, size in building_types.items():
