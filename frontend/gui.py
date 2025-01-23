@@ -204,14 +204,14 @@ class GUI(threading.Thread):
         # Load and scale building images
         building_types = {
             "TownCenter": (256, 256),  # Taille : (256, 256)
-            "Barracks": (self.TILE_WIDTH * 3.5, self.TILE_HEIGHT * 6),  # Taille : (224, 192)
+            "Barracks": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6 * 511 // 666),  # Taille : (666, 511)
             "House": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),  # Taille : (128, 128)
             "Rubble": (64, 64),  # Taille : (64, 64)
-            "Stable": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6),  # Taille : (192, 192)
-            "ArcheryRange": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6),  # Taille : (192, 192)
+            "Stable": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6 * 471 // 612),  # Taille : (612, 471)
+            "ArcheryRange": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6 * 595 // 648),  # Taille : (648, 595)
             "Camp": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),  # Taille : (128, 128)
             "Farm": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 2),  # Taille : (128, 64)
-            "Keep": (64, 64),  # Taille : (64, 64)
+            "Keep": (64, 64*481//310),  # Taille : (64, 64)
         }
 
         for building_type, size in building_types.items():
@@ -914,15 +914,13 @@ class GUI(threading.Thread):
                     image = self.building_images[building_type]
 
                     # Adjust position for the sprite size
-                    adjusted_y = screen_y - image.get_height()
+                    adjusted_y = screen_y - image.get_height() + (self.TILE_HEIGHT // 2)
                     adjusted_x = screen_x + self.TILE_WIDTH * (2 - obj.size) // 2
 
-                    if obj.size == 3 or obj.size == 4:
-                        adjusted_y += (self.TILE_HEIGHT // 2)
+                    if obj.size == 4:
                         adjusted_x -= (self.TILE_WIDTH // 2)
-
-                    if obj.size == 2:
-                        adjusted_y += (self.TILE_HEIGHT // 2)
+                    if obj.size == 3 :
+                        adjusted_y -= (self.TILE_HEIGHT // 6 ) 
 
                     self.screen.blit(image, (adjusted_x, adjusted_y))
                 else:
