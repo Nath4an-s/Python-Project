@@ -110,11 +110,7 @@ class TownCenter(Building):
         self.training_queue = []
         self.sprite = "towncenter"
         self.sizeizo = (256, 256)  # (width, height)
-        self.z = 7*64
-
-    @property
-    def bbox_bottom(self):
-        return self.position[1] + self.sizeizo[1]
+        self.z = 230 # Verifier sur image
 
     def spawn_villager(self):
         if self.built:
@@ -143,11 +139,7 @@ class House(Building):
         self.population_increase = 5
         self.sprite = "house"
         self.sizeizo = (128, 128)  # (width, height)
-        self.z = 64*2
-
-    @property
-    def bbox_bottom(self):
-        return self.position[1] + self.sizeizo[1]
+        self.z = 130
 
     def is_walkable(self):
         return False
@@ -160,11 +152,8 @@ class Camp(Building):
         self.symbol = 'C'
         self.sprite = "camp"
         self.sizeizo = (128, 128)  # (width, height)
-        self.z = 64*2
+        self.z = 130
 
-    @property
-    def bbox_bottom(self):
-        return self.position[1] + self.sizeizo[1]
 
     def drop_point(self, unit, resource_type):
         # Camp acts as a drop point for resources
@@ -190,9 +179,6 @@ class Farm(Building):
         self.sizeizo = (128, 64) # (width, height)
         self.z = 0
 
-    @property
-    def bbox_bottom(self):
-        return self.position[1] + self.sizeizo[1]
 
     def is_walkable(self):
         return True
@@ -205,12 +191,9 @@ class Barracks(Building):
         self.training_queue = []
         self.sprite = "barracks"
         self.sizeizo = (224, 192)  # (width, height)
-        self.z = 5*64
+        self.z = 185
 
-    @property
-    def bbox_bottom(self):
-        return self.position[1] + self.sizeizo[1]
-
+ 
     def spawn_swordsman(self):
         if self.built:
             return Swordsman(self.player)
@@ -227,11 +210,7 @@ class Stable(Building):
         self.training_queue = []
         self.sprite = "stable"
         self.sizeizo = (192, 192)  # (width, height)
-        self.z = 6*64
-
-    @property
-    def bbox_bottom(self):
-        return self.position[1] + self.sizeizo[1]
+        self.z = 180
 
     def spawn_horseman(self):
         if self.built:
@@ -249,11 +228,8 @@ class ArcheryRange(Building):
         self.training_queue = []
         self.sprite = "archeryrange"
         self.sizeizo = (192, 192)  # (width, height)
-        self.z = 5*64
+        self.z = 180
 
-    @property
-    def bbox_bottom(self):
-        return self.position[1] + self.sizeizo[1]
 
     def spawn_archer(self):
         if self.built:
@@ -273,11 +249,8 @@ class Keep(Building):
         self.sprite = "keep"
         self.last_attack_time = 0    
         self.sizeizo = (64, 64)  # (width, height)
-        self.z = 0
+        self.z = 60
 
-    @property
-    def bbox_bottom(self):
-        return self.position[1] + self.sizeizo[1]        
-
+    
     def is_walkable(self):
         return False

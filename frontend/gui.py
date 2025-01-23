@@ -99,12 +99,6 @@ class Camera:
         self.offset_x = max(min_x, min(self.offset_x + dx, max_x))
         self.offset_y = max(min_y, min(self.offset_y + dy, max_y))
 
-def tint_image(image, color):
-    """Tint an image with the given color."""
-    tinted_image = image.copy()
-    tinted_image.fill(color + (0,), special_flags=pygame.BLEND_RGBA_MULT)
-    return tinted_image
-
 class GUI(threading.Thread):
     def __init__(self, data_queue):
         super().__init__()
@@ -187,20 +181,6 @@ class GUI(threading.Thread):
             "Soil": self.load_image(self.RESOURCES_PATH / "soil.png"),
         }
 
-
-        for player_id, color in self.PLAYER_COLORS.items():
-            #self.PLAYER_COLORS[player_id] = color + (200,)  # Add alpha channel
-            self.villager_images[player_id] = {}
-            self.swordman_images[player_id] = {}
-            
-            for unit_type, images in self.villager_images.items():
-                for direction, frames in images.items():
-                    self.villager_images[unit_type][direction] = [tint_image(frame, self.unit_colors["villager"]) for frame in frames]
-
-            for unit_type, images in self.swordman_images.items():
-                for direction, frames in images.items():
-                    self.swordman_images[unit_type][direction] = [tint_image(frame, self.unit_colors["swordman"]) for frame in frames]
-                    
         # Load and scale building images
         building_types = {
             "TownCenter": (256, 256),  # Taille : (256, 256)
@@ -725,7 +705,7 @@ class GUI(threading.Thread):
                 unit_x = iso_x + (self.game_data.map.width * self.TILE_WIDTH // 2)
                 unit_y = iso_y
                 if visible_rect.collidepoint(unit_x, unit_y):
-                    entities.append((unit_x, unit_y, "unit", unit))
+                    entities.append((unit_x, unit_y, "unit", unit,unit.z))
 
             for building in player.buildings:
                 bottom_right_x = building.position[0] + building.size - 2
@@ -736,25 +716,19 @@ class GUI(threading.Thread):
                 building_y = iso_y
 
                 if visible_rect.collidepoint(building_x, building_y):
-                    entities.append((building_x, building_y, "building", building))
+                    entities.append((building_x, building_y, "building", building, building.z))
 
-        # Sort entities by their depth (y + x for isometric rendering)
-        #Tri 1 
-        """   
+
         entities.sort(key=lambda e: (
-            0 if e[2] == "building" and e[3].name == "Farm" else 1,  # Fermes en premier
-            (e[1] + e[0]),  # Profondeur isométrique (y + x)
-        ))
-        """
-        #Tri 2
-        
-        entities.sort(key=lambda e: (
-            0 if e[2] == "building" and e[3].name == "Farm" else 1,  # Priorité des fermes
-            -((e[3].bbox_bottom - e[3].z) + e[1] + e[0])  # Inclut la hauteur `z`
-        ))
-        
+            0 if e[2] == "building" and e[3].name == "Farm" else 1,
+            e[0] + e[1],  # Critère principal : somme des coordonnées pour l'ordre isométrique global
+             -(e[1] - (e[4] if e[2] == 'building' else 0)),  # Critère secondaire : profondeur en tenant compte de la taille
+            e[1],
+            ))
+
+    
         # Render all entities
-        for x, y, entity_type, obj in entities:
+        for x, y, entity_type, obj, z in entities:
             screen_x = x - self.camera.offset_x
             screen_y = y - self.camera.offset_y
             image = None
@@ -773,6 +747,8 @@ class GUI(threading.Thread):
                         state = "idle"
                     if state == "marching" or  state == "returning" or state == "going_to_battle" or  state == "going_to_construction_site" or obj.is_moving == True:
                         state = "walking"   
+                    if state == "attacking" or state == "is_attacked":
+                        state = "attacking"
 
                 # Ralentir l'animation (par exemple, changer de frame tous les 5 rendus)
                 animation_speed = 40  # Ajustez cette valeur pour contrôler la vitesse
@@ -923,11 +899,10 @@ class GUI(threading.Thread):
                         adjusted_y -= (self.TILE_HEIGHT // 6 ) 
 
                     self.screen.blit(image, (adjusted_x, adjusted_y))
-                else:
-                    pygame.draw.rect(
+                    pygame.draw.circle(
                         self.screen,
                         (150, 150, 150),
-                        pygame.Rect(screen_x, screen_y, self.TILE_WIDTH, self.TILE_HEIGHT)
+                        (screen_x, screen_y),5
                     )
 
 
