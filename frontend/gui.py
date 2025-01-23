@@ -372,7 +372,7 @@ class GUI(threading.Thread):
         self.swordman_images = {
            "walking": {
                 "south": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walk" / f"Halbadierwalk{i:03}.png")
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walk" / f"Axethrowerwalk{i:03}.png")
                     for i in range(1, 10)
                 ],
                 "north": [
@@ -437,7 +437,7 @@ class GUI(threading.Thread):
             "idle": {
                 "south": [
                     self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Stand" / f"Axethrowerstand{i:03}.png")
-                    for i in range(9, 13)  
+                    for i in range(1, 10)  
                 ],
             },
         }
