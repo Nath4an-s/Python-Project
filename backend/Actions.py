@@ -408,6 +408,7 @@ class Action:
             if not isinstance(enemy_unit, Building):
                 enemy_unit.is_attacked_by = unit
                 enemy_unit.task = "is_attacked"
+            unit.is_moving = False
             self._attack(unit, enemy_unit, current_time_called)
         else:
             self.move_unit(unit, int(target_x), int(target_y), current_time_called)
@@ -415,6 +416,8 @@ class Action:
 
     
     def _attack(self, unit, enemy_unit, current_time_called):
+        if unit.task != "attacking":
+            unit.task = "attacking"
         if hasattr(unit, 'path'):
             del unit.path
         if hasattr(unit, 'last_move_time'):
