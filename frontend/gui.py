@@ -475,21 +475,21 @@ class GUI(threading.Thread):
                 ],
                 "northeast": [
                     self.flip_image_horizontally(
-                        self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walk" / f"Axethrowerwalk{i:03}.png")
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Attack" / f"Axethrowerattack{i:03}.png")
                     )
                     for i in range(49, 64)
                 ],
                 "northwest": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walk" / f"Axethrowerwalk{i:03}.png")
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Attack" / f"Axethrowerattack{i:03}.png")
                     for i in range(49, 64) 
                 ],
                 "southwest": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walk" / f"Axethrowerwalk{i:03}.png")
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Attack" / f"Axethrowerattack{i:03}.png")
                     for i in range(17, 32) 
                 ],
                 "southeast": [
                     self.flip_image_horizontally(
-                        self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walk" / f"Axethrowerwalk{i:03}.png")
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "Attack" / f"Axethrowerattack{i:03}.png")
                     )
                     for i in range(17, 32)
                 ],
@@ -957,19 +957,16 @@ class GUI(threading.Thread):
                 direction = obj.direction
 
                 # Déterminer l'état de l'unité
-                if obj.is_moving:
+                if obj.is_moving == True:
                     state = "walking"  
-                else:
+                else :
                     if state is None:
-                        obj.direction = "south"  # Par défaut, face au sud
-                        state = "idle"           # État par défaut
-                    elif state in {"marching", "returning", "going_to_battle", "going_to_construction_site"}:
-                        state = "walking"       # Ces états correspondent à "walking"
-                    elif state in {"attacking", "is_attacked"}:
-                        state = "attacking"     # Ces états correspondent à "attacking"
-                    else:
-                        state = "idle"          # Par défaut, si aucun autre état n'est déterminé
-
+                        obj.direction = "south"
+                        state = "idle"
+                    if state == "marching" or  state == "returning" or state == "going_to_battle" or  state == "going_to_construction_site" or obj.is_moving == True:
+                        state = "walking"   
+                    if state == "attacking" or state == "is_attacked":
+                        state = "attacking"
 
                 animation_speed = 40
                 obj.frame_counter += 1
@@ -983,41 +980,42 @@ class GUI(threading.Thread):
                         image = images[obj.current_frame % len(images)]
 
                 elif unit_type == "swordman":
-                    if state in self.swordman_images and direction in self.swordman_images[state]:
-                        images = self.swordman_images[state][direction]
-                        image = images[obj.current_frame % len(images)]
-                        #self.screen.blit(image, (screen_x, screen_y))
+                   if state in self.swordman_images and direction in self.swordman_images[state]:
+                    images = self.swordman_images[state][direction]
+                    image = images[obj.current_frame % len(images)]
+                    # self.screen.blit(image, (screen_x, screen_y))
 
-                        # Dessiner une flèche indiquant la direction
-                        arrow_color = (0, 0, 255)  # Rouge pour la flèche
-                        arrow_size = 20  # Taille de la flèche
-                        dx, dy = 0, 0
+                    # Dessiner une flèche indiquant la direction
+                    arrow_color = (0, 0, 255)  # Bleu pour la flèche
+                    arrow_size = 20  # Taille de la flèche
+                    dx, dy = 0, 0
 
-                        # Détermine les décalages pour chaque direction
-                        if direction == "north":
-                            dx, dy = 0, -arrow_size
-                        elif direction == "south":
-                            dx, dy = 0, arrow_size
-                        elif direction == "east":
-                            dx, dy = arrow_size, 0
-                        elif direction == "west":
-                            dx, dy = -arrow_size, 0
-                        elif direction == "northeast":
-                            dx, dy = arrow_size, -arrow_size
-                        elif direction == "northwest":
-                            dx, dy = -arrow_size, -arrow_size
-                        elif direction == "southeast":
-                            dx, dy = arrow_size, arrow_size
-                        elif direction == "southwest":
-                            dx, dy = -arrow_size, arrow_size
+                    # Détermine les décalages pour chaque direction
+                    if direction == "north":
+                        dx, dy = 0, -arrow_size
+                    elif direction == "south":
+                        dx, dy = 0, arrow_size
+                    elif direction == "east":
+                        dx, dy = arrow_size, 0
+                    elif direction == "west":
+                        dx, dy = -arrow_size, 0
+                    elif direction == "northeast":
+                        dx, dy = arrow_size, -arrow_size
+                    elif direction == "northwest":
+                        dx, dy = -arrow_size, -arrow_size
+                    elif direction == "southeast":
+                        dx, dy = arrow_size, arrow_size
+                    elif direction == "southwest":
+                        dx, dy = -arrow_size, arrow_size
 
-                        # Définir les points du triangle pour la flèche
-                        arrow_tip = (screen_x + dx, screen_y + dy)
-                        arrow_left = (screen_x - dy // 2, screen_y + dx // 2)
-                        arrow_right = (screen_x + dy // 2, screen_y - dx // 2)
+                    # Définir les points du triangle pour la flèche
+                    arrow_tip = (screen_x + dx, screen_y + dy)
+                    arrow_left = (screen_x - dy // 2, screen_y + dx // 2)
+                    arrow_right = (screen_x + dy // 2, screen_y - dx // 2)
 
-                        # Dessiner le triangle représentant la flèche
-                        pygame.draw.polygon(self.screen, arrow_color, [arrow_tip, arrow_left, arrow_right])
+                    # Dessiner le triangle représentant la flèche
+                    pygame.draw.polygon(self.screen, arrow_color, [arrow_tip, arrow_left, arrow_right])
+
 
                 elif unit_type == "archer":
                     if state in self.archer_images and direction in self.archer_images[state]:

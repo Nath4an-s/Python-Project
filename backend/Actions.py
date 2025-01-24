@@ -422,6 +422,7 @@ class Action:
 
     
     def _attack(self, unit, enemy_unit, current_time_called):
+        unit.is_moving = False
         if hasattr(unit, 'path'):
             del unit.path
         if hasattr(unit, 'last_move_time'):
