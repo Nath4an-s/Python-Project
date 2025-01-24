@@ -7,8 +7,6 @@ from pathlib import Path
 import time
 import traceback
 
-from backend.Building import Farm
-
 def get_unit_offsets(state, direction):
  
     offsets = {
@@ -197,6 +195,7 @@ class GUI(threading.Thread):
             "Camp": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),  # Taille : (128, 128)
             "Farm": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 2),  # Taille : (128, 64)
             "Keep": (64, 64*481//310),  # Taille : (64, 64)
+            "Construct": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 2),  # Taille : (128, 64)
         }
 
         for building_type, size in building_types.items():
@@ -442,7 +441,7 @@ class GUI(threading.Thread):
             "dying": {
                 "south": [
                     self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Die" / f"Axethrowerdie{i:03}.png")
-                    for i in range(9, 13)
+                    for i in range(1, 13)
                 ],
             },
             "idle": {
@@ -517,7 +516,7 @@ class GUI(threading.Thread):
                 
                 "south": [
                     self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Die" / f"Archerdie{i:03}.png")
-                    for i in range(9, 13)
+                    for i in range(1, 13)
                 ],
             },
             "idle": {
@@ -785,6 +784,70 @@ class GUI(threading.Thread):
                         image = self.IMAGES["Gold"]
                         self.pre_rendered_map.blit(image, (screen_x, screen_y))
 
+    '''def render_dying_entities(self, game_data):
+        """
+        Render dying entities and remove them from the dictionary when animation completes.
+        
+        :param game_data: Game data containing pre_post_entities
+        """
+        # Define dying animation parameters
+        dying_animation_frames = {
+            'villager': 10,   # 10 frames for the villager's dying animation
+            'swordsman': 12,
+            'archer': 8,
+            'horseman': 10
+        }
+        
+        # Map entity types to their respective image dictionaries (dying animation by direction)
+        entity_image_map = {
+            'villager': self.villager_images.get("dying", []),  # Now directly a list
+            'swordsman': self.swordman_images.get("dying", []),  # Now directly a list
+            'archer': self.archer_images.get("dying", []),      # Now directly a list
+            'horseman': self.horseman_images.get("dying", [])    # Now directly a list
+        }        
+
+        # Track entities to remove after animation completes
+        entities_to_remove = []
+
+        for entity_type, entities in game_data.map.pre_post_entities.items():
+            if isinstance(entities, list):  # Ensure we have a list of entities
+                for index, entity_data in enumerate(entities):
+                    # If entity_data is just (x, y), initialize the dying_frame
+                    if len(entity_data) == 2:  # Add frame counter if not present
+                        entities[index] = (*entity_data, 0)  # Add dying_frame = 0
+
+                    # Unpack position and current dying frame
+                    x, y, current_frame = entities[index]
+                    screen_x, screen_y = self.cart_to_iso(x, y)
+
+                    # Get the correct images for the entity type
+                    entity_images = entity_image_map.get(entity_type, [])
+                    
+                    # Ensure entity_images is a valid list
+                    if isinstance(entity_images, list):
+                        # Check if the current frame is within the valid range
+                        if 0 <= current_frame < len(entity_images):
+                            # Render the current frame of the animation
+                            image = entity_images[current_frame]
+                            self.screen.blit(image, (screen_x, screen_y))
+                            
+                            # Increment the animation frame only if it's not the last one
+                            if current_frame < dying_animation_frames.get(entity_type, 10) - 1:
+                                entities[index] = (x, y, current_frame + 1)
+                            else:
+                                # Stay at the last frame (don't increment anymore)
+                                entities[index] = (x, y, current_frame)  
+                    
+                    # Check if the animation is complete (i.e., last frame)
+                    if current_frame >= dying_animation_frames.get(entity_type, 10) - 1:
+                        # Add to the removal list only after displaying the last frame
+                        if current_frame == dying_animation_frames.get(entity_type, 10) - 1:
+                            entities_to_remove.append((entity_type, index))
+
+        # Remove completed dying entities after rendering
+        for entity_type, entity_index in reversed(entities_to_remove):
+            game_data.map.pre_post_entities[entity_type].pop(entity_index)
+            print(f"Removing entity at index {entity_index} of type {entity_type}")'''
 
     def render_isometric_map(self):
         if not self.pre_rendered_map:
@@ -1007,6 +1070,8 @@ class GUI(threading.Thread):
                         (150, 150, 150),
                         (screen_x, screen_y),5
                     )
+
+        '''self.render_dying_entities(self.game_data)'''
 
 
     def initialize_pygame(self):
