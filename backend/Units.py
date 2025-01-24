@@ -214,7 +214,6 @@ class Villager(Unit):
         self.sprite_height = 50
         self.z = 0
         self.max_hp = 25
-        print(f"Villager created with max_hp: {self.max_hp}")  # Add this line for debugging
 
     @property
     def bbox_bottom(self):

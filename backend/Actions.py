@@ -461,22 +461,32 @@ class Action:
             self.debug_print(f"not entering attack phase, distance: {distance}", 'Red')
 
     def construct_building(self, unit, building_type, x, y, player, current_time_called):
+        # Check if unit is already stuck or in an impossible construction state
+        if unit.task is not None:
+            # Check if task is stale or impossible
+            if (hasattr(unit, 'target_building') and 
+                (unit.target_building[0] != x or unit.target_building[1] != y)):
+                # Reset task if trying to build at a different location
+                unit.task = None
+                del unit.target_building
+                return False
+
+        # Validate construction site
         if self.map.grid[y][x].building and not self.map.grid[y][x].building.name == "Construct":  
             if not self.map.is_area_free(x, y, building_type(player).size):
-                self.debug_print(f"Cannot construct building at ({x}, {y}): area is not free anymore IN GOING_TO_CONSTRUCT.", 'Yellow')
-                self.debug_print(self.map.grid[y][x].building.name == "Construct", 'Green')
+                self.debug_print(f"Cannot construct building at ({x}, {y}): area not free.", 'Yellow')
                 unit.task = None
-                return
+                return False
         elif self.map.grid[y][x].resource:
-            self.debug_print(f"Cannot construct building at ({x}, {y}): area is not free anymore IN GOING_TO_CONSTRUCT.", 'Yellow')
+            self.debug_print(f"Cannot construct building at ({x}, {y}): resource present.", 'Yellow')
             unit.task = None
-            return
+            return False
         
-        if not hasattr(unit, 'construction_type'):
-            unit.construction_type = building_type
-        if not hasattr(unit, 'target_building'):
-            unit.target_building = (x, y)
+        # Set construction attributes
+        unit.construction_type = building_type
+        unit.target_building = (x, y)
 
+        # Movement to construction site
         if unit.task != "going_to_construction_site":
             unit.task = "going_to_construction_site"
             
@@ -486,84 +496,90 @@ class Action:
                     self.move_unit(unit, pos[0], pos[1], current_time_called)
                     break
 
-        if unit.target_position is None: # Check if the unit has reached the construction site
+        # Reached construction site
+        if unit.target_position is None:
             unit.task = "constructing"
             unit.direction = self.get_direction(unit.position[0], unit.position[1], x, y)
-            if not player.constructing_buildings:
-                player.constructing_buildings.append({
-                    "position": (x, y),
-                    "num_workers": 1,
-                    "workers": [unit],
-                    "type": building_type,
-                    "start_time": current_time_called
-                })
-                self.debug_print(f"First Assignation :{player.constructing_buildings}", 'Blue')
-            else:
-                for building in player.constructing_buildings:
-                    if building["position"] == (x, y):
-                        if unit not in building.get("workers", []):  # Évite les doublons
-                            building["num_workers"] += 1
-                            building.setdefault("workers", []).append(unit)
-                            self.debug_print(player.constructing_buildings, 'Blue')
-                        break
-                    else:  # Si aucun bâtiment existant n'est trouvé
-                        player.constructing_buildings.append({
-                            "position": (x, y),
-                            "num_workers": 1,
-                            "workers": [unit],
-                            "type": building_type,
-                            "start_time": current_time_called
-                        })
-                        self.debug_print(player.constructing_buildings, 'Blue')
-            if hasattr(unit, 'path'):
-                del unit.path
-            if hasattr(unit, 'last_move_time'):
-                del unit.last_move_time
-            self._construct(unit, building_type, x, y, player, current_time_called)
+            
+            # Track construction with additional safeguards
+            self._track_construction(unit, building_type, x, y, player, current_time_called)
+            
+            # Ensure construction start time
+            if not hasattr(unit, 'start_building'):
+                unit.start_building = current_time_called
+            
+            # Spawn construction marker if needed
+            if not self.map.grid[y][x].building:
+                Building.spawn_building(player, x, y, Construct, self.map)
 
+        return True
+
+    def _track_construction(self, unit, building_type, x, y, player, current_time_called):
+        # Find or create construction entry
+        construction_entry = next(
+            (b for b in player.constructing_buildings if b["position"] == (x, y)), 
+            None
+        )
+        
+        if construction_entry:
+            # Prevent duplicate workers
+            if unit not in construction_entry.get("workers", []):
+                construction_entry["num_workers"] = construction_entry.get("num_workers", 0) + 1
+                construction_entry.setdefault("workers", []).append(unit)
+        else:
+            # Create new construction entry
+            new_entry = {
+                "position": (x, y),
+                "num_workers": 1,
+                "workers": [unit],
+                "type": building_type,
+                "start_time": current_time_called,
+                "completed": False
+            }
+            player.constructing_buildings.append(new_entry)
 
     def _construct(self, unit, building_type, x, y, player, current_time_called):
-        if self.map.grid[y][x].building and not self.map.grid[y][x].building.name == "Construct":
-            if not self.map.is_area_free(x, y, building_type(player).size):
-                self.debug_print(f"Cannot construct building at ({x}, {y}): area is not free anymore IN CONSTRUCT.", 'Yellow')
-                self.debug_print(self.map.grid[y][x].building.name == "Construct", 'Green')
-                unit.task = None
-                return
+        # Find active construction entry
+        construction_entry = next(
+            (b for b in player.constructing_buildings if b["position"] == (x, y)), 
+            None
+        )
+        
+        if not construction_entry or construction_entry.get("completed", False):
+            unit.task = None
+            return False
 
-        # Find or initialize the number of workers
-        num_workers = next((b["num_workers"] for b in player.constructing_buildings if b["position"] == (x, y)), 1)
+        # Calculate construction time
+        num_workers = construction_entry.get("num_workers", 1)
         actual_building_time = 3 * building_type(player).build_time / (num_workers + 2)
 
-        # Initialize start time
-        if not hasattr(unit, 'start_building'):
-            unit.start_building = current_time_called
-
-        if not self.map.grid[y][x].building:
-            Building.spawn_building(player, x, y, Construct, self.map)
-
-        # Verify if the time has elapsed
+        # Check construction completion
         if current_time_called - unit.start_building >= actual_building_time:
+            # Remove existing building
             Building.kill_building(player, self.map.grid[y][x].building, self.map)
+            
+            # Spawn new building
             Building.spawn_building(player, x, y, building_type, self.map)
 
-            # Reset tasks for workers
-            for building in player.constructing_buildings:
-                if building["position"] == (x, y):
-                    for worker in building.get("workers", []):
-                        worker.task = None
-                        del worker.target_building
-                        del worker.construction_type
-                        del worker.start_building
-                    break
+            # Mark construction as completed
+            construction_entry["completed"] = True
 
-            # Clean up constructing buildings
+            # Reset workers
+            for worker in construction_entry.get("workers", []):
+                worker.task = None
+                for attr in ['target_building', 'construction_type', 'start_building']:
+                    if hasattr(worker, attr):
+                        delattr(worker, attr)
+
+            # Remove completed construction
             player.constructing_buildings = [
-                b for b in player.constructing_buildings if b["position"] != (x, y)
+                b for b in player.constructing_buildings if not b.get("completed", False)
             ]
             
             self.debug_print(f"Building {building_type.__name__} completed at ({x}, {y}).", 'Blue')
+            return True
 
-            return
+        return False
         
     def attack_target(self, building, target, current_time_called, game_map): # for the Keep
         if target is not None:
