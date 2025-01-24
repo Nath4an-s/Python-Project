@@ -73,35 +73,24 @@ class GameEngine:
         self.is_paused = False  # Flag to track if the game is paused
         self.changed_tiles = set()  # Set to track changed tiles
         
+        # IA related attributes
+        self.ias = [IA(player, player.ai_profile, self.map, time.time()) for player in self.players]  # Instantiate IA for each player
+        for i in range(len(self.players)):
+            self.players[i].ai = self.ias[i]
+        self.IA_used = False
+
+        # Sauvegarde related attributes
         if not sauvegarde:
             Building.place_starting_buildings(self.map)   # Place starting town centers on the map
             Unit.place_starting_units(self.players, self.map)  # Place starting units on the map
         
         self.debug_print = debug_print
-        self.ias = [IA(player, player.ai_profile, self.map, time.time()) for player in self.players]  # Instantiate IA for each player
-        for i in range(len(self.players)):
-            self.players[i].ai = self.ias[i]
-        self.IA_used = False
         self.current_time = time.time()
 
         # GUI thread related attributes
         self.gui_running = False
         self.data_queue = Queue()
         self.gui_thread = None
-
-        # Initialize other game components based on the game mode
-        if self.game_mode == "Utopia":
-            self.initialize_utopia_mode()
-        elif self.game_mode == "Gold Rush":
-            self.initialize_gold_rush_mode()
-
-    def initialize_utopia_mode(self):
-        # Logic specific to Utopia mode
-        pass
-    
-    def initialize_gold_rush_mode(self):
-        # Logic specific to Gold Rush mode
-        pass
 
     def start_gui_thread(self):
         """Initialize and start the GUI thread"""
@@ -178,6 +167,18 @@ class GameEngine:
                     top_left_x = max(0, min(self.map.width - viewport_width, top_left_x + dx))
                     top_left_y = max(0, min(self.map.height - viewport_height, top_left_y + dy))
                 
+                ###### TEST KEYS #######
+
+                if key == ord('r'):
+                    self.debug_print(self.ias[2].decided_builds)
+
+
+
+
+
+
+                #########################
+
                 if key == curses.KEY_F9:
                     if not self.gui_running:
                         self.start_gui_thread()
@@ -186,81 +187,28 @@ class GameEngine:
                         stdscr.clear()
                         stdscr.refresh()
                         continue
-                elif key == ord('h'):  # When 'h' is pressed, test for the functions
-                    #for unit in self.players[2].units:             #Takes time to calculates all paths but is perfectly smooth after that
-                        #action.move_unit(unit, 50, 60, current_time)
-                    action.move_unit(self.players[0].units[0], 2, 2, self.get_current_time()) # Move the first unit to (0, 0)
-                elif key == ord('g'):  # When 'g' is pressed, test for the functions
-                    Unit.kill_unit(self.players[2], self.players[2].units[0], self.map)
-                elif key == ord('b'):  # When 'b' is pressed, test for the functions
-                    action.gather_resources(self.players[1].units[0], "Wood", self.get_current_time())
-
-
                 elif key == ord('\t'):  # TAB key
                     generate_html_report(self.players)
                     self.debug_print(f"HTML report generated at turn {self.turn}")
                     if self.is_paused == False:
                         self.is_paused = True
                         self.debug_print("Game paused.")
-                elif key == ord('j'):
-                    action.construct_building(self.players[2].units[2], Farm, 10, 10, self.players[2], self.get_current_time())
-                    #action.construct_building(self.players[2].units[1], Farm, 10, 10, self.players[2], current_time)
-                    #action.construct_building(self.players[2].units[3], Barracks, 1, 1, self.players[2], current_time)
-                    #action.construct_building(self.players[2].units[4], Barracks, 1, 1, self.players[2], current_time)
-                elif key == ord('t'):
-                    action.construct_building(self.players[2].units[1], House, 4, 4, self.players[2], self.get_current_time())
-                    action.construct_building(self.players[2].units[3], Camp, 6, 6, self.players[2], self.get_current_time())
-                elif key == ord('k'):
-                    action.gather_resources(self.players[2].units[1], "Food", self.get_current_time())
-                    action.gather_resources(self.players[2].units[2], "Wood", self.get_current_time())
-                    action.gather_resources(self.players[2].units[3], "Gold", self.get_current_time())
-                elif key == ord('o'):
-                    self.debug_print(self.map.grid[0][0].resource.amount)
-                elif key == ord('l'):
-                    if self.map.grid[1][0].resource is not None:
-                        self.debug_print(self.map.grid[1][0].resource.amount)
-                    else:
-                        self.debug_print("No resource at this location")
-                elif key == ord('m'):
-                    self.debug_print(self.map.grid[1][1].resource.amount)
-                elif key == ord('r'):
-                    self.debug_print(self.ias[2].decided_builds)
-                elif key == ord('a'):
-                    Building.spawn_building(self.players[2], 2, 2, House, self.map)
-                    Unit.spawn_unit(Archer, 4, 2, self.players[2], self.map)
-                elif key == ord('b'):
-                    action.go_battle(self.players[1].units[1], self.players[2].units[0], self.get_current_time())
-                elif key == ord('e'):
-                    Building.spawn_building(self.players[2], 2, 2, Keep, self.map)
-                    action.move_unit(self.players[0].units[0], 4, 5, self.get_current_time())
-                elif key == ord('f'):
-                    Building.kill_building(self.players[2], self.players[2].buildings[-1], self.map)
-                elif key == ord('y'):
-                    Building.kill_building(self.players[1], self.players[1].buildings[-1], self.map)
                 elif key == ord('p'):
                     self.is_paused = not self.is_paused
                     if self.is_paused:
                         self.debug_print("Game paused.")
                     else:
                         self.debug_print("Game resumed.")
-                elif key == ord('c'):
-                    Unit.train_unit(Villager, 2, 2, self.players[2], self.players[2].buildings[0], self.map, self.get_current_time()) #TODO:coordinates should be next to the right building (hardcoded)
-                    Unit.train_unit(Villager, 3, 2, self.players[2], self.players[2].buildings[0], self.map, self.get_current_time()) #same building so after first one
-                    Unit.train_unit(Swordsman, 2, 3, self.players[2], self.players[2].buildings[1], self.map, self.get_current_time()) #other buidling so same time as first one
-                elif key == ord('u'):
-                    self.players[2].owned_resources["Food"] -= 19950
-                elif key == ord('v'):  
-                    self.save_game()
-                elif key == ord('i'):
-                    action.construct_building(self.players[2].units[0], Barracks, 10, 10, self.players[2], self.get_current_time())
-                    action.construct_building(self.players[2].units[1], Barracks, 10, 10, self.players[2], self.get_current_time())
 
                 elif key == ord('n'):
                     self.IA_used = not self.IA_used
                     self.debug_print(f"IA used: {self.IA_used}")
-                elif key == ord('x'): #Attaquer un batiment
-                    for unit in self.players[2].units:
-                        action.go_battle(unit, self.players[1].buildings[-1], self.get_current_time())
+
+                elif key == curses.KEY_F10: 
+                    self.save_game()
+                elif key == curses.KEY_F12:
+                    self.load_game()
+
                 #call the IA
                 if not self.is_paused and self.turn % 10 == 0 and self.IA_used == True: # Call the IA every 5 turns: change 0, 5, 10, 15, ... depending on lag
                     for ia in self.ias:
