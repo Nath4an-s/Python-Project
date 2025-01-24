@@ -1146,9 +1146,6 @@ class GUI(threading.Thread):
                 image = self.building_images["Rubble"]
                 self.screen.blit(image, (screen_x, screen_y))
 
-   
-                   
-                   
         if self.show_global_overlay:  # Exemple : Une condition pour afficher un overlay global
             overlay_surface = self.background
             self.screen.blit(overlay_surface, (0, 0))
