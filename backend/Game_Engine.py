@@ -235,7 +235,9 @@ class GameEngine:
                 elif key == ord('v'):  
                     self.save_game()
                 elif key == ord('i'):
-                    action.construct_building(self.players[2].units[0], Farm, 10, 10, self.players[2], self.get_current_time())
+                    action.construct_building(self.players[2].units[0], Barracks, 10, 10, self.players[2], self.get_current_time())
+                    action.construct_building(self.players[2].units[1], Barracks, 10, 10, self.players[2], self.get_current_time())
+
                 elif key == ord('n'):
                     self.IA_used = not self.IA_used
                     self.debug_print(f"IA used: {self.IA_used}")
