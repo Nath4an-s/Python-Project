@@ -254,8 +254,8 @@ class IA:
             return False
         if is_building:
             for build in self.decided_builds:
-                if (abs(build[0] - x) < building_size + 2 and
-                    abs(build[1] - y) < building_size + 2):
+                if (abs(build[0] - x) < building_size + build[2] and
+                    abs(build[1] - y) < building_size + build[2]):
                     return False
 
         # Check if area is free on map
@@ -272,7 +272,6 @@ class IA:
             if (abs(construct_x - x) < max(building_size, construct_size) and
                 abs(construct_y - y) < max(building_size, construct_size)):
                 return False
-                
         return True
 
 
@@ -361,7 +360,7 @@ class IA:
                     self.current_time_called
                 )
                 if build_position not in self.decided_builds:
-                    self.decided_builds.append(build_position)
+                    self.decided_builds.append((build_position[0], build_position[1], building_class(self.player).size))
 
 
 #### ATTACK STRATEGY ####

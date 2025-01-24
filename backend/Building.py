@@ -51,10 +51,11 @@ class Building:
                     town_center_x += random.choice([-1, 0, 1])
                     town_center_y += random.choice([-1, 0, 1])
 
-                if game_map.is_area_free(town_center_x, town_center_y, TownCenter(player).size):
-                    # Create an instance of Building (or TownCenter) to call spawn_building
-                    building_instance = Building(player, "TownCenter", 1500, 60, {"wood": 275}, TownCenter(player).size, (town_center_x, town_center_y))
-                    building_instance.spawn_building(player, town_center_x, town_center_y, TownCenter, game_map)
+            if game_map.is_area_free(town_center_x, town_center_y, TownCenter(player).size):
+                # Create an instance of Building (or TownCenter) to call spawn_building
+                building_instance = TownCenter(player)
+                player.ai.decided_builds.append((town_center_x, town_center_y, TownCenter(player).size))
+                building_instance.spawn_building(player, town_center_x, town_center_y, TownCenter, game_map)
 
                     # Check if the civilization is Marines
                     if player.civilization == "Marines":
@@ -73,8 +74,9 @@ class Building:
                                 new_x += random.choice([-1, 0, 1])
                                 new_y += random.choice([-1, 0, 1])
 
-                            # Spawn the building with the map passed in
-                            building_instance.spawn_building(player, new_x, new_y, building, game_map)
+                        # Spawn the building with the map passed in
+                        player.ai.decided_builds.append((new_x, new_y, building(player).size))
+                        building_instance.spawn_building(player, new_x, new_y, building, game_map)
 
                         debug_print(f"Placed additional buildings for {player.name} (Marines) around ({town_center_x}, {town_center_y})", 'Blue')
                     else:
