@@ -422,6 +422,7 @@ class Action:
 
     
     def _attack(self, unit, enemy_unit, current_time_called):
+        unit.is_moving = False
         if hasattr(unit, 'path'):
             del unit.path
         if hasattr(unit, 'last_move_time'):
@@ -460,10 +461,15 @@ class Action:
             self.debug_print(f"not entering attack phase, distance: {distance}", 'Red')
 
     def construct_building(self, unit, building_type, x, y, player, current_time_called):
-        if not self.map.is_area_free(x, y, building_type(player).size):
-            if unit.task != "going_to_construction_site": 
-                #self.debug_print(f"Cannot construct building at ({x}, {y}): area is not free.")
-                pass
+        if self.map.grid[y][x].building and not self.map.grid[y][x].building.name == "Construct":  
+            if not self.map.is_area_free(x, y, building_type(player).size):
+                self.debug_print(f"Cannot construct building at ({x}, {y}): area is not free anymore IN GOING_TO_CONSTRUCT.", 'Yellow')
+                self.debug_print(self.map.grid[y][x].building.name == "Construct", 'Green')
+                unit.task = None
+                return
+        elif self.map.grid[y][x].resource:
+            self.debug_print(f"Cannot construct building at ({x}, {y}): area is not free anymore IN GOING_TO_CONSTRUCT.", 'Yellow')
+            unit.task = None
             return
         
         if not hasattr(unit, 'construction_type'):
@@ -480,16 +486,10 @@ class Action:
                     self.move_unit(unit, pos[0], pos[1], current_time_called)
                     break
 
-        if unit.target_position is None:
+        if unit.target_position is None: # Check if the unit has reached the construction site
             unit.task = "constructing"
             unit.direction = self.get_direction(unit.position[0], unit.position[1], x, y)
-            for building in player.constructing_buildings:
-                if building["position"] == (x, y):
-                    if unit not in building.get("workers", []):  # Évite les doublons
-                        building["num_workers"] += 1
-                        building.setdefault("workers", []).append(unit)
-                    break
-            else:  # Si aucun bâtiment existant n'est trouvé
+            if not player.constructing_buildings:
                 player.constructing_buildings.append({
                     "position": (x, y),
                     "num_workers": 1,
@@ -497,6 +497,24 @@ class Action:
                     "type": building_type,
                     "start_time": current_time_called
                 })
+                self.debug_print(f"First Assignation :{player.constructing_buildings}", 'Blue')
+            else:
+                for building in player.constructing_buildings:
+                    if building["position"] == (x, y):
+                        if unit not in building.get("workers", []):  # Évite les doublons
+                            building["num_workers"] += 1
+                            building.setdefault("workers", []).append(unit)
+                            self.debug_print(player.constructing_buildings, 'Blue')
+                        break
+                    else:  # Si aucun bâtiment existant n'est trouvé
+                        player.constructing_buildings.append({
+                            "position": (x, y),
+                            "num_workers": 1,
+                            "workers": [unit],
+                            "type": building_type,
+                            "start_time": current_time_called
+                        })
+                        self.debug_print(player.constructing_buildings, 'Blue')
             if hasattr(unit, 'path'):
                 del unit.path
             if hasattr(unit, 'last_move_time'):

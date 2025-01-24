@@ -172,6 +172,56 @@ if __name__ == "__main__":
         (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Swordman\Stand\Axethrowerstand001.png", False),  # south
     ]
 
+    image_data_horseman = [
+        # Etat "walking" (marche) - Directions spécifiques
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Horseman\Walk\Scoutwalk001.png", False),  # south
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Horseman\Walk\Scoutwalk041.png", False),  # north
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Horseman\Walk\Scoutwalk021.png", False),  # west
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Horseman\Walk\Scoutwalk021.png", True),   # east (flipped)
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Horseman\Walk\Scoutwalk031.png", True),   # northeast (flipped)
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Horseman\Walk\Scoutwalk031.png", False),  # northwest
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Horseman\Walk\Scoutwalk011.png", False),  # southwest
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Horseman\Walk\Scoutwalk011.png", True),   # southeast (flipped)
+
+        # Etat "attacking" (attaque) - Directions spécifiques
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Horseman\Attack\Scoutattack001.png", False),  # south
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Horseman\Attack\Scoutattack041.png", False),  # north
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Horseman\Attack\Scoutattack021.png", False),  # west
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Horseman\Attack\Scoutattack021.png", True),   # east (flipped)
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Horseman\Attack\Scoutattack031.png", True),   # northeast (flipped)
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Horseman\Attack\Scoutattack031.png", False),  # northwest
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Horseman\Attack\Scoutattack011.png", False),  # southwest
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Horseman\Attack\Scoutattack011.png", True),   # southeast (flipped)
+
+        # Etat "idle" (inactif) - Position spécifique
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Horseman\Stand\Scoutstand001.png", False),  # south
+    ]
+
+    image_data_archer = [
+        # Etat "walking" (marche) - Directions spécifiques
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Archer\Walk\Archerwalk001.png", False),  # south
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Archer\Walk\Archerwalk041.png", False),  # north
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Archer\Walk\Archerwalk021.png", False),  # west
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Archer\Walk\Archerwalk021.png", True),   # east (flipped)
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Archer\Walk\Archerwalk031.png", True),   # northeast (flipped)
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Archer\Walk\Archerwalk031.png", False),  # northwest
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Archer\Walk\Archerwalk011.png", False),  # southwest
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Archer\Walk\Archerwalk011.png", True),   # southeast (flipped)
+
+        # Etat "attacking" (attaque) - Directions spécifiques
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Archer\Attack\Archerattack001.png", False),  # south
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Archer\Attack\Archerattack041.png", False),  # north
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Archer\Attack\Archerattack021.png", False),  # west
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Archer\Attack\Archerattack021.png", True),   # east (flipped)
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Archer\Attack\Archerattack031.png", True),   # northeast (flipped)
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Archer\Attack\Archerattack031.png", False),  # northwest
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Archer\Attack\Archerattack011.png", False),  # southwest
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Archer\Attack\Archerattack011.png", True),   # southeast (flipped)
+
+        # Etat "idle" (inactif) - Position spécifique
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Archer\Stand\Archerstand001.png", False),  # south
+    ]
+
 
     # Position cible (où le point rouge doit apparaître)
     target_position = (400, 300)  # Position au centre de la fenêtre

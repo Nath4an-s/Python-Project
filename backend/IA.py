@@ -284,7 +284,7 @@ class IA:
             
         villagers = list(set(villagers))  # Ensure no duplicates
         
-        building_types = [Farm, Barracks, House, TownCenter, Stable, ArcheryRange, Keep, Camp]
+        building_types = [Farm, Barracks, House, TownCenter, Stable, ArcheryRange, Keep, Camp, Construct]
         building_costs = {
             "Farm": {"Wood": 60, "Gold": 0},
             "Barracks": {"Wood": 175, "Gold": 0},
@@ -293,7 +293,8 @@ class IA:
             "Stable": {"Wood": 175, "Gold": 0},
             "ArcheryRange": {"Wood": 175, "Gold": 0},
             "Keep": {"Wood": 35, "Gold": 125},
-            "Camp": {"Wood": 100, "Gold": 0}
+            "Camp": {"Wood": 100, "Gold": 0},
+            "Construct": {"Wood": float('inf'), "Gold": float('inf')}
         }
 
         building_counts = {building.__name__: 0 for building in building_types}
