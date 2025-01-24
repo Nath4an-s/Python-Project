@@ -19,7 +19,7 @@ def get_unit_offsets(unit_type, state, direction):
         },
         "walking": {
             "north": (-22, -43),
-            "south": (-21, -41),
+            "south": (-35, -52),
             "west": (-18, -38),
             "east": (-13, -41),
             "northwest": (-17, -41),
@@ -92,10 +92,71 @@ def get_unit_offsets(unit_type, state, direction):
         },
     }
 
+    offsets_horsman = {
+        "idle": {
+            "south": (-40, -56),
+        },
+        "walking": {
+            "north": (-41, -51),
+            "south": (-35, -67),
+            "west": (-40, -63),
+            "east": (-41, -65),
+            "northwest": (-42, -66),
+            "northeast": (-45, -67),
+            "southwest": (-44, -65),
+            "southeast": (-43, -62),
+        },
+        "attacking": {
+            "north": (-45, -65),
+            "south": (-43, -75), #1
+            "west": (-42, -71),
+            "east": (-37, -70),
+            "northwest": (-38, -70),
+            "northeast": (-41, -67),
+            "southwest": (-43, -70), #fait
+            "southeast": (-38, -71),
+        },
+        "dying": {
+            "south": (-36, -62),
+        },
+    }
+
+    offsets_archer = {
+        "idle": {
+            "south": (-40, -56),
+        },
+        "walking": {
+            "north": (-26, -44),
+            "south": (-26, -45),
+            "west": (-30, -41),
+            "east": (-28, -39),
+            "northwest": (-26, -38),
+            "northeast": (-27, -42),
+            "southwest": (-29, -40),
+            "southeast": (-28, -43),
+        },
+        "attacking": {
+            "north": (-33, -53),
+            "south": (-29, -54), #1
+            "west": (-34, -53),
+            "east": (-26, -53),
+            "northwest": (-34, -52),
+            "northeast": (-23, -53),
+            "southwest": (-34, -51), #fait
+            "southeast": (-28, -51),
+        },
+        "dying": {
+            "south": (-29, -53),
+        },
+    }
+
+
     # Associer les offsets en fonction du type d'unité
     offsets_by_unit_type = {
         "villager": offsets_villager,
         "swordman": offsets_swordman,
+        "horseman" :offsets_horsman,
+        "archer":offsets_archer,
     }
 
     # Récupérer les offsets pour le type d'unité donné
@@ -575,10 +636,9 @@ class GUI(threading.Thread):
                 ],
             },
             "idle": {
-               
                 "south": [
                     self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Stand" / f"Archerstand{i:03}.png")
-                    for i in range(9, 13)
+                    for i in range(11, 20)
                 ],
             },
         }
@@ -1019,82 +1079,14 @@ class GUI(threading.Thread):
 
                 elif unit_type == "archer":
                     if state in self.archer_images and direction in self.archer_images[state]:
-                        #images = self.archer_images[state][direction]
-                        #image = images[obj.current_frame % len(images)]
-                        
-                        # Affiche l'image du villageois (ou tout autre sprite lié)
-                        #self.screen.blit(image, (screen_x, screen_y))
-
-                        # Dessiner une flèche indiquant la direction
-                        arrow_color = (255, 0, 0)  # Rouge pour la flèche
-                        arrow_size = 10  # Taille de la flèche
-                        dx, dy = 0, 0
-
-                        # Détermine les décalages pour chaque direction
-                        if direction == "north":
-                            dx, dy = 0, -arrow_size
-                        elif direction == "south":
-                            dx, dy = 0, arrow_size
-                        elif direction == "east":
-                            dx, dy = arrow_size, 0
-                        elif direction == "west":
-                            dx, dy = -arrow_size, 0
-                        elif direction == "northeast":
-                            dx, dy = arrow_size, -arrow_size
-                        elif direction == "northwest":
-                            dx, dy = -arrow_size, -arrow_size
-                        elif direction == "southeast":
-                            dx, dy = arrow_size, arrow_size
-                        elif direction == "southwest":
-                            dx, dy = -arrow_size, arrow_size
-
-                        # Définir les points du triangle pour la flèche
-                        arrow_tip = (screen_x + dx, screen_y + dy)
-                        arrow_left = (screen_x - dy // 2, screen_y + dx // 2)
-                        arrow_right = (screen_x + dy // 2, screen_y - dx // 2)
-
-                        # Dessiner le triangle représentant la flèche
-                        pygame.draw.polygon(self.screen, arrow_color, [arrow_tip, arrow_left, arrow_right])
+                        images = self.archer_images[state][direction]
+                        image = images[obj.current_frame % len(images)]
 
                 elif unit_type == "horseman":
                     if state in self.horseman_images and direction in self.horseman_images[state]:
-                        #images = self.horseman_images[state][direction]
-                        #image = images[obj.current_frame % len(images)]
+                        images = self.horseman_images[state][direction]
+                        image = images[obj.current_frame % len(images)]
                         
-                        # Affiche l'image du villageois (ou tout autre sprite lié)
-                        #self.screen.blit(image, (screen_x, screen_y))
-
-                        # Dessiner une flèche indiquant la direction
-                        arrow_color = (255, 0, 0)  # Rouge pour la flèche
-                        arrow_size = 10  # Taille de la flèche
-                        dx, dy = 0, 0
-
-                        # Détermine les décalages pour chaque direction
-                        if direction == "north":
-                            dx, dy = 0, -arrow_size
-                        elif direction == "south":
-                            dx, dy = 0, arrow_size
-                        elif direction == "east":
-                            dx, dy = arrow_size, 0
-                        elif direction == "west":
-                            dx, dy = -arrow_size, 0
-                        elif direction == "northeast":
-                            dx, dy = arrow_size, -arrow_size
-                        elif direction == "northwest":
-                            dx, dy = -arrow_size, -arrow_size
-                        elif direction == "southeast":
-                            dx, dy = arrow_size, arrow_size
-                        elif direction == "southwest":
-                            dx, dy = -arrow_size, arrow_size
-
-                        # Définir les points du triangle pour la flèche
-                        arrow_tip = (screen_x + dx, screen_y + dy)
-                        arrow_left = (screen_x - dy // 2, screen_y + dx // 2)
-                        arrow_right = (screen_x + dy // 2, screen_y - dx // 2)
-
-                        # Dessiner le triangle représentant la flèche
-                        pygame.draw.polygon(self.screen, arrow_color, [arrow_tip, arrow_left, arrow_right])
-
                 offset_x, offset_y = get_unit_offsets(unit_type,state, direction)
                 screen_x = x - self.camera.offset_x + offset_x
                 screen_y = y - self.camera.offset_y + offset_y
