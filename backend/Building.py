@@ -7,9 +7,11 @@ import math
 
 from backend.Starter_File import players as players_list
 from logger import debug_print
+from Starter_File import global_speedS
 
 # Building Class
 class Building:
+    global_speed = global_speedS
     def __init__(self, player, name, hp, build_time, cost, size=1, position=(0, 0)):
         self.player = player  # The player who owns the building
         self.name = name
@@ -104,7 +106,7 @@ class Building:
 # TownCenter Class
 class TownCenter(Building):
     def __init__(self, player):
-        super().__init__(player, "Town Center", hp=1000, build_time=15, cost={"Wood": 350}, size=4)
+        super().__init__(player, "Town Center", hp=1000, build_time=15 / Building.global_speed, cost={"Wood": 350}, size=4)
         self.symbol = 'T'
         self.population_increase = 5
         self.training_queue = []
@@ -134,7 +136,7 @@ class TownCenter(Building):
 # House Class
 class House(Building):
     def __init__(self, player):
-        super().__init__(player, "House", hp=200, build_time=25, cost={"Wood": 25}, size=2)
+        super().__init__(player, "House", hp=200, build_time=25 / Building.global_speed, cost={"Wood": 25}, size=2)
         self.symbol = 'H'
         self.population_increase = 5
         self.sprite = "house"
@@ -148,7 +150,7 @@ class House(Building):
 # Camp Class
 class Camp(Building):
     def __init__(self, player):
-        super().__init__(player, "Camp", hp=200, build_time=25, cost={"Wood": 100}, size=2)
+        super().__init__(player, "Camp", hp=200, build_time=25 / Building.global_speed, cost={"Wood": 100}, size=2)
         self.symbol = 'C'
         self.sprite = "camp"
         self.sizeizo = (128, 128)  # (width, height)
@@ -171,7 +173,7 @@ class Camp(Building):
 
 class Farm(Building):
     def __init__(self, player):
-        super().__init__(player, "Farm", hp=100, build_time=10, cost={"Wood": 60}, size=2)
+        super().__init__(player, "Farm", hp=100, build_time=10 / Building.global_speed, cost={"Wood": 60}, size=2)
         self.symbol = 'F'
         self.food = 300  # Contains 300 Food
         self.is_farmed = False
@@ -186,7 +188,7 @@ class Farm(Building):
 # Barracks Class
 class Barracks(Building):
     def __init__(self, player):
-        super().__init__(player, "Barracks", hp=500, build_time=50, cost={"Wood": 175}, size=3)
+        super().__init__(player, "Barracks", hp=500, build_time=50 / Building.global_speed, cost={"Wood": 175}, size=3)
         self.symbol = 'B'
         self.training_queue = []
         self.sprite = "barracks"
@@ -205,7 +207,7 @@ class Barracks(Building):
 # Stable Class
 class Stable(Building):
     def __init__(self, player):
-        super().__init__(player, "Stable", hp=500, build_time=50, cost={"Wood": 175}, size=3)
+        super().__init__(player, "Stable", hp=500, build_time=50 / Building.global_speed, cost={"Wood": 175}, size=3)
         self.symbol = 'S'
         self.training_queue = []
         self.sprite = "stable"
@@ -223,7 +225,7 @@ class Stable(Building):
 # ArcheryRange Class
 class ArcheryRange(Building):
     def __init__(self, player):
-        super().__init__(player, "Archery Range", hp=500, build_time=50, cost={"Wood": 175}, size=3)
+        super().__init__(player, "Archery Range", hp=500, build_time=50 / Building.global_speed, cost={"Wood": 175}, size=3)
         self.symbol = 'A'
         self.training_queue = []
         self.sprite = "archeryrange"
@@ -242,7 +244,7 @@ class ArcheryRange(Building):
 # Keep Class
 class Keep(Building):
     def __init__(self, player):
-        super().__init__(player, "Keep", hp=800, build_time=80, cost={"Wood": 35, "Gold": 125}, size=1)
+        super().__init__(player, "Keep", hp=800, build_time=80 / Building.global_speed, cost={"Wood": 35, "Gold": 125}, size=1)
         self.symbol = 'K'
         self.attack = 5
         self.range = 8
