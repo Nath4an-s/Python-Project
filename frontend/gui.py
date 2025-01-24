@@ -1070,39 +1070,6 @@ class GUI(threading.Thread):
                    if state in self.swordman_images and direction in self.swordman_images[state]:
                     images = self.swordman_images[state][direction]
                     image = images[obj.current_frame % len(images)]
-                    # self.screen.blit(image, (screen_x, screen_y))
-
-                    # Dessiner une flèche indiquant la direction
-                    arrow_color = (0, 0, 255)  # Bleu pour la flèche
-                    arrow_size = 20  # Taille de la flèche
-                    dx, dy = 0, 0
-
-                    # Détermine les décalages pour chaque direction
-                    if direction == "north":
-                        dx, dy = 0, -arrow_size
-                    elif direction == "south":
-                        dx, dy = 0, arrow_size
-                    elif direction == "east":
-                        dx, dy = arrow_size, 0
-                    elif direction == "west":
-                        dx, dy = -arrow_size, 0
-                    elif direction == "northeast":
-                        dx, dy = arrow_size, -arrow_size
-                    elif direction == "northwest":
-                        dx, dy = -arrow_size, -arrow_size
-                    elif direction == "southeast":
-                        dx, dy = arrow_size, arrow_size
-                    elif direction == "southwest":
-                        dx, dy = -arrow_size, arrow_size
-
-                    # Définir les points du triangle pour la flèche
-                    arrow_tip = (screen_x + dx, screen_y + dy)
-                    arrow_left = (screen_x - dy // 2, screen_y + dx // 2)
-                    arrow_right = (screen_x + dy // 2, screen_y - dx // 2)
-
-                    # Dessiner le triangle représentant la flèche
-                    pygame.draw.polygon(self.screen, arrow_color, [arrow_tip, arrow_left, arrow_right])
-
 
                 elif unit_type == "archer":
                     if state in self.archer_images and direction in self.archer_images[state]:
@@ -1117,10 +1084,9 @@ class GUI(threading.Thread):
                 offset_x, offset_y = get_unit_offsets(unit_type,state, direction)
                 screen_x = x - self.camera.offset_x + offset_x
                 screen_y = y - self.camera.offset_y + offset_y
-                # Affichage du sprite sur l'écran
                 if image:
                     self.screen.blit(image, (screen_x, screen_y))
-                    if obj.is_attacked_by:  # Afficher la barre de vie uniquement si l'unité est attaquée
+                    if obj.is_attacked_by:
                         self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp, image.get_height())
 
 
