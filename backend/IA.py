@@ -1,4 +1,6 @@
 #IA
+import random
+
 from Actions import *
 from logger import debug_print
 from Building import *
@@ -434,24 +436,37 @@ class IA:
         if needed_defenders > 0:
             defensive_troops.extend(troops[:needed_defenders])
 
-        important_buildings = [b for b in self.player.buildings if isinstance(b, (TownCenter, Camp))]
-        for building, defender in zip(important_buildings, defensive_troops):
-            self.defend_position(defender, building.position)
-
         return defensive_troops
 
     def defend_position(self, unit, position):
-        patrol_radius = 5
+        patrol_radius = 10
         x, y = position
+
         
-        # Calculate patrol position considering unit speed and patrol radius
-        patrol_x = x + patrol_radius
-        patrol_y = y
-        
-        # Use the existing move_unit method from Actions class
+        # List of potential patrol locations around the building
         if unit.target_position is None:
-            Action(self.game_map).move_unit(unit, patrol_x, patrol_y, self.current_time_called)
-            self.defend(unit)
+            patrol_locations = [
+                (x + dx, y + dy) 
+                for dx in range(-patrol_radius, patrol_radius + 1) 
+                for dy in range(-patrol_radius, patrol_radius + 1)
+                if (dx != 0 or dy != 0)  # Exclude the original position
+            ]
+
+            # Choose a random free location
+            free_locations = [
+                loc for loc in patrol_locations 
+                if self.is_tile_free(loc[0], loc[1], self.game_map)
+            ]
+            
+            # If free locations exist, move to a random free location
+            if free_locations:
+                patrol_x, patrol_y = random.choice(free_locations)
+                
+                # Use the existing move_unit method from Actions class
+                Action(self.game_map).move_unit(unit, patrol_x, patrol_y, self.current_time_called)
+
+    def is_tile_free(self, x, y, game_map):
+        return game_map.grid[x][y].building or not game_map.grid[x][y].resource
 
     def defend(self, unit):
                     
