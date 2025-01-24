@@ -128,6 +128,8 @@ class GUI(threading.Thread):
         self.villager_images = {}
         self.swordman_images = {}
         self.show_resources = False
+
+        self.mouse_held = None
         
         self.PLAYER_COLORS = {
             1: (0, 0, 255),    # Blue
@@ -143,7 +145,7 @@ class GUI(threading.Thread):
         self.COLORS = {
             "Wood": (34, 139, 34),   # Dark green for wood
             "Gold": (255, 215, 0),   # Gold color
-            "Soil": (0, 255, 0)      # Green for soil
+            "Soil": (77, 164, 128)      # Green for soil
         }
 
         self.last_mini_map_update = time.time()
@@ -158,6 +160,7 @@ class GUI(threading.Thread):
         self.RESOURCES_PATH = self.BASE_PATH / "assets" / "resources"
         self.BUILDINGS_PATH = self.BASE_PATH / "assets" / "buildings" 
         self.IMG_PATH = self.BASE_PATH / "assets" / "img"
+        self.IMG_HUD = self.BASE_PATH / "assets" / "HUD"
 
         assert self.RESOURCES_PATH.exists(), f"Resources directory {self.RESOURCES_PATH} does not exist."
         assert self.BUILDINGS_PATH.exists(), f"Buildings directory {self.BUILDINGS_PATH} does not exist."
@@ -194,6 +197,9 @@ class GUI(threading.Thread):
         for building_type, size in building_types.items():
             image = self.load_image(self.BUILDINGS_PATH / f"{building_type.lower()}.png")
             self.building_images[building_type] = pygame.transform.scale(image, size)
+
+        self.hud_image = self.load_image(self.IMG_HUD / "Hud.png")
+        self.mini_map_back = self.load_image(self.IMG_HUD / "MiniMAP.png")
 
         self.villager_images = {
             "walking": {
@@ -703,8 +709,16 @@ class GUI(threading.Thread):
                     self.running = False
                 elif event.key == pygame.K_F2:
                     self.show_resources = not self.show_resources
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                self.handle_mini_map_click(event)
+
+            # Gestion des événements de la souris
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Bouton gauche
+                self.mouse_held = True
+            elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:  # Relâcher le clic gauche
+                self.mouse_held = False
+
+        # Appeler la fonction pour gérer le survol continu
+        self.handle_mini_map_hover()
+
 
 
     def handle_keyboard_input(self):
@@ -1054,17 +1068,13 @@ class GUI(threading.Thread):
         self.join()
 
 
-
     def update_and_draw_mini_map(self):
-        """
-        Updates and draws the isometric mini-map. Resource rendering happens every 50 seconds,
-        while other components are drawn every frame.
-        """
+ 
         mini_map_width = 200
         mini_map_height = 150
         mini_map_x = self.WINDOW_WIDTH - mini_map_width - 10
         mini_map_y = self.WINDOW_HEIGHT - mini_map_height - 10
-        tile_offset_x = mini_map_width // 2  # Centering adjustment for isometric projection
+        tile_offset_x = mini_map_width // 2  
 
         # Check if it's time to update resource rendering
         current_time = time.time()
@@ -1074,7 +1084,7 @@ class GUI(threading.Thread):
 
         # Calculate the source rect to only blit the visible portion of the mini-map
         source_rect = pygame.Rect(tile_offset_x, 0, mini_map_width, mini_map_height)
-        
+
         # Draw the pre-rendered mini-map surface
         self.screen.blit(self.mini_map_surface, (mini_map_x, mini_map_y), source_rect)
 
@@ -1105,18 +1115,24 @@ class GUI(threading.Thread):
         view_rect_height = (self.WINDOW_HEIGHT / (self.game_data.map.height * self.TILE_HEIGHT)) * mini_map_height
         view_rect_x = mini_map_x + ((self.camera.offset_x / (self.game_data.map.width * self.TILE_WIDTH)) * mini_map_width)
         view_rect_y = mini_map_y + ((self.camera.offset_y / (self.game_data.map.height * self.TILE_HEIGHT)) * mini_map_height)
-        pygame.draw.rect(self.screen, (255, 0, 0), (view_rect_x, view_rect_y, view_rect_width, view_rect_height), 2)
+        pygame.draw.rect(self.screen, (255, 255, 255), (view_rect_x, view_rect_y, view_rect_width, view_rect_height), 2)
 
     def update_mini_map_resources(self, mini_map_width, mini_map_height, tile_offset_x):
         """
         Updates the pre-rendered resource layer of the mini-map with properly centered background.
         """
+        background_image = self.mini_map_back
+
         # Create a surface with extra width to accommodate isometric offset
         total_width = mini_map_width + tile_offset_x * 2
         self.mini_map_surface = pygame.Surface((total_width, mini_map_height), pygame.SRCALPHA)
-        
-        # Fill the entire background
-        self.mini_map_surface.fill((50, 40, 50))  # Mini-map background color
+
+        # Calculer les offsets pour centrer l'image sur la surface
+        x_offset = (total_width - background_image.get_width()) // 2
+        y_offset = (mini_map_height - background_image.get_height()) // 2
+
+        # Dessiner l'image centrée sur la surface
+        self.mini_map_surface.blit(background_image, (x_offset, y_offset))
 
         # Render resources on the mini-map
         for y in range(self.game_data.map.height):
@@ -1135,102 +1151,92 @@ class GUI(threading.Thread):
                 
                 # Draw the resource tile
                 pygame.draw.rect(self.mini_map_surface, color, (mini_map_iso_x, mini_map_iso_y, 2, 2))
-
-    def handle_mini_map_click(self, event):
+    
+    def handle_mini_map_hover(self):
         """
-        Handles user clicks on the mini-map by updating the camera position to center the view
-        relative to the red rectangle.
+        Permet un survol continu de la mini-map tout en maintenant le clic gauche de la souris,
+        en ajustant dynamiquement la position de la caméra.
         """
         mini_map_width = 200
         mini_map_height = 150
         mini_map_x = self.WINDOW_WIDTH - mini_map_width - 10
         mini_map_y = self.WINDOW_HEIGHT - mini_map_height - 10
 
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            mouse_x, mouse_y = event.pos
+        # Obtenir la position actuelle de la souris
+        mouse_x, mouse_y = pygame.mouse.get_pos()
 
-            # Check if click is within mini-map bounds
-            if mini_map_x <= mouse_x <= mini_map_x + mini_map_width and \
-            mini_map_y <= mouse_y <= mini_map_y + mini_map_height:
-                
-                # Calculate relative position within mini-map
+        # Vérifier si la souris est dans les limites de la mini-map
+        if mini_map_x <= mouse_x <= mini_map_x + mini_map_width and \
+        mini_map_y <= mouse_y <= mini_map_y + mini_map_height:
+            
+            # Si le bouton gauche est maintenu
+            if self.mouse_held:
+                # Calculer la position relative dans la mini-map
                 relative_x = (mouse_x - mini_map_x) / mini_map_width
                 relative_y = (mouse_y - mini_map_y) / mini_map_height
 
-                # Calculate the size of the red rectangle (view rectangle)
+                # Calculer la taille du rectangle de vue (zone visible)
                 view_rect_width = (self.WINDOW_WIDTH / (self.game_data.map.width * self.TILE_WIDTH)) * mini_map_width
                 view_rect_height = (self.WINDOW_HEIGHT / (self.game_data.map.height * self.TILE_HEIGHT)) * mini_map_height
 
-                # Adjust camera offsets to center the view on the click
+                # Ajuster dynamiquement les offsets de la caméra
                 self.camera.offset_x = int(relative_x * self.game_data.map.width * self.TILE_WIDTH - (view_rect_width / 2) * (self.game_data.map.width * self.TILE_WIDTH) / mini_map_width)
                 self.camera.offset_y = int(relative_y * self.game_data.map.height * self.TILE_HEIGHT - (view_rect_height / 2) * (self.game_data.map.height * self.TILE_HEIGHT) / mini_map_height)
 
     def display_player_resources(self):
         """
-        Displays player resources in a compact HUD with icons for clarity and properly aligned text.
+        Affiche les informations des joueurs (Wood, Food, Gold, Nombre de bâtiments) sur une seule ligne par joueur.
         """
-        font = pygame.font.Font(None, 18)  # Smaller font for compact layout
-        x_start = 10
-        y_start = 10
-        hud_width = 250
-        hud_height = 90
-        icon_size = 16
-        padding = 8
-        spacing = 5
-        bar_height = 4
-        text_color = (255, 255, 255)
-        bar_colors = {
-            "Wood": (34, 139, 34),   
-            "Food": (255, 165, 0),   
-            "Gold": (255, 215, 0),   
-        }
-        background_color = (30, 30, 30, 200)  
+        font = pygame.font.Font(None, 18)  # Police pour le texte
+        x_start = 10  # Position horizontale de départ
+        y_start = 10  # Position verticale de départ
+        spacing = 10  # Espacement entre chaque joueur
+        text_color = (255, 255, 255)  # Couleur du texte (blanc pour contraste)
 
-        resource_icons = {
-            "Wood": pygame.transform.scale(self.iconwod, (icon_size, icon_size)),
-            "Food": pygame.Surface((icon_size, icon_size)),  # Placeholder
-            "Gold": pygame.transform.scale(self.icongold, (icon_size, icon_size)),
-        }
-        resource_icons["Food"].fill((255, 165, 0))  # Fill placeholder with orange
+        # Charger l'image HUD
+        hud_image = self.hud_image
+        hud_width, hud_height = hud_image.get_size()
 
-        for i, player in enumerate(self.game_data.players):
-            y_position = y_start + i * (hud_height + spacing)
-            box_surface = pygame.Surface((hud_width, hud_height), pygame.SRCALPHA)
-            box_surface.fill(background_color)
-            self.screen.blit(box_surface, (x_start, y_position))
+        # Parcourir chaque joueur
+        for i, player in enumerate(self.game_data.players[:len(self.game_data.players)]):
+            y_position = y_start + i * (hud_height + spacing)  # Position verticale pour ce joueur
+            x_position = x_start  # Position horizontale de départ pour ce joueur
 
-            name_text = f"{player.name} (Player {player.id})"
+            # Dessiner l'image HUD pour le joueur
+            self.screen.blit(hud_image, (x_position, y_position))
+
+            # Décalage initial pour commencer à écrire les données
+            text_x = x_position + 50  # Début à l'intérieur de l'image
+            text_y_centered = y_position + (hud_height // 2) - 5  # Centrer verticalement le texte
+
+            # Afficher le nom du joueur (première ligne, centrée)
+            name_text = f"{player.name}"
             name_surface = font.render(name_text, True, text_color)
-            self.screen.blit(name_surface, (x_start + padding, y_position + padding))
+            name_x = text_x - 40
+            name_y = text_y_centered - 27
+            self.screen.blit(name_surface, (name_x, name_y))
 
-            resource_y = y_position + padding + font.get_height() + spacing
-            for resource, value in player.owned_resources.items():
-                icon_x = x_start + padding
-                icon_y = resource_y
-                if resource in resource_icons:
-                    self.screen.blit(resource_icons[resource], (icon_x, icon_y))
+            # Afficher la ressource "Wood"
+            wood_text = f"{player.owned_resources.get('Wood', 0)}"
+            wood_surface = font.render(wood_text, True, text_color)
+            self.screen.blit(wood_surface, (text_x, text_y_centered))
+            text_x += 90  # Décaler pour afficher la ressource suivante
 
-                bar_x = icon_x + icon_size + spacing
-                bar_width = hud_width - (icon_size + 3 * padding)
-                bar_y = resource_y + (icon_size - bar_height) // 2
-                pygame.draw.rect(self.screen, (50, 50, 50), (bar_x, bar_y, bar_width, bar_height), border_radius=4)
-                
-                max_bar_width = min(bar_width, bar_width * (value / 100))
-                pygame.draw.rect(self.screen, bar_colors.get(resource, text_color), (bar_x, bar_y, max_bar_width, bar_height), border_radius=4)
+            # Afficher la ressource "Food"
+            food_text = f"{player.owned_resources.get('Food', 0)}"
+            food_surface = font.render(food_text, True, text_color)
+            self.screen.blit(food_surface, (text_x, text_y_centered))
+            text_x += 100  # Décaler pour afficher la ressource suivante
 
-                resource_text = f"{value}"
-                text_x = bar_x + max_bar_width + spacing
-                resource_surface = font.render(resource_text, True, text_color)
-                self.screen.blit(resource_surface, (text_x, bar_y))
+            # Afficher la ressource "Gold"
+            gold_text = f"{player.owned_resources.get('Gold', 0)}"
+            gold_surface = font.render(gold_text, True, text_color)
+            self.screen.blit(gold_surface, (text_x, text_y_centered))
+            text_x += 90  # Décaler pour afficher le nombre de bâtiments
 
-                resource_y += icon_size + spacing
-
-            buildings_text = f"Buildings: {len(player.buildings)}"
+            # Afficher le nombre de bâtiments
+            buildings_text = f"{len(player.buildings)}"
             buildings_surface = font.render(buildings_text, True, text_color)
-            buildings_x = x_start + padding
-            buildings_y = resource_y + spacing
-
-            if buildings_y + font.get_height() + padding <= y_position + hud_height:
-                self.screen.blit(buildings_surface, (buildings_x, buildings_y))
+            self.screen.blit(buildings_surface, (text_x, text_y_centered))
 
 
