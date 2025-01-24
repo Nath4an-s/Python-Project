@@ -285,7 +285,7 @@ class GUI(threading.Thread):
             "TownCenter": (256, 256),  # Taille : (256, 256)
             "Barracks": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6 * 511 // 666),  # Taille : (666, 511)
             "House": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),  # Taille : (128, 128)
-            #"Rubble": (64, 64),  # Taille : (64, 64)
+            "Rubble": (64, 64),  # Taille : (64, 64)
             "Stable": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6 * 471 // 612),  # Taille : (612, 471)
             "ArcheryRange": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6 * 595 // 648),  # Taille : (648, 595)
             "Camp": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),  # Taille : (128, 128)
@@ -1021,9 +1021,16 @@ class GUI(threading.Thread):
                 if visible_rect.collidepoint(building_x, building_y):
                     entities.append((building_x, building_y, "building", building, building.z))
 
+            for rubble in self.game_data.map.rubbles:
+                iso_x, iso_y = self.cart_to_iso(rubble[0], rubble[1])
+                rubble_x = iso_x + (self.game_data.map.width * self.TILE_WIDTH // 2)
+                rubble_y = iso_y
+                if visible_rect.collidepoint(rubble_x, rubble_y):
+                    entities.append((rubble_x, rubble_y, "rubble", rubble, 0))
+
 
         entities.sort(key=lambda e: (
-            0 if e[2] == "building" and e[3].name == "Farm" else 1,
+            0 if (e[2] == "building" and e[3].name == "Farm") or e[2] == "rubble" else 1,
             e[0] + e[1],  # Critère principal : somme des coordonnées pour l'ordre isométrique global
              -(e[1] - (e[4] if e[2] == 'building' else 0)),  # Critère secondaire : profondeur en tenant compte de la taille
             e[1],
@@ -1088,8 +1095,6 @@ class GUI(threading.Thread):
                     self.screen.blit(image, (screen_x, screen_y))
                     if obj.is_attacked_by:
                         self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp, image.get_height())
-
-
           
             elif entity_type == "building":
                 # Adjust sprite rendering based on building size
@@ -1114,7 +1119,11 @@ class GUI(threading.Thread):
                     )
                     if hasattr(obj, 'is_attacked_by') and obj.is_attacked_by:  # Afficher la barre de vie uniquement si l'unité est attaquée
                         self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp, image.get_height())
-
+            elif entity_type == "rubble":
+                screen_x = x - self.camera.offset_x - self.TILE_WIDTH//2
+                screen_y = y - self.camera.offset_y - self.TILE_HEIGHT
+                image = self.building_images["Rubble"]
+                self.screen.blit(image, (screen_x, screen_y))
 
    
 
