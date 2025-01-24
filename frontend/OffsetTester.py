@@ -222,10 +222,11 @@ if __name__ == "__main__":
         (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Archer\Stand\Archerstand001.png", False),  # south
     ]
 
+    imagedetree = [(r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\resources\soil.png",False)]
 
     # Position cible (où le point rouge doit apparaître)
     target_position = (400, 300)  # Position au centre de la fenêtre
     
     # Lancer le test
-    tester = OffsetTester(image_data_axethrower, target_position=target_position)
+    tester = OffsetTester(imagedetree, target_position=target_position)
     tester.run()

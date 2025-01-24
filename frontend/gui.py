@@ -7,6 +7,7 @@ import queue as Queue
 from pathlib import Path
 import time
 import traceback
+import random
 
 def get_unit_offsets(unit_type, state, direction):
     """
@@ -165,8 +166,6 @@ def get_unit_offsets(unit_type, state, direction):
     # Retourner l'offset pour l'état et la direction donnés
     return offsets.get(state, {}).get(direction, (0, 0))
 
-
-
 class Camera:
     def __init__(self, width, height):
         self.width = width
@@ -250,6 +249,7 @@ class GUI(threading.Thread):
         self.last_mini_map_update = time.time()
         self.mini_map_update_interval = 50
         self.mini_map_surface = None
+        self.show_global_overlay = True
 
     def flip_image_horizontally(self, image):
         return pygame.transform.flip(image, True, False)
@@ -278,6 +278,8 @@ class GUI(threading.Thread):
             "Wood": self.load_image(self.RESOURCES_PATH / "tree.png"),
             "Gold": self.load_image(self.RESOURCES_PATH / "gold.png"),
             "Soil": self.load_image(self.RESOURCES_PATH / "soil.png"),
+            "Flower": self.load_image(self.RESOURCES_PATH / "Flower.png"),
+            "Soil1": self.load_image(self.RESOURCES_PATH / "soil1.png"),
         }
 
         # Load and scale building images
@@ -301,6 +303,7 @@ class GUI(threading.Thread):
         self.hud_image = self.load_image(self.IMG_HUD / "Hud.png")
         self.mini_map_back = self.load_image(self.IMG_HUD / "MiniMAP.png")
         self.back = self.load_image(self.IMG_HUD / "Hud2.png")
+        self.background = self.load_image(self.IMG_HUD / "Overlay.png")
 
         self.villager_images = {
             "walking": {
@@ -887,27 +890,49 @@ class GUI(threading.Thread):
                 tile_x = iso_x + (self.game_data.map.width * self.TILE_WIDTH // 2)
                 tile_y = iso_y
 
-                # Dessiner les tuiles
+                # Dessiner les polygones pour observer les limites des tuiles
                 transformed_polygon = [
                     (tile_x + point[0], tile_y + point[1]) for point in self.tile_polygon
                 ]
-                pygame.draw.polygon(self.pre_rendered_map, (0, 124, 0), transformed_polygon)
-                pygame.draw.lines(self.pre_rendered_map, (200, 200, 200), True, transformed_polygon, 1)
+                
+                if "Soil" in self.IMAGES and "Soil1" in self.IMAGES:
+                    # Alterner entre Soil et Soil1 en fonction de la parité de (x + y)
+                    tile_type = "Soil1" if random.random() < 0.01 else "Soil"
+                    tile_image = self.IMAGES[tile_type]
+                    tile_rect = tile_image.get_rect(center=(tile_x, tile_y))
+                    self.pre_rendered_map.blit(tile_image, tile_rect)
 
-                # Récupérer les informations de la tuile
+                pygame.draw.lines(self.pre_rendered_map, (200, 200, 200), True, transformed_polygon, 1)  # Bordures
+
+                # Récupérer les informations de la tuile et placer les ressources
                 tile = self.game_data.map.grid[y][x]
+
+                if tile and random.random() < 0.01:
+                        flower_image = self.IMAGES["Flower"]
+                        self.pre_rendered_map.blit(flower_image, (
+                            tile_x - (flower_image.get_width() // 2),
+                            tile_y - flower_image.get_height() + (self.TILE_HEIGHT // 2)
+                        ))
+
                 if tile and tile.resource:
-                    # Ajuster les coordonnées pour placer les ressources
-                    screen_x = tile_x - self.TILE_WIDTH // 2  # Ajustement pour centrer horizontalement
-                    screen_y = tile_y - self.TILE_HEIGHT // 2  # Ajustement pour l'altitude
+                    # Ajuster les coordonnées pour centrer la ressource
+                    screen_x = tile_x
+                    screen_y = tile_y - (self.TILE_HEIGHT // 2)
 
                     if tile.resource.type == "Wood":
                         image = self.IMAGES["Wood"]
-                        self.pre_rendered_map.blit(image, (tile_x - (self.IMAGES["Wood"].get_width() // 2), tile_y - self.IMAGES["Wood"].get_height() + (self.TILE_HEIGHT // 2)))
+                        self.pre_rendered_map.blit(image, (
+                            tile_x - (image.get_width() // 2),
+                            tile_y - image.get_height() + (self.TILE_HEIGHT // 2)
+                        ))
 
                     elif tile.resource.type == "Gold":
                         image = self.IMAGES["Gold"]
-                        self.pre_rendered_map.blit(image, (screen_x, screen_y))
+                        self.pre_rendered_map.blit(image, (
+                            tile_x - (image.get_width() // 2),
+                            tile_y - image.get_height() + (self.TILE_HEIGHT // 2)
+                        ))
+
 
     '''def render_dying_entities(self, game_data):
         """
@@ -1089,8 +1114,6 @@ class GUI(threading.Thread):
                     if obj.is_attacked_by:
                         self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp, image.get_height())
 
-
-          
             elif entity_type == "building":
                 # Adjust sprite rendering based on building size
                 building_type = obj.name.replace(" ", "")
@@ -1107,16 +1130,14 @@ class GUI(threading.Thread):
                         adjusted_y -= (self.TILE_HEIGHT // 6 ) 
 
                     self.screen.blit(image, (adjusted_x, adjusted_y))
-                    pygame.draw.circle(
-                        self.screen,
-                        (150, 150, 150),
-                        (screen_x, screen_y),5
-                    )
                     if hasattr(obj, 'is_attacked_by') and obj.is_attacked_by:  # Afficher la barre de vie uniquement si l'unité est attaquée
                         self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp, image.get_height())
+                   
+                   
+        if self.show_global_overlay:  # Exemple : Une condition pour afficher un overlay global
+            overlay_surface = self.background
+            self.screen.blit(overlay_surface, (0, 0))
 
-
-   
 
     def initialize_pygame(self):
         pygame.init()
