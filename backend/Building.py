@@ -24,7 +24,8 @@ class Building:
         self.position = position  # Store the position of the TownCenter
         self.symbol = 'B'
         self.nb_workers = None # Number of workers for the building --> impact building time
-        
+        self.max_hp = hp
+
     def __str__(self):
         return self.symbol  # Ensure the building is represented by just the symbol
     
@@ -113,6 +114,7 @@ class TownCenter(Building):
         self.sprite = "towncenter"
         self.sizeizo = (256, 256)  # (width, height)
         self.z = 230 # Verifier sur image
+        self.max_hp = 1000
 
     def spawn_villager(self):
         if self.built:
@@ -142,6 +144,7 @@ class House(Building):
         self.sprite = "house"
         self.sizeizo = (128, 128)  # (width, height)
         self.z = 130
+        self.max_hp = 200
 
     def is_walkable(self):
         return False
@@ -155,6 +158,7 @@ class Camp(Building):
         self.sprite = "camp"
         self.sizeizo = (128, 128)  # (width, height)
         self.z = 130
+        self.max_hp = 200
 
 
     def drop_point(self, unit, resource_type):
@@ -180,6 +184,7 @@ class Farm(Building):
         self.sprite = "farm"
         self.sizeizo = (128, 64) # (width, height)
         self.z = 0
+        self.max_hp = 100
 
 
     def is_walkable(self):
@@ -194,6 +199,7 @@ class Barracks(Building):
         self.sprite = "barracks"
         self.sizeizo = (224, 192)  # (width, height)
         self.z = 185
+        self.max_hp = 500
 
  
     def spawn_swordsman(self):
@@ -213,6 +219,7 @@ class Stable(Building):
         self.sprite = "stable"
         self.sizeizo = (192, 192)  # (width, height)
         self.z = 180
+        self.max_hp = 500
 
     def spawn_horseman(self):
         if self.built:
@@ -231,6 +238,7 @@ class ArcheryRange(Building):
         self.sprite = "archeryrange"
         self.sizeizo = (192, 192)  # (width, height)
         self.z = 180
+        self.max_hp = 500
 
 
     def spawn_archer(self):
@@ -252,6 +260,7 @@ class Keep(Building):
         self.last_attack_time = 0    
         self.sizeizo = (64, 64)  # (width, height)
         self.z = 60
+        self.max_hp = 800
 
     
     def is_walkable(self):

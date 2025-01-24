@@ -171,9 +171,6 @@ class Unit:
             player.population -= 1  # Decrease the player's population
             x, y = unit_to_kill.position
             game_map.remove_unit(int(x), int(y), unit_to_kill)  # Assuming game_map is a property of the player
-            if unit_to_kill.sprite not in game_map.pre_post_entities:
-                game_map.pre_post_entities[unit_to_kill.sprite] = []
-            game_map.pre_post_entities[unit_to_kill.sprite].append(unit_to_kill.position)
             debug_print(f"Unit {unit_to_kill.name} belonging to {player.name} at ({x}, {y}) killed. (RIP)", 'DarkRed')
         else:
             debug_print(f"Unit {unit_to_kill.name} does not belong to {player.name}.", 'Yellow')
@@ -197,12 +194,12 @@ class Villager(Unit):
             debug_print(f"Le fichier {fichier} n'a pas été trouvé.", 'Yellow')
             return ["Villager"]  # in case file not found
 
-    def __init__(self, player,position, name = None):
+    def __init__(self, player, position, name=None):
         if name is None:
             noms_disponibles = self.lire_noms_fichier()
             name = random.choice(noms_disponibles)
 
-        super().__init__(player, hp=25, cost={"Food": 50}, attack=2, speed=0.8 * Unit.global_speed, symbol="v", training_time = 3 / Unit.global_speed)
+        super().__init__(player, hp=25, cost={"Food": 50}, attack=2, speed=0.8 * Unit.global_speed, symbol="v", training_time=3 / Unit.global_speed)
         self.carrying = {"Wood": 0, "Food": 0, "Gold": 0}
         self.carry_capacity = 20  # Can carry up to 20 of any resource
         self.gather_rate = 25/60 * Unit.global_speed  # 25 resources per minute (in resources per second)
@@ -216,6 +213,8 @@ class Villager(Unit):
         self.sprite = "villager"
         self.sprite_height = 50
         self.z = 0
+        self.max_hp = 25
+        print(f"Villager created with max_hp: {self.max_hp}")  # Add this line for debugging
 
     @property
     def bbox_bottom(self):
@@ -233,6 +232,8 @@ class Swordsman(Unit):
         self.sprite = "swordman"
         self.sprite_height = 52
         self.z = 64
+        self.max_hp = 40 # Maximum health points
+
     @property
     def bbox_bottom(self):
         return self.position[1] + self.sprite_height
@@ -252,6 +253,8 @@ class Horseman(Unit):
         self.sprite = "horseman"
         self.sprite_height = 90
         self.z = 64
+        self.max_hp = 45
+
     @property
     def bbox_bottom(self):
         return self.position[1] + self.sprite_height
@@ -269,6 +272,8 @@ class Archer(Unit):
         self.sprite = "archer"
         self.sprite_height = 54
         self.z = 64
+        self.max_hp = 30
+
     @property
     def bbox_bottom(self):
         return self.position[1] + self.sprite_height

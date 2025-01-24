@@ -134,6 +134,7 @@ class Camera:
         self.offset_x = max(min_x, min(self.offset_x + dx, max_x))
         self.offset_y = max(min_y, min(self.offset_y + dy, max_y))
 
+
 class GUI(threading.Thread):
     def __init__(self, data_queue):
         super().__init__()
@@ -752,6 +753,16 @@ class GUI(threading.Thread):
         self.IMAGES["Gold"] = pygame.transform.scale(self.IMAGES["Gold"], (self.TILE_WIDTH, self.TILE_HEIGHT))
         self.IMAGES["Wood"] = pygame.transform.scale(self.IMAGES["Wood"], (int(self.TILE_WIDTH * 2), int(self.TILE_HEIGHT * 2.5)))
 
+    def calculate_damage_from_enemies(building, enemies):
+        """Calcul des dégâts basés sur la distance des ennemis."""
+        damage = 0
+        for enemy in enemies:
+            distance_x = abs(enemy.position[0] - building.position[0])
+            distance_y = abs(enemy.position[1] - building.position[1])
+            if distance_x < 100 and distance_y < 100:  # Supposons une portée de dégâts de 100 pixels
+                damage += 10  # Chaque ennemi à portée ajoute 10 points de dégâts
+        return damage
+
     def cart_to_iso(self, cart_x, cart_y):
         iso_x = (cart_x - cart_y) * (self.TILE_WIDTH // 2)
         iso_y = (cart_x + cart_y) * (self.TILE_HEIGHT // 2)
@@ -903,6 +914,20 @@ class GUI(threading.Thread):
             game_data.map.pre_post_entities[entity_type].pop(entity_index)
             print(f"Removing entity at index {entity_index} of type {entity_type}")'''
 
+    def draw_health_bar(self, screen_x, screen_y, hp, max_hp, img_height, width=30, height=2):
+        # Calcul du pourcentage de vie restant
+        health_percentage = hp / max_hp
+        health_width = int(width * health_percentage)
+        # Couleur de la barre de vie
+        color = (0, 255, 0) if health_percentage > 0.5 else (255, 165, 0) if health_percentage > 0.25 else (255, 0, 0)
+        # Positionnement de la barre au-dessus de l'unité en tenant compte de la hauteur de l'image
+        bar_x = screen_x - width // 2
+        bar_y = screen_y - img_height   # 10 pixels au-dessus de l'unité
+        # Dessiner le fond et la barre de vie
+        pygame.draw.rect(self.screen, (255, 255, 255), [bar_x, bar_y, width, height])
+        pygame.draw.rect(self.screen, color, [bar_x, bar_y, health_width, height])
+
+
     def render_isometric_map(self):
         if not self.pre_rendered_map:
             self.pre_render_map()
@@ -950,6 +975,8 @@ class GUI(threading.Thread):
             screen_x = x - self.camera.offset_x
             screen_y = y - self.camera.offset_y
             image = None
+            #if entity_type in ["unit", "building"]:  # Supposons que `obj` a des attributs `hp` et `max_hp`
+            #    self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp, image.get_height())
 
             if entity_type == "unit":
                 unit_type = obj.sprite 
@@ -1103,6 +1130,9 @@ class GUI(threading.Thread):
                 # Affichage du sprite sur l'écran
                 if image:
                     self.screen.blit(image, (screen_x, screen_y))
+                    if obj.is_attacked_by:  # Afficher la barre de vie uniquement si l'unité est attaquée
+                        self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp, image.get_height())
+
 
           
             elif entity_type == "building":
@@ -1126,7 +1156,11 @@ class GUI(threading.Thread):
                         (150, 150, 150),
                         (screen_x, screen_y),5
                     )
+                    if hasattr(obj, 'is_attacked_by') and obj.is_attacked_by:  # Afficher la barre de vie uniquement si l'unité est attaquée
+                        self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp, image.get_height())
 
+
+   
 
     def initialize_pygame(self):
         pygame.init()
