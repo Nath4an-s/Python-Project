@@ -8,9 +8,12 @@ from pathlib import Path
 import time
 import traceback
 
-def get_unit_offsets(state, direction):
- 
-    offsets = {
+def get_unit_offsets(unit_type, state, direction):
+    """
+    Retourne les offsets pour une unité en fonction de son type, de son état et de sa direction.
+    """
+    # Offsets par défaut pour "villager"
+    offsets_villager = {
         "idle": {
             "south": (-25, -37),
         },
@@ -55,18 +58,53 @@ def get_unit_offsets(state, direction):
             "southeast": (-29, -43),
         },
         "dying": {
-            "north": (0, -5),
             "south": (0, 5),
-            "west": (-5, 0),
-            "east": (5, 0),
-            "northwest": (-5, -5),
-            "northeast": (5, -5),
-            "southwest": (-5, 5),
-            "southeast": (5, 5),
         },
     }
 
+    # Offsets spécifiques pour "swordman"
+    offsets_swordman = {
+        "idle": {
+            "south": (-40, -56),
+        },
+        "walking": {
+            "north": (-38, -54),
+            "south": (-28, -40),
+            "west": (-25, -42),
+            "east": (-24, -40),
+            "northwest": (-24, -42),
+            "northeast": (-25, -42),
+            "southwest": (-27, -40),
+            "southeast": (-24, -43),
+        },
+        "attacking": {
+            "north": (-22, -50),
+            "south": (-21, -48), #1
+            "west": (-22, -49),
+            "east": (-27, -48),
+            "northwest": (-21, -48),
+            "northeast": (-29, -50),
+            "southwest": (-23, -47), #fait
+            "southeast": (-26, -47),
+        },
+        "dying": {
+            "south": (0, 7),
+        },
+    }
+
+    # Associer les offsets en fonction du type d'unité
+    offsets_by_unit_type = {
+        "villager": offsets_villager,
+        "swordman": offsets_swordman,
+    }
+
+    # Récupérer les offsets pour le type d'unité donné
+    offsets = offsets_by_unit_type.get(unit_type, offsets_villager)
+
+    # Retourner l'offset pour l'état et la direction donnés
     return offsets.get(state, {}).get(direction, (0, 0))
+
+
 
 class Camera:
     def __init__(self, width, height):
@@ -418,31 +456,53 @@ class GUI(threading.Thread):
             "attacking": {
                 "north": [
                     self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Attack" / f"Axethrowerattack{i:03}.png")
-                    for i in range(1, 6)
+                    for i in range(65, 80)
                 ],
                 "east": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Attack" / f"Axethrowerattack{i:03}.png")
-                    for i in range(6, 9)
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Attack" / f"Axethrowerattack{i:03}.png")
+                    )
+                    for i in range(33, 48)
                 ],
                 "south": [
                     self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Attack" / f"Axethrowerattack{i:03}.png")
-                    for i in range(9, 13)
+                    for i in range(1, 16)
                 ],
                 "west": [
                     self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Attack" / f"Axethrowerattack{i:03}.png")
-                    for i in range(13, 16)
+                    for i in range(33, 48)
+                ],
+                "northeast": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walk" / f"Axethrowerwalk{i:03}.png")
+                    )
+                    for i in range(49, 64)
+                ],
+                "northwest": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walk" / f"Axethrowerwalk{i:03}.png")
+                    for i in range(49, 64) 
+                ],
+                "southwest": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walk" / f"Axethrowerwalk{i:03}.png")
+                    for i in range(17, 32) 
+                ],
+                "southeast": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walk" / f"Axethrowerwalk{i:03}.png")
+                    )
+                    for i in range(17, 32)
                 ],
             },
             "dying": {
                 "south": [
                     self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Die" / f"Axethrowerdie{i:03}.png")
-                    for i in range(9, 13)
+                    for i in range(1, 10)
                 ],
             },
             "idle": {
                 "south": [
                     self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Stand" / f"Axethrowerstand{i:03}.png")
-                    for i in range(1, 11)  
+                    for i in range(1, 10)  
                 ],
             },
         }
@@ -702,7 +762,7 @@ class GUI(threading.Thread):
             if event.type == pygame.QUIT:
                 self.running = False
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_F12:
+                if event.key == pygame.K_F9:
                     self.running = False
                 elif event.key == pygame.K_F1:
                     self.show_resources = not self.show_resources
@@ -830,16 +890,20 @@ class GUI(threading.Thread):
                 state = obj.task
                 direction = obj.direction
 
-                if obj.is_moving == True:
+                # Déterminer l'état de l'unité
+                if obj.is_moving:
                     state = "walking"  
-                else :
+                else:
                     if state is None:
-                        obj.direction = "south"
-                        state = "idle"
-                    if state == "marching" or  state == "returning" or state == "going_to_battle" or  state == "going_to_construction_site" or obj.is_moving == True:
-                        state = "walking"   
-                    if state == "attacking" or state == "is_attacked":
-                        state = "attacking"
+                        obj.direction = "south"  # Par défaut, face au sud
+                        state = "idle"           # État par défaut
+                    elif state in {"marching", "returning", "going_to_battle", "going_to_construction_site"}:
+                        state = "walking"       # Ces états correspondent à "walking"
+                    elif state in {"attacking", "is_attacked"}:
+                        state = "attacking"     # Ces états correspondent à "attacking"
+                    else:
+                        state = "idle"          # Par défaut, si aucun autre état n'est déterminé
+
 
                 animation_speed = 40
                 obj.frame_counter += 1
@@ -856,13 +920,11 @@ class GUI(threading.Thread):
                     if state in self.swordman_images and direction in self.swordman_images[state]:
                         images = self.swordman_images[state][direction]
                         image = images[obj.current_frame % len(images)]
-                        
-                        # Affiche l'image du villageois (ou tout autre sprite lié)
                         #self.screen.blit(image, (screen_x, screen_y))
 
                         # Dessiner une flèche indiquant la direction
-                        arrow_color = (255, 0, 0)  # Rouge pour la flèche
-                        arrow_size = 6  # Taille de la flèche
+                        arrow_color = (0, 0, 255)  # Rouge pour la flèche
+                        arrow_size = 20  # Taille de la flèche
                         dx, dy = 0, 0
 
                         # Détermine les décalages pour chaque direction
@@ -893,15 +955,15 @@ class GUI(threading.Thread):
 
                 elif unit_type == "archer":
                     if state in self.archer_images and direction in self.archer_images[state]:
-                        images = self.archer_images[state][direction]
-                        image = images[obj.current_frame % len(images)]
+                        #images = self.archer_images[state][direction]
+                        #image = images[obj.current_frame % len(images)]
                         
                         # Affiche l'image du villageois (ou tout autre sprite lié)
                         #self.screen.blit(image, (screen_x, screen_y))
 
                         # Dessiner une flèche indiquant la direction
                         arrow_color = (255, 0, 0)  # Rouge pour la flèche
-                        arrow_size = 2  # Taille de la flèche
+                        arrow_size = 10  # Taille de la flèche
                         dx, dy = 0, 0
 
                         # Détermine les décalages pour chaque direction
@@ -932,15 +994,15 @@ class GUI(threading.Thread):
 
                 elif unit_type == "horseman":
                     if state in self.horseman_images and direction in self.horseman_images[state]:
-                        images = self.horseman_images[state][direction]
-                        image = images[obj.current_frame % len(images)]
+                        #images = self.horseman_images[state][direction]
+                        #image = images[obj.current_frame % len(images)]
                         
                         # Affiche l'image du villageois (ou tout autre sprite lié)
                         #self.screen.blit(image, (screen_x, screen_y))
 
                         # Dessiner une flèche indiquant la direction
                         arrow_color = (255, 0, 0)  # Rouge pour la flèche
-                        arrow_size = 2  # Taille de la flèche
+                        arrow_size = 10  # Taille de la flèche
                         dx, dy = 0, 0
 
                         # Détermine les décalages pour chaque direction
@@ -969,7 +1031,7 @@ class GUI(threading.Thread):
                         # Dessiner le triangle représentant la flèche
                         pygame.draw.polygon(self.screen, arrow_color, [arrow_tip, arrow_left, arrow_right])
 
-                offset_x, offset_y = get_unit_offsets(state, direction)
+                offset_x, offset_y = get_unit_offsets(unit_type,state, direction)
                 screen_x = x - self.camera.offset_x + offset_x
                 screen_y = y - self.camera.offset_y + offset_y
                 # Affichage du sprite sur l'écran

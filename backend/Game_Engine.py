@@ -161,7 +161,7 @@ class GameEngine:
                     top_left_x = max(0, min(self.map.width - viewport_width, top_left_x + dx))
                     top_left_y = max(0, min(self.map.height - viewport_height, top_left_y + dy))
                 
-                if key == curses.KEY_F12:
+                if key == curses.KEY_F9:
                     if not self.gui_running:
                         self.start_gui_thread()
                     else:
