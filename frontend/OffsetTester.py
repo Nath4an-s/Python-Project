@@ -147,9 +147,35 @@ if __name__ == "__main__":
         (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Villager\Stand\Villagerstand017.png", False),  # south
     ]
 
+    image_data_axethrower = [
+        # Etat "walking" (marche) - Directions spécifiques
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Swordman\Walk\Axethrowerwalk001.png", False),  # south
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Swordman\Walk\Axethrowerwalk061.png", False),  # north
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Swordman\Walk\Axethrowerwalk031.png", False),  # west
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Swordman\Walk\Axethrowerwalk031.png", True),   # east (flipped)
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Swordman\Walk\Axethrowerwalk046.png", True),   # northeast (flipped)
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Swordman\Walk\Axethrowerwalk046.png", False),  # northwest
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Swordman\Walk\Axethrowerwalk016.png", False),  # southwest
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Swordman\Walk\Axethrowerwalk016.png", True),   # southeast (flipped)
+
+        # Etat "attacking" (attaque) - Directions spécifiques
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Swordman\Attack\Axethrowerattack001.png", False),  # south
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Swordman\Attack\Axethrowerattack065.png", False),  # north
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Swordman\Attack\Axethrowerattack033.png", False),  # west
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Swordman\Attack\Axethrowerattack033.png", True),   # east (flipped)
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Swordman\Attack\Axethrowerattack049.png", True),   # northeast (flipped)
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Swordman\Attack\Axethrowerattack049.png", False),  # northwest
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Swordman\Attack\Axethrowerattack017.png", False),  # southwest
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Swordman\Attack\Axethrowerattack017.png", True),   # southeast (flipped)
+
+        # Etat "idle" (inactif) - Position spécifique
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Swordman\Stand\Axethrowerstand001.png", False),  # south
+    ]
+
+
     # Position cible (où le point rouge doit apparaître)
     target_position = (400, 300)  # Position au centre de la fenêtre
     
     # Lancer le test
-    tester = OffsetTester(image_data, target_position=target_position)
+    tester = OffsetTester(image_data_axethrower, target_position=target_position)
     tester.run()
