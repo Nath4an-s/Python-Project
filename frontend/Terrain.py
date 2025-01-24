@@ -129,6 +129,10 @@ class Map:
             for i in range(building.size):
                 for j in range(building.size):
                     self.grid[y + j][x + i].building = building
+                    if self.grid[y + j][x + i].rubble == True:
+                        self.grid[y + j][x + i].rubble = False
+                    if (x + j, y + i) in self.rubbles:
+                        self.rubbles.remove((x + j, y + i))
 
     def remove_building(self, x, y, building):
         for i in range(building.size):
