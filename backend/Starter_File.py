@@ -41,11 +41,11 @@ class StartMenu:
             'disabled': (80, 80, 80)  # Color for disabled buttons
         }
         
+        # Adjusted button positions for 3 buttons
         self.buttons = [
-            {'text': 'Start Game', 'rect': pygame.Rect(300, 220, 200, 50)},
-            {'text': 'Load Game', 'rect': pygame.Rect(300, 290, 200, 50)},
-            {'text': 'Settings', 'rect': pygame.Rect(300, 360, 200, 50)},
-            {'text': 'Exit', 'rect': pygame.Rect(300, 430, 200, 50)}
+            {'text': 'Start Game', 'rect': pygame.Rect(300, 250, 200, 50)},
+            {'text': 'Load Game', 'rect': pygame.Rect(300, 320, 200, 50)},
+            {'text': 'Exit', 'rect': pygame.Rect(300, 390, 200, 50)}
         ]
         self.font = pygame.font.Font(None, 48)
         
@@ -274,14 +274,212 @@ class LoadGameMenu:
             
             pygame.display.flip()
 
+class GameSettingsMenu:
+    def __init__(self, screen_width=800, screen_height=600):
+        self.screen = pygame.display.set_mode((screen_width, screen_height))
+        pygame.display.set_caption("AIge of Empire - Paramètres de la partie")
+        
+        self.colors = {
+            'background': (50, 50, 50),
+            'button': (100, 100, 100),
+            'button_hover': (150, 150, 150),
+            'text': (255, 255, 255),
+            'selected': (120, 160, 120),
+            'input_bg': (70, 70, 70)
+        }
+        
+        self.font = pygame.font.Font(None, 36)
+        self.title_font = pygame.font.Font(None, 48)
+        
+        # Game settings
+        self.game_modes = ["Utopia", "Gold Rush"]
+        self.current_mode = 0
+        self.map_size = 120
+        self.num_players = 3
+        
+        # Popup settings
+        self.show_mode_popup = False
+        self.popup_rect = pygame.Rect(screen_width // 2 - 200, 200, 400, len(self.game_modes) * 50)
+        
+        # Buttons
+        button_width = 200
+        button_height = 50
+        center_x = screen_width // 2
+        
+        self.mode_button = {
+            'text': self.game_modes[self.current_mode], 
+            'rect': pygame.Rect(center_x - button_width//2, 150, button_width, button_height)
+        }
+        
+        # Create mode selection buttons for popup
+        self.mode_options = []
+        for i, mode in enumerate(self.game_modes):
+            self.mode_options.append({
+                'text': mode,
+                'rect': pygame.Rect(center_x - button_width//2, 200 + i * 50, button_width, button_height)
+            })
+        
+        # Map size controls
+        self.map_decrease = {'text': '-', 'rect': pygame.Rect(center_x - 140, 250, 50, button_height)}
+        self.map_display = {'text': f"{self.map_size}x{self.map_size}", 
+                           'rect': pygame.Rect(center_x - 60, 250, 120, button_height)}
+        self.map_increase = {'text': '+', 'rect': pygame.Rect(center_x + 90, 250, 50, button_height)}
+        
+        # Player count controls
+        self.player_decrease = {'text': '-', 'rect': pygame.Rect(center_x - 140, 350, 50, button_height)}
+        self.player_display = {'text': str(self.num_players), 
+                             'rect': pygame.Rect(center_x - 60, 350, 120, button_height)}
+        self.player_increase = {'text': '+', 'rect': pygame.Rect(center_x + 90, 350, 50, button_height)}
+        
+        # Navigation buttons
+        self.start_button = {'text': 'Commencer', 'rect': pygame.Rect(center_x + 20, 500, 150, button_height)}
+        self.back_button = {'text': 'Retour', 'rect': pygame.Rect(center_x - 170, 500, 150, button_height)}
+
+    def draw(self):
+        # Draw main menu
+        self.screen.fill(self.colors['background'])
+        
+        # Draw title
+        title = self.title_font.render("Paramètres de la partie", True, self.colors['text'])
+        title_rect = title.get_rect(center=(400, 80))
+        self.screen.blit(title, title_rect)
+        
+        # Draw labels
+        mode_label = self.font.render("Mode de jeu:", True, self.colors['text'])
+        self.screen.blit(mode_label, (200, 160))
+        
+        map_label = self.font.render("Taille de la carte:", True, self.colors['text'])
+        self.screen.blit(map_label, (200, 260))
+        
+        players_label = self.font.render("Nombre de joueurs:", True, self.colors['text'])
+        self.screen.blit(players_label, (200, 360))
+        
+        mouse_pos = pygame.mouse.get_pos()
+        
+        # Draw mode button
+        color = self.colors['button_hover'] if self.mode_button['rect'].collidepoint(mouse_pos) else self.colors['button']
+        pygame.draw.rect(self.screen, color, self.mode_button['rect'], border_radius=5)
+        text = self.font.render(self.game_modes[self.current_mode], True, self.colors['text'])
+        text_rect = text.get_rect(center=self.mode_button['rect'].center)
+        self.screen.blit(text, text_rect)
+        
+        # Draw mode selection popup if active
+        if self.show_mode_popup:
+            # Draw popup background
+            pygame.draw.rect(self.screen, self.colors['background'], self.popup_rect)
+            pygame.draw.rect(self.screen, self.colors['button'], self.popup_rect, 2)
+            
+            # Draw mode options
+            for option in self.mode_options:
+                color = self.colors['button_hover'] if option['rect'].collidepoint(mouse_pos) else self.colors['button']
+                pygame.draw.rect(self.screen, color, option['rect'], border_radius=5)
+                text = self.font.render(option['text'], True, self.colors['text'])
+                text_rect = text.get_rect(center=option['rect'].center)
+                self.screen.blit(text, text_rect)
+        
+        # Draw map size controls
+        for button in [self.map_decrease, self.map_display, self.map_increase]:
+            color = self.colors['button_hover'] if button['rect'].collidepoint(mouse_pos) else self.colors['button']
+            pygame.draw.rect(self.screen, color, button['rect'], border_radius=5)
+            text = self.font.render(button['text'], True, self.colors['text'])
+            text_rect = text.get_rect(center=button['rect'].center)
+            self.screen.blit(text, text_rect)
+        
+        # Draw player count controls
+        for button in [self.player_decrease, self.player_display, self.player_increase]:
+            color = self.colors['button_hover'] if button['rect'].collidepoint(mouse_pos) else self.colors['button']
+            pygame.draw.rect(self.screen, color, button['rect'], border_radius=5)
+            text = self.font.render(button['text'], True, self.colors['text'])
+            text_rect = text.get_rect(center=button['rect'].center)
+            self.screen.blit(text, text_rect)
+        
+        # Draw navigation buttons
+        for button in [self.start_button, self.back_button]:
+            color = self.colors['button_hover'] if button['rect'].collidepoint(mouse_pos) else self.colors['button']
+            pygame.draw.rect(self.screen, color, button['rect'], border_radius=5)
+            text = self.font.render(button['text'], True, self.colors['text'])
+            text_rect = text.get_rect(center=button['rect'].center)
+            self.screen.blit(text, text_rect)
+
+    def run(self):
+        running = True
+        while running:
+            self.draw()
+            
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    return None
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_pos = event.pos
+                    
+                    # Handle game mode
+                    if self.mode_button['rect'].collidepoint(mouse_pos):
+                        self.show_mode_popup = not self.show_mode_popup
+                    elif self.show_mode_popup:
+                        for i, option in enumerate(self.mode_options):
+                            if option['rect'].collidepoint(mouse_pos):
+                                self.current_mode = i
+                                self.show_mode_popup = False
+                                break
+                        # Close popup if clicked outside
+                        if not self.popup_rect.collidepoint(mouse_pos):
+                            self.show_mode_popup = False
+                    
+                    # Handle map size
+                    elif self.map_decrease['rect'].collidepoint(mouse_pos):
+                        self.map_size = max(120, self.map_size - 20)
+                        self.map_display['text'] = f"{self.map_size}x{self.map_size}"
+                    elif self.map_increase['rect'].collidepoint(mouse_pos):
+                        self.map_size = min(200, self.map_size + 20)
+                        self.map_display['text'] = f"{self.map_size}x{self.map_size}"
+                    
+                    # Handle player count
+                    elif self.player_decrease['rect'].collidepoint(mouse_pos):
+                        self.num_players = max(2, self.num_players - 1)
+                        self.player_display['text'] = str(self.num_players)
+                    elif self.player_increase['rect'].collidepoint(mouse_pos):
+                        self.num_players = min(8, self.num_players + 1)
+                        self.player_display['text'] = str(self.num_players)
+                    
+                    # Handle navigation
+                    elif self.back_button['rect'].collidepoint(mouse_pos):
+                        return 'back'
+                    elif self.start_button['rect'].collidepoint(mouse_pos):
+                        return {
+                            'mode': self.game_modes[self.current_mode],
+                            'map_size': (self.map_size, self.map_size),
+                            'num_players': self.num_players
+                        }
+            
+            pygame.display.flip()
+
 def start_menu(save_file=None):
     menu = StartMenu()
     action = menu.run()
     
     if action == 'Start Game':
-        pygame.quit()
-        from Game_Engine import GameEngine
-        curses.wrapper(lambda stdscr: start_game(stdscr, None))
+        settings_menu = GameSettingsMenu()
+        settings = settings_menu.run()
+        
+        if settings == 'back':
+            return start_menu(save_file)
+        elif settings:
+            pygame.quit()
+            from Game_Engine import GameEngine
+            # Update global settings
+            global GameMode, map_size, players
+            GameMode = settings['mode']
+            map_size = settings['map_size']
+            # Adjust number of players
+            players = players[:settings['num_players']]
+            while len(players) < settings['num_players']:
+                new_id = len(players) + 1
+                players.append(Player(f'Player {new_id}', "Means", "aggressive", player_id=new_id))
+            
+            curses.wrapper(lambda stdscr: start_game(stdscr, None))
+        else:
+            pygame.quit()
+            sys.exit()
     elif action == 'Load Game' and menu.has_saves:
         load_menu = LoadGameMenu()
         selected_save = load_menu.run()
@@ -295,9 +493,6 @@ def start_menu(save_file=None):
         else:  # If window was closed
             pygame.quit()
             sys.exit()
-    elif action == 'Settings':
-        print("Settings menu (Pas encore fait)")
-        sys.exit()
     elif action in ['Exit', 'quit']:
         pygame.quit()
         print("Exiting game")

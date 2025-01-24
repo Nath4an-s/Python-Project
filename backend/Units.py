@@ -171,6 +171,9 @@ class Unit:
             player.population -= 1  # Decrease the player's population
             x, y = unit_to_kill.position
             game_map.remove_unit(int(x), int(y), unit_to_kill)  # Assuming game_map is a property of the player
+            if unit_to_kill.sprite not in game_map.pre_post_entities:
+                game_map.pre_post_entities[unit_to_kill.sprite] = []
+            game_map.pre_post_entities[unit_to_kill.sprite].append(unit_to_kill.position)
             debug_print(f"Unit {unit_to_kill.name} belonging to {player.name} at ({x}, {y}) killed. (RIP)", 'DarkRed')
         else:
             debug_print(f"Unit {unit_to_kill.name} does not belong to {player.name}.", 'Yellow')
