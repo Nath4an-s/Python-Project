@@ -469,7 +469,7 @@ class GUI(threading.Thread):
             },
             "idle": {
                 "south": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "Stand" /f"Villagerstand{i:03}.png")
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Villager" / "Stand" /f"Villagerstand{i:03}.png") #nouveau
                     for i in range(17, 30)
                 ],
             },
