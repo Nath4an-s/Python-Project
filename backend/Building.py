@@ -31,25 +31,23 @@ class Building:
     
     @classmethod
     def place_starting_buildings(cls, game_map):
-        from backend.Starter_File import players  # Import the updated players list
-        num_players = len(players)
+        num_players = len(players_list)
         map_center_x = game_map.width // 2
         map_center_y = game_map.height // 2
-        radius = int(0.45 * min(game_map.width, game_map.height))
-        
-        if num_players > 0:  # Only proceed if we have players
-            angle_step = 360 // num_players
-            random.seed()
-            
-            for i, player in enumerate(players):
-                angle = math.radians(i * angle_step)
-                town_center_x = map_center_x + int(radius * math.cos(angle))
-                town_center_y = map_center_y + int(radius * math.sin(angle))
-                
-                # Adjust the location if tile is not free
-                while not game_map.is_area_free(town_center_x, town_center_y, TownCenter(player).size):
-                    town_center_x += random.choice([-1, 0, 1])
-                    town_center_y += random.choice([-1, 0, 1])
+        radius = int(0.45 * min(game_map.width, game_map.height))  # 90% of half the map size
+    
+        angle_step = 360 // num_players  # Equal angular distance between town centers
+        random.seed()  # Explicitly seed the random number generator
+
+        for i, player in enumerate(players_list):
+            angle = math.radians(i * angle_step)
+            town_center_x = map_center_x + int(radius * math.cos(angle))
+            town_center_y = map_center_y + int(radius * math.sin(angle))
+
+            # Adjust the location if tile is not free
+            while not game_map.is_area_free(town_center_x, town_center_y, TownCenter(player).size):
+                town_center_x += random.choice([-1, 0, 1])
+                town_center_y += random.choice([-1, 0, 1])
 
             if game_map.is_area_free(town_center_x, town_center_y, TownCenter(player).size):
                 # Create an instance of Building (or TownCenter) to call spawn_building
@@ -57,7 +55,7 @@ class Building:
                 player.ai.decided_builds.append((town_center_x, town_center_y, TownCenter(player).size))
                 building_instance.spawn_building(player, town_center_x, town_center_y, TownCenter, game_map)
 
-                    # Check if the civilization is Marines
+                # Check if the civilization is Marines
                 if player.civilization == "Marines":
                     marine_buildings = [
                         (TownCenter, 5, 0), (TownCenter, -5, 0), 
@@ -74,9 +72,9 @@ class Building:
                             new_x += random.choice([-1, 0, 1])
                             new_y += random.choice([-1, 0, 1])
 
-                    # Spawn the building with the map passed in
-                    player.ai.decided_builds.append((new_x, new_y, building(player).size))
-                    building_instance.spawn_building(player, new_x, new_y, building, game_map)
+                        # Spawn the building with the map passed in
+                        player.ai.decided_builds.append((new_x, new_y, building(player).size))
+                        building_instance.spawn_building(player, new_x, new_y, building, game_map)
 
                     debug_print(f"Placed additional buildings for {player.name} (Marines) around ({town_center_x}, {town_center_y})", 'Blue')
                 else:

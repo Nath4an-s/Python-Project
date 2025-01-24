@@ -3,7 +3,6 @@ import pygame
 import sys
 import curses
 import os
-import random
 from Players import *
 
 
@@ -18,8 +17,13 @@ GUI_size = type('GUI_size', (object,), {})()
 GUI_size.x = 800
 GUI_size.y = 600
 
-# Initialize empty players list instead of fixed players
-players = []
+# Initialize players with both name and AI profile
+#Civilizations are either Leans, Means or Marines
+players = [
+    Player('Player 1', "Means", "aggressive", player_id=1),
+    Player('Player 2', "Leans", "aggressive", player_id=2),
+    Player('Player 3', "Marines", "aggressive", player_id=3)
+]
 
 global_speedS = 10
 
@@ -298,10 +302,7 @@ class GameSettingsMenu:
         GameMode = self.game_modes[self.current_mode]
         self.map_width = 120
         self.map_height = 120
-        
-        
-        # Initialize with minimum number of players
-        self.num_players = 2  # Start with minimum 2 players
+        self.num_players = 3
         
         # Popup settings
         self.show_mode_popup = False
@@ -351,7 +352,7 @@ class GameSettingsMenu:
             'active': False
         }
         
-        # Player count input
+        # Player count controls
         self.player_input = {
             'text': str(self.num_players),
             'active': False
@@ -498,8 +499,6 @@ class GameSettingsMenu:
                     elif self.back_button['rect'].collidepoint(mouse_pos):
                         return 'back'
                     elif self.start_button['rect'].collidepoint(mouse_pos):
-                        # Ensure valid number of players before returning
-                        self.num_players = max(2, min(8, self.num_players))
                         return {
                             'mode': self.game_modes[self.current_mode],
                             'map_size': (self.map_width, self.map_height),
@@ -580,20 +579,13 @@ def start_menu(save_file=None):
             global GameMode, map_size, players
             GameMode = settings['mode']
             map_size = settings['map_size']
-            num_players = int(settings['num_players'])
+            # Adjust number of players
+            players = players[:settings['num_players']]
+            while len(players) < settings['num_players']:
+                new_id = len(players) + 1
+                players.append(Player(f'Player {new_id}', "Means", "aggressive", player_id=new_id))
             
-            # Create new players list with selected number of players
-            civilizations = ["Means", "Leans", "Marines"]
-            players = []  # Clear existing players list
-            
-            # Create players with random civilizations
-            for i in range(num_players):
-                player_id = i + 1
-                civilization = random.choice(civilizations)  # Randomly select civilization
-                new_player = Player(f'Player {player_id}', civilization, "aggressive", player_id=player_id)
-                players.append(new_player)
-            
-            # Start the game with new settings
+            # Pass the selected game mode to the GameEngine
             curses.wrapper(lambda stdscr: GameEngine(GameMode, map_size, players, sauvegarde=False).run(stdscr))
         else:
             pygame.quit()
