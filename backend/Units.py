@@ -171,6 +171,9 @@ class Unit:
             player.population -= 1  # Decrease the player's population
             x, y = unit_to_kill.position
             game_map.remove_unit(int(x), int(y), unit_to_kill)  # Assuming game_map is a property of the player
+            if unit_to_kill.sprite not in game_map.pre_post_entities:
+                game_map.pre_post_entities[unit_to_kill.sprite] = []
+            game_map.pre_post_entities[unit_to_kill.sprite].append(unit_to_kill.position)
             debug_print(f"Unit {unit_to_kill.name} belonging to {player.name} at ({x}, {y}) killed. (RIP)", 'DarkRed')
         else:
             debug_print(f"Unit {unit_to_kill.name} does not belong to {player.name}.", 'Yellow')
@@ -211,8 +214,12 @@ class Villager(Unit):
         self.is_acting = None
         self.position = position
         self.sprite = "villager"
+        self.sprite_height = 50
+        self.z = 0
 
-
+    @property
+    def bbox_bottom(self):
+        return self.position[1] + self.sprite_height
 
 # Swordsman Class
 class Swordsman(Unit):
@@ -224,7 +231,11 @@ class Swordsman(Unit):
         self.name = "Swordsman"
         self.is_acting = None
         self.sprite = "swordman"
-       
+        self.sprite_height = 52
+        self.z = 64
+    @property
+    def bbox_bottom(self):
+        return self.position[1] + self.sprite_height
 
 
 # Horseman Class
@@ -239,7 +250,11 @@ class Horseman(Unit):
         self.position = position
         self.direction = direction
         self.sprite = "horseman"
-       
+        self.sprite_height = 90
+        self.z = 64
+    @property
+    def bbox_bottom(self):
+        return self.position[1] + self.sprite_height
 
 
 # Archer Class
@@ -252,4 +267,8 @@ class Archer(Unit):
         self.name = "Archer"
         self.is_acting = None
         self.sprite = "archer"
-
+        self.sprite_height = 54
+        self.z = 64
+    @property
+    def bbox_bottom(self):
+        return self.position[1] + self.sprite_height

@@ -310,6 +310,7 @@ class Action:
             return False
 
     def _gather(self, unit, resource_type, current_time_called):
+        unit.is_moving = False
         tile = self.map.grid[unit.target_resource[1]][unit.target_resource[0]] if unit.target_resource is not None else None
         
         unit.direction = self.get_direction(unit.position[0], unit.position[1], unit.target_resource[0], unit.target_resource[1])
@@ -388,6 +389,11 @@ class Action:
                 unit.task = None
 
     def go_battle(self, unit, enemy_unit, current_time_called):
+        if not enemy_unit:
+            unit.task = None
+            unit.target_attack = None
+            return
+            
         unit.task = "going_to_battle"
         unit.target_attack = enemy_unit
         
@@ -408,6 +414,7 @@ class Action:
             if not isinstance(enemy_unit, Building):
                 enemy_unit.is_attacked_by = unit
                 enemy_unit.task = "is_attacked"
+            unit.is_moving = False
             self._attack(unit, enemy_unit, current_time_called)
         else:
             self.move_unit(unit, int(target_x), int(target_y), current_time_called)
@@ -475,6 +482,7 @@ class Action:
 
         if unit.target_position is None:
             unit.task = "constructing"
+            unit.direction = self.get_direction(unit.position[0], unit.position[1], x, y)
             for building in player.constructing_buildings:
                 if building["position"] == (x, y):
                     if unit not in building.get("workers", []):  # Évite les doublons
@@ -497,10 +505,12 @@ class Action:
 
 
     def _construct(self, unit, building_type, x, y, player, current_time_called):
-        if not self.map.is_area_free(x, y, building_type(player).size):
-            self.debug_print(f"Cannot construct building at ({x}, {y}): area is not free anymore.", 'Yellow')
-            unit.task = None
-            return
+        if self.map.grid[y][x].building and not self.map.grid[y][x].building.name == "Construct":
+            if not self.map.is_area_free(x, y, building_type(player).size):
+                self.debug_print(f"Cannot construct building at ({x}, {y}): area is not free anymore IN CONSTRUCT.", 'Yellow')
+                self.debug_print(self.map.grid[y][x].building.name == "Construct", 'Green')
+                unit.task = None
+                return
 
         # Find or initialize the number of workers
         num_workers = next((b["num_workers"] for b in player.constructing_buildings if b["position"] == (x, y)), 1)
@@ -510,8 +520,12 @@ class Action:
         if not hasattr(unit, 'start_building'):
             unit.start_building = current_time_called
 
+        if not self.map.grid[y][x].building:
+            Building.spawn_building(player, x, y, Construct, self.map)
+
         # Verify if the time has elapsed
         if current_time_called - unit.start_building >= actual_building_time:
+            Building.kill_building(player, self.map.grid[y][x].building, self.map)
             Building.spawn_building(player, x, y, building_type, self.map)
 
             # Reset tasks for workers
@@ -532,7 +546,8 @@ class Action:
             self.debug_print(f"Building {building_type.__name__} completed at ({x}, {y}).", 'Blue')
 
             return
-    def attack_target(self, building, target, current_time_called, game_map):
+        
+    def attack_target(self, building, target, current_time_called, game_map): # for the Keep
         if target is not None:
             if current_time_called - building.last_attack_time >= 1:
                 building.last_attack_time = current_time_called

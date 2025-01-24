@@ -96,9 +96,9 @@ class Building:
             player.buildings.remove(building_to_kill)
             x, y = building_to_kill.position
             game_map.remove_building(int(x), int(y), building_to_kill)  # Assuming game_map is a property of the player
-            debug_print(f"Building {building_to_kill} belonging to {player.name} at ({x}, {y}) killed.", 'DarkBlue')
+            debug_print(f"Building {building_to_kill.name} belonging to {player.name} at ({x}, {y}) killed.", 'DarkBlue')
         else:
-            debug_print(f"Building {building_to_kill} does not belong to {player.name}.", 'Yellow')
+            debug_print(f"Building {building_to_kill.name} does not belong to {player.name}.", 'Yellow')
 
 
 # TownCenter Class
@@ -109,6 +109,8 @@ class TownCenter(Building):
         self.population_increase = 5
         self.training_queue = []
         self.sprite = "towncenter"
+        self.sizeizo = (256, 256)  # (width, height)
+        self.z = 230 # Verifier sur image
 
     def spawn_villager(self):
         if self.built:
@@ -136,6 +138,8 @@ class House(Building):
         self.symbol = 'H'
         self.population_increase = 5
         self.sprite = "house"
+        self.sizeizo = (128, 128)  # (width, height)
+        self.z = 130
 
     def is_walkable(self):
         return False
@@ -147,6 +151,9 @@ class Camp(Building):
         super().__init__(player, "Camp", hp=200, build_time=25, cost={"Wood": 100}, size=2)
         self.symbol = 'C'
         self.sprite = "camp"
+        self.sizeizo = (128, 128)  # (width, height)
+        self.z = 130
+
 
     def drop_point(self, unit, resource_type):
         # Camp acts as a drop point for resources
@@ -169,6 +176,9 @@ class Farm(Building):
         self.food = 300  # Contains 300 Food
         self.is_farmed = False
         self.sprite = "farm"
+        self.sizeizo = (128, 64) # (width, height)
+        self.z = 0
+
 
     def is_walkable(self):
         return True
@@ -180,7 +190,10 @@ class Barracks(Building):
         self.symbol = 'B'
         self.training_queue = []
         self.sprite = "barracks"
+        self.sizeizo = (224, 192)  # (width, height)
+        self.z = 185
 
+ 
     def spawn_swordsman(self):
         if self.built:
             return Swordsman(self.player)
@@ -196,6 +209,8 @@ class Stable(Building):
         self.symbol = 'S'
         self.training_queue = []
         self.sprite = "stable"
+        self.sizeizo = (192, 192)  # (width, height)
+        self.z = 180
 
     def spawn_horseman(self):
         if self.built:
@@ -212,6 +227,9 @@ class ArcheryRange(Building):
         self.symbol = 'A'
         self.training_queue = []
         self.sprite = "archeryrange"
+        self.sizeizo = (192, 192)  # (width, height)
+        self.z = 180
+
 
     def spawn_archer(self):
         if self.built:
@@ -229,7 +247,26 @@ class Keep(Building):
         self.attack = 5
         self.range = 8
         self.sprite = "keep"
-        self.last_attack_time = 0            
+        self.last_attack_time = 0    
+        self.sizeizo = (64, 64)  # (width, height)
+        self.z = 60
 
+    
     def is_walkable(self):
         return False
+    
+
+# Construct Class
+class Construct(Building):
+    def __init__(self, player):
+        super().__init__(player, "Construct", hp=1, build_time=0, cost={"Wood": 1}, size=2)
+        self.symbol = '%'
+        self.sprite = "construct"
+        self.future_building = None
+        self.workers = []
+        self.sizeizo = (128, 64)  # (width, height)
+        self.z = 50
+    
+    def is_walkable(self):
+        return False
+

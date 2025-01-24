@@ -1,11 +1,72 @@
 import pygame
 from pygame.locals import FULLSCREEN
 from pygame.locals import HIDDEN
+from backend.Building import Farm
 import threading
 import queue as Queue
 from pathlib import Path
 import time
 import traceback
+
+def get_unit_offsets(state, direction):
+ 
+    offsets = {
+        "idle": {
+            "south": (-25, -37),
+        },
+        "walking": {
+            "north": (-22, -43),
+            "south": (-21, -41),
+            "west": (-18, -38),
+            "east": (-13, -41),
+            "northwest": (-17, -41),
+            "northeast": (-13, -38),
+            "southwest": (-20, -38),
+            "southeast": (-10, -40),
+        },
+        "attacking": {
+            "north": (0, -20),
+            "south": (0, 20),
+            "west": (-20, 0),
+            "east": (20, 0),
+            "northwest": (-20, -20),
+            "northeast": (20, -20),
+            "southwest": (-20, 20),
+            "southeast": (20, 20),
+        },
+        "gathering": {
+            "north": (-63, -67),
+            "south": (-62, -72),
+            "west": (-61, -67),
+            "east": (-22, -70),
+            "northwest": (-59, -65),
+            "northeast": (-26, -67),
+            "southwest": (-62, -69),
+            "southeast": (-19, -69),
+        },
+        "constructing": {
+            "north": (-38, -28),
+            "south": (-37, 37),
+            "west": (-29, -40),
+            "east": (-28, -40),
+            "northwest": (-30, -33),
+            "northeast": (-27, -34),
+            "southwest": (-27, -40),
+            "southeast": (-29, -43),
+        },
+        "dying": {
+            "north": (0, -5),
+            "south": (0, 5),
+            "west": (-5, 0),
+            "east": (5, 0),
+            "northwest": (-5, -5),
+            "northeast": (5, -5),
+            "southwest": (-5, 5),
+            "southeast": (5, 5),
+        },
+    }
+
+    return offsets.get(state, {}).get(direction, (0, 0))
 
 class Camera:
     def __init__(self, width, height):
@@ -34,12 +95,6 @@ class Camera:
 
         self.offset_x = max(min_x, min(self.offset_x + dx, max_x))
         self.offset_y = max(min_y, min(self.offset_y + dy, max_y))
-
-def tint_image(image, color):
-    """Tint an image with the given color."""
-    tinted_image = image.copy()
-    tinted_image.fill(color + (0,), special_flags=pygame.BLEND_RGBA_MULT)
-    return tinted_image
 
 class GUI(threading.Thread):
     def __init__(self, data_queue):
@@ -71,7 +126,10 @@ class GUI(threading.Thread):
         self.villager_images = {}
         self.swordman_images = {}
         self.show_resources = False
-        
+        self.show_units = False
+
+        self.mouse_held = None
+           
         self.PLAYER_COLORS = {
             1: (0, 0, 255),    # Blue
             2: (255, 0, 0),    # Red
@@ -86,13 +144,11 @@ class GUI(threading.Thread):
         self.COLORS = {
             "Wood": (34, 139, 34),   # Dark green for wood
             "Gold": (255, 215, 0),   # Gold color
-            "Soil": (0, 255, 0)      # Green for soil
+            "Soil": (77, 164, 128)      # Green for soil
         }
 
-        # Timing for mini-map updates
         self.last_mini_map_update = time.time()
-        self.mini_map_update_interval = 50  # Update every 50 seconds
-        # Initialize mini-map surface
+        self.mini_map_update_interval = 50
         self.mini_map_surface = None
 
     def flip_image_horizontally(self, image):
@@ -103,6 +159,7 @@ class GUI(threading.Thread):
         self.RESOURCES_PATH = self.BASE_PATH / "assets" / "resources"
         self.BUILDINGS_PATH = self.BASE_PATH / "assets" / "buildings" 
         self.IMG_PATH = self.BASE_PATH / "assets" / "img"
+        self.IMG_HUD = self.BASE_PATH / "assets" / "HUD"
 
         assert self.RESOURCES_PATH.exists(), f"Resources directory {self.RESOURCES_PATH} does not exist."
         assert self.BUILDINGS_PATH.exists(), f"Buildings directory {self.BUILDINGS_PATH} does not exist."
@@ -123,38 +180,27 @@ class GUI(threading.Thread):
             "Soil": self.load_image(self.RESOURCES_PATH / "soil.png"),
         }
 
-
-        for player_id, color in self.PLAYER_COLORS.items():
-            #self.PLAYER_COLORS[player_id] = color + (200,)  # Add alpha channel
-            self.villager_images[player_id] = {}
-            self.swordman_images[player_id] = {}
-            
-            for unit_type, images in self.villager_images.items():
-                for direction, frames in images.items():
-                    self.villager_images[unit_type][direction] = [tint_image(frame, self.unit_colors["villager"]) for frame in frames]
-
-            for unit_type, images in self.swordman_images.items():
-                for direction, frames in images.items():
-                    self.swordman_images[unit_type][direction] = [tint_image(frame, self.unit_colors["swordman"]) for frame in frames]
-                    
         # Load and scale building images
         building_types = {
-            "TownCenter": (256, 256),
-            "Barracks": (self.TILE_WIDTH * 3.5, self.TILE_HEIGHT * 6),
-            "House": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),
-            "Rubble": (64, 64),
-            "Stable": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6),
-            "ArcheryRange": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6),
-            "Camp": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),
-            "Farm": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 2),
-            "Keep": (64, 64),
+            "TownCenter": (256, 256),  # Taille : (256, 256)
+            "Barracks": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6 * 511 // 666),  # Taille : (666, 511)
+            "House": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),  # Taille : (128, 128)
+            #"Rubble": (64, 64),  # Taille : (64, 64)
+            "Stable": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6 * 471 // 612),  # Taille : (612, 471)
+            "ArcheryRange": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6 * 595 // 648),  # Taille : (648, 595)
+            "Camp": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),  # Taille : (128, 128)
+            "Farm": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 2),  # Taille : (128, 64)
+            "Keep": (64, 64*481//310),  # Taille : (64, 64)
+            "Construct": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 2),  # Taille : (128, 64)
         }
 
         for building_type, size in building_types.items():
             image = self.load_image(self.BUILDINGS_PATH / f"{building_type.lower()}.png")
             self.building_images[building_type] = pygame.transform.scale(image, size)
 
-        self.rubble = {}
+        self.hud_image = self.load_image(self.IMG_HUD / "Hud.png")
+        self.mini_map_back = self.load_image(self.IMG_HUD / "MiniMAP.png")
+        self.back = self.load_image(self.IMG_HUD / "Hud2.png")
 
         self.villager_images = {
             "walking": {
@@ -328,12 +374,11 @@ class GUI(threading.Thread):
                 ],
             },
         }
-        
-        
+                
         self.swordman_images = {
            "walking": {
                 "south": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walk" / f"Halbadierwalk{i:03}.png")
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "swordman" / "walk" / f"Axethrowerwalk{i:03}.png")
                     for i in range(1, 10)
                 ],
                 "north": [
@@ -392,17 +437,16 @@ class GUI(threading.Thread):
             "dying": {
                 "south": [
                     self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Die" / f"Axethrowerdie{i:03}.png")
-                    for i in range(9, 13)
+                    for i in range(1, 13)
                 ],
             },
             "idle": {
                 "south": [
                     self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Stand" / f"Axethrowerstand{i:03}.png")
-                    for i in range(9, 13)  
+                    for i in range(1, 11)  
                 ],
             },
         }
-
 
         self.archer_images = {
             "walking": {
@@ -467,7 +511,7 @@ class GUI(threading.Thread):
                 
                 "south": [
                     self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Die" / f"Archerdie{i:03}.png")
-                    for i in range(9, 13)
+                    for i in range(1, 13)
                 ],
             },
             "idle": {
@@ -479,87 +523,174 @@ class GUI(threading.Thread):
             },
         }
 
-        '''
         self.horseman_images = {
             "walking": {
                 "north": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Walk" / f"Horsemanwalk{i:03}.png")
-                    for i in range(1, 6)
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Walk" / f"Scoutwalk{i:03}.png")
+                    for i in range(41, 50)
                 ],
                 "east": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Walk" / f"Horsemanwalk{i:03}.png")
-                    for i in range(6, 9)
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Walk" / f"Scoutwalk{i:03}.png")
+                    )
+                    for i in range(21, 30)
                 ],
                 "south": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Walk" / f"Horsemanwalk{i:03}.png")
-                    for i in range(9, 13)
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Walk" / f"Scoutwalk{i:03}.png")
+                    for i in range(1, 10)
                 ],
                 "west": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Walk" / f"Horsemanwalk{i:03}.png")
-                    for i in range(13, 16)
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Walk" / f"Scoutwalk{i:03}.png")
+                    for i in range(21, 30)
+                ],
+                "northeast": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Walk" / f"Scoutwalk{i:03}.png")
+                    )
+                    for i in range(31, 40)
+                ],
+                "northwest": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Walk" / f"Scoutwalk{i:03}.png")
+                    for i in range(31, 40)
+                ],
+                "southeast": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Walk" / f"Scoutwalk{i:03}.png")
+                    )
+                    for i in range(11, 20)
+                ],
+                "southwest": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Walk" / f"Scoutwalk{i:03}.png")
+                    for i in range(11, 20)
                 ],
             },
             "attacking": {
                 "north": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Attack" / f"Horsemanattack{i:03}.png")
-                    for i in range(1, 6)
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Attack" / f"Scoutattack{i:03}.png")
+                    for i in range(41, 50)
                 ],
                 "east": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Attack" / f"Horsemanattack{i:03}.png")
-                    for i in range(6, 9)
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Attack" / f"Scoutattack{i:03}.png")
+                    )
+                    for i in range(21, 30)
                 ],
                 "south": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Attack" / f"Horsemanattack{i:03}.png")
-                    for i in range(9, 13)
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Attack" / f"Scoutattack{i:03}.png")
+                    for i in range(1, 10)
                 ],
                 "west": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Attack" / f"Horsemanattack{i:03}.png")
-                    for i in range(13, 16)
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Attack" / f"Scoutattack{i:03}.png")
+                    for i in range(21, 30)
+                ],
+                "northeast": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Attack" / f"Scoutattack{i:03}.png")
+                    )
+                    for i in range(31, 40)
+                ],
+                "northwest": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Attack" / f"Scoutattack{i:03}.png")
+                    for i in range(31, 40)
+                ],
+                "southeast": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Attack" / f"Scoutattack{i:03}.png")
+                    )
+                    for i in range(11, 20)
+                ],
+                "southwest": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Attack" / f"Scoutattack{i:03}.png")
+                    for i in range(11, 20)
                 ],
             },
             "dying": {
                 "north": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Die" / f"Horsemandie{i:03}.png")
-                    for i in range(1, 6)
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Die" / f"Scoutdie{i:03}.png")
+                    for i in range(41, 50)
                 ],
                 "east": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Die" / f"Horsemandie{i:03}.png")
-                    for i in range(6, 9)
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Die" / f"Scoutdie{i:03}.png")
+                    )
+                    for i in range(21, 30)
                 ],
                 "south": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Die" / f"Horsemandie{i:03}.png")
-                    for i in range(9, 13)
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Die" / f"Scoutdie{i:03}.png")
+                    for i in range(1, 10)
                 ],
                 "west": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Die" / f"Horsemandie{i:03}.png")
-                    for i in range(13, 16)
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Die" / f"Scoutdie{i:03}.png")
+                    for i in range(21, 30)
+                ],
+                "northeast": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Die" / f"Scoutdie{i:03}.png")
+                    )
+                    for i in range(31, 40)
+                ],
+                "northwest": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Die" / f"Scoutdie{i:03}.png")
+                    for i in range(31, 40)
+                ],
+                "southeast": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Die" / f"Scoutdie{i:03}.png")
+                    )
+                    for i in range(11, 20)
+                ],
+                "southwest": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Die" / f"Scoutdie{i:03}.png")
+                    for i in range(11, 20)
                 ],
             },
             "idle": {
                 "north": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Stand" / f"Horsemanstand{i:03}.png")
-                    for i in range(1, 6)
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Stand" / f"Scoutstand{i:03}.png")
+                    for i in range(41, 50)
                 ],
                 "east": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Stand" / f"Horsemanstand{i:03}.png")
-                    for i in range(6, 9)
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Stand" / f"Scoutstand{i:03}.png")
+                    )
+                    for i in range(21, 30)
                 ],
                 "south": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Stand" / f"Horsemanstand{i:03}.png")
-                    for i in range(9, 13)
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Stand" / f"Scoutstand{i:03}.png")
+                    for i in range(1, 10)
                 ],
                 "west": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Stand" / f"Horsemanstand{i:03}.png")
-                    for i in range(13, 16)
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Stand" / f"Scoutstand{i:03}.png")
+                    for i in range(21, 30)
+                ],
+                "northeast": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Stand" / f"Scoutstand{i:03}.png")
+                    )
+                    for i in range(31, 40)
+                ],
+                "northwest": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Stand" / f"Scoutstand{i:03}.png")
+                    for i in range(31, 40)
+                ],
+                "southeast": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Stand" / f"Scoutstand{i:03}.png")
+                    )
+                    for i in range(11, 20)
+                ],
+                "southwest": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Horseman" / "Stand" / f"Scoutstand{i:03}.png")
+                    for i in range(11, 20)
                 ],
             },
         }
-        '''
+
         self.iconwod = self.load_image(self.RESOURCES_PATH / "iconwood.png")
         self.icongold = self.load_image(self.RESOURCES_PATH / "icongold.png")
 
         self.IMAGES["Gold"] = pygame.transform.scale(self.IMAGES["Gold"], (self.TILE_WIDTH, self.TILE_HEIGHT))
-        self.IMAGES["Wood"] = pygame.transform.scale(self.IMAGES["Wood"], (self.TILE_WIDTH, self.TILE_HEIGHT))
+        self.IMAGES["Wood"] = pygame.transform.scale(self.IMAGES["Wood"], (int(self.TILE_WIDTH * 2), int(self.TILE_HEIGHT * 2.5)))
 
     def cart_to_iso(self, cart_x, cart_y):
         iso_x = (cart_x - cart_y) * (self.TILE_WIDTH // 2)
@@ -574,11 +705,19 @@ class GUI(threading.Thread):
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_F12:
                     self.running = False
-                elif event.key == pygame.K_F2:
+                elif event.key == pygame.K_F1:
                     self.show_resources = not self.show_resources
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                self.handle_mini_map_click(event)
+                elif event.key == pygame.K_F2:
+                    self.show_units = not self.show_units
 
+            # Gestion des événements de la souris
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Bouton gauche
+                self.mouse_held = True
+            elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:  # Relâcher le clic gauche
+                self.mouse_held = False
+
+        # Appeler la fonction pour gérer le survol continu
+        self.handle_mini_map_hover()
 
     def handle_keyboard_input(self):
         keys = pygame.key.get_pressed()
@@ -633,12 +772,76 @@ class GUI(threading.Thread):
 
                     if tile.resource.type == "Wood":
                         image = self.IMAGES["Wood"]
-                        self.pre_rendered_map.blit(image, (screen_x, screen_y))
+                        self.pre_rendered_map.blit(image, (tile_x - (self.IMAGES["Wood"].get_width() // 2), tile_y - self.IMAGES["Wood"].get_height() + (self.TILE_HEIGHT // 2)))
 
                     elif tile.resource.type == "Gold":
                         image = self.IMAGES["Gold"]
                         self.pre_rendered_map.blit(image, (screen_x, screen_y))
 
+    '''def render_dying_entities(self, game_data):
+        """
+        Render dying entities and remove them from the dictionary when animation completes.
+        
+        :param game_data: Game data containing pre_post_entities
+        """
+        # Define dying animation parameters
+        dying_animation_frames = {
+            'villager': 10,   # 10 frames for the villager's dying animation
+            'swordsman': 12,
+            'archer': 8,
+            'horseman': 10
+        }
+        
+        # Map entity types to their respective image dictionaries (dying animation by direction)
+        entity_image_map = {
+            'villager': self.villager_images.get("dying", []),  # Now directly a list
+            'swordsman': self.swordman_images.get("dying", []),  # Now directly a list
+            'archer': self.archer_images.get("dying", []),      # Now directly a list
+            'horseman': self.horseman_images.get("dying", [])    # Now directly a list
+        }        
+
+        # Track entities to remove after animation completes
+        entities_to_remove = []
+
+        for entity_type, entities in game_data.map.pre_post_entities.items():
+            if isinstance(entities, list):  # Ensure we have a list of entities
+                for index, entity_data in enumerate(entities):
+                    # If entity_data is just (x, y), initialize the dying_frame
+                    if len(entity_data) == 2:  # Add frame counter if not present
+                        entities[index] = (*entity_data, 0)  # Add dying_frame = 0
+
+                    # Unpack position and current dying frame
+                    x, y, current_frame = entities[index]
+                    screen_x, screen_y = self.cart_to_iso(x, y)
+
+                    # Get the correct images for the entity type
+                    entity_images = entity_image_map.get(entity_type, [])
+                    
+                    # Ensure entity_images is a valid list
+                    if isinstance(entity_images, list):
+                        # Check if the current frame is within the valid range
+                        if 0 <= current_frame < len(entity_images):
+                            # Render the current frame of the animation
+                            image = entity_images[current_frame]
+                            self.screen.blit(image, (screen_x, screen_y))
+                            
+                            # Increment the animation frame only if it's not the last one
+                            if current_frame < dying_animation_frames.get(entity_type, 10) - 1:
+                                entities[index] = (x, y, current_frame + 1)
+                            else:
+                                # Stay at the last frame (don't increment anymore)
+                                entities[index] = (x, y, current_frame)  
+                    
+                    # Check if the animation is complete (i.e., last frame)
+                    if current_frame >= dying_animation_frames.get(entity_type, 10) - 1:
+                        # Add to the removal list only after displaying the last frame
+                        if current_frame == dying_animation_frames.get(entity_type, 10) - 1:
+                            entities_to_remove.append((entity_type, index))
+
+        # Remove completed dying entities after rendering
+        for entity_type, entity_index in reversed(entities_to_remove):
+            game_data.map.pre_post_entities[entity_type].pop(entity_index)
+            print(f"Removing entity at index {entity_index} of type {entity_type}")'''
 
     def render_isometric_map(self):
         if not self.pre_rendered_map:
@@ -660,7 +863,7 @@ class GUI(threading.Thread):
                 unit_x = iso_x + (self.game_data.map.width * self.TILE_WIDTH // 2)
                 unit_y = iso_y
                 if visible_rect.collidepoint(unit_x, unit_y):
-                    entities.append((unit_x, unit_y, "unit", unit))
+                    entities.append((unit_x, unit_y, "unit", unit,unit.z))
 
             for building in player.buildings:
                 bottom_right_x = building.position[0] + building.size - 2
@@ -671,88 +874,49 @@ class GUI(threading.Thread):
                 building_y = iso_y
 
                 if visible_rect.collidepoint(building_x, building_y):
-                    entities.append((building_x, building_y, "building", building))
+                    entities.append((building_x, building_y, "building", building, building.z))
 
-        current_time = time.time()
-        for (x, y), (image, end_time) in list(self.rubble.items()):
-            if current_time < end_time:
-                iso_x, iso_y = self.cart_to_iso(x, y)
-                rubble_x = iso_x + (self.game_data.map.width * self.TILE_WIDTH // 2)
-                rubble_y = iso_y
-                if visible_rect.collidepoint(rubble_x, rubble_y):
-                    entities.append((rubble_x, rubble_y, "rubble", image))
-            else:
-                del self.rubble[(x, y)]
-        # Sort entities by their depth (y + x for isometric rendering)
-        entities.sort(key=lambda e: e[0] + e[1])
 
+        entities.sort(key=lambda e: (
+            0 if e[2] == "building" and e[3].name == "Farm" else 1,
+            e[0] + e[1],  # Critère principal : somme des coordonnées pour l'ordre isométrique global
+             -(e[1] - (e[4] if e[2] == 'building' else 0)),  # Critère secondaire : profondeur en tenant compte de la taille
+            e[1],
+            ))
+
+    
         # Render all entities
-# Render all entities
-        for x, y, entity_type, obj in entities:
+        for x, y, entity_type, obj, z in entities:
             screen_x = x - self.camera.offset_x
             screen_y = y - self.camera.offset_y
             image = None
 
             if entity_type == "unit":
-                # Assurez-vous que chaque unité a un attribut `sprite`, `state`, et `direction`
-                unit_type = obj.sprite  # Le type d'unité (ex. "villager", "swordman", "archer")
-                state = obj.task  # Par exemple, "idle" comme état par défaut
-                direction = obj.direction  # La direction de l'unité (ex. "north", "south", "west", "east")
+                unit_type = obj.sprite 
+                state = obj.task
+                direction = obj.direction
+
                 if obj.is_moving == True:
                     state = "walking"  
                 else :
                     if state is None:
                         obj.direction = "south"
                         state = "idle"
-                    if state == "marching" or  state == "going_to_battle" or  state == "going_to_construction_site" or obj.is_moving == True:
+                    if state == "marching" or  state == "returning" or state == "going_to_battle" or  state == "going_to_construction_site" or obj.is_moving == True:
                         state = "walking"   
+                    if state == "attacking" or state == "is_attacked":
+                        state = "attacking"
 
-                # Ralentir l'animation (par exemple, changer de frame tous les 5 rendus)
-                animation_speed = 100  # Ajustez cette valeur pour contrôler la vitesse
+                animation_speed = 40
                 obj.frame_counter += 1
                 if obj.frame_counter >= animation_speed:
-                    obj.current_frame += 1  # Passe à la frame suivante
-                    obj.frame_counter = 0  # Réinitialise le compteur
+                    obj.current_frame += 1
+                    obj.frame_counter = 0
 
-                # Attribution du sprite correspondant à chaque type d'unité
                 if unit_type == "villager":
                     if state in self.villager_images and direction in self.villager_images[state]:
                         images = self.villager_images[state][direction]
                         image = images[obj.current_frame % len(images)]
-                        
-                        # Affiche l'image du villageois (ou tout autre sprite lié)
-                        #self.screen.blit(image, (screen_x, screen_y))
-
-                        # Dessiner une flèche indiquant la direction
-                        arrow_color = (255, 0, 0)  # Rouge pour la flèche
-                        arrow_size = 20  # Taille de la flèche
-                        dx, dy = 0, 0
-
-                        # Détermine les décalages pour chaque direction
-                        if direction == "north":
-                            dx, dy = 0, -arrow_size
-                        elif direction == "south":
-                            dx, dy = 0, arrow_size
-                        elif direction == "east":
-                            dx, dy = arrow_size, 0
-                        elif direction == "west":
-                            dx, dy = -arrow_size, 0
-                        elif direction == "northeast":
-                            dx, dy = arrow_size, -arrow_size
-                        elif direction == "northwest":
-                            dx, dy = -arrow_size, -arrow_size
-                        elif direction == "southeast":
-                            dx, dy = arrow_size, arrow_size
-                        elif direction == "southwest":
-                            dx, dy = -arrow_size, arrow_size
-
-                        # Définir les points du triangle pour la flèche
-                        arrow_tip = (screen_x + dx, screen_y + dy)
-                        arrow_left = (screen_x - dy // 2, screen_y + dx // 2)
-                        arrow_right = (screen_x + dy // 2, screen_y - dx // 2)
-
-                        # Dessiner le triangle représentant la flèche
-                        pygame.draw.polygon(self.screen, arrow_color, [arrow_tip, arrow_left, arrow_right])
 
                 elif unit_type == "swordman":
                     if state in self.swordman_images and direction in self.swordman_images[state]:
@@ -764,7 +928,7 @@ class GUI(threading.Thread):
 
                         # Dessiner une flèche indiquant la direction
                         arrow_color = (255, 0, 0)  # Rouge pour la flèche
-                        arrow_size = 2  # Taille de la flèche
+                        arrow_size = 6  # Taille de la flèche
                         dx, dy = 0, 0
 
                         # Détermine les décalages pour chaque direction
@@ -793,7 +957,7 @@ class GUI(threading.Thread):
                         # Dessiner le triangle représentant la flèche
                         pygame.draw.polygon(self.screen, arrow_color, [arrow_tip, arrow_left, arrow_right])
 
-                elif unit_type == "Archer":
+                elif unit_type == "archer":
                     if state in self.archer_images and direction in self.archer_images[state]:
                         images = self.archer_images[state][direction]
                         image = images[obj.current_frame % len(images)]
@@ -832,12 +996,51 @@ class GUI(threading.Thread):
                         # Dessiner le triangle représentant la flèche
                         pygame.draw.polygon(self.screen, arrow_color, [arrow_tip, arrow_left, arrow_right])
 
+                elif unit_type == "horseman":
+                    if state in self.horseman_images and direction in self.horseman_images[state]:
+                        images = self.horseman_images[state][direction]
+                        image = images[obj.current_frame % len(images)]
+                        
+                        # Affiche l'image du villageois (ou tout autre sprite lié)
+                        #self.screen.blit(image, (screen_x, screen_y))
+
+                        # Dessiner une flèche indiquant la direction
+                        arrow_color = (255, 0, 0)  # Rouge pour la flèche
+                        arrow_size = 2  # Taille de la flèche
+                        dx, dy = 0, 0
+
+                        # Détermine les décalages pour chaque direction
+                        if direction == "north":
+                            dx, dy = 0, -arrow_size
+                        elif direction == "south":
+                            dx, dy = 0, arrow_size
+                        elif direction == "east":
+                            dx, dy = arrow_size, 0
+                        elif direction == "west":
+                            dx, dy = -arrow_size, 0
+                        elif direction == "northeast":
+                            dx, dy = arrow_size, -arrow_size
+                        elif direction == "northwest":
+                            dx, dy = -arrow_size, -arrow_size
+                        elif direction == "southeast":
+                            dx, dy = arrow_size, arrow_size
+                        elif direction == "southwest":
+                            dx, dy = -arrow_size, arrow_size
+
+                        # Définir les points du triangle pour la flèche
+                        arrow_tip = (screen_x + dx, screen_y + dy)
+                        arrow_left = (screen_x - dy // 2, screen_y + dx // 2)
+                        arrow_right = (screen_x + dy // 2, screen_y - dx // 2)
+
+                        # Dessiner le triangle représentant la flèche
+                        pygame.draw.polygon(self.screen, arrow_color, [arrow_tip, arrow_left, arrow_right])
+
+                offset_x, offset_y = get_unit_offsets(state, direction)
+                screen_x = x - self.camera.offset_x + offset_x
+                screen_y = y - self.camera.offset_y + offset_y
                 # Affichage du sprite sur l'écran
                 if image:
-                    if state in ["gathering","constructing","attacking"]:
-                        self.screen.blit(image, (screen_x - 60, screen_y - 60))
-                    else :
-                        self.screen.blit(image, (screen_x - 10, screen_y - 15))
+                    self.screen.blit(image, (screen_x, screen_y))
 
           
             elif entity_type == "building":
@@ -847,44 +1050,26 @@ class GUI(threading.Thread):
                     image = self.building_images[building_type]
 
                     # Adjust position for the sprite size
-                    adjusted_y = screen_y - image.get_height()
+                    adjusted_y = screen_y - image.get_height() + (self.TILE_HEIGHT // 2)
                     adjusted_x = screen_x + self.TILE_WIDTH * (2 - obj.size) // 2
 
-                    if obj.size == 3 or obj.size == 4:
-                        adjusted_y += (self.TILE_HEIGHT // 2)
+                    if obj.size == 4:
                         adjusted_x -= (self.TILE_WIDTH // 2)
-
-                    if obj.size == 2:
-                        adjusted_y += (self.TILE_HEIGHT // 2)
+                    if obj.size == 3 :
+                        adjusted_y -= (self.TILE_HEIGHT // 6 ) 
 
                     self.screen.blit(image, (adjusted_x, adjusted_y))
-                else:
-                    pygame.draw.rect(
+                    pygame.draw.circle(
                         self.screen,
                         (150, 150, 150),
-                        pygame.Rect(screen_x, screen_y, self.TILE_WIDTH, self.TILE_HEIGHT)
+                        (screen_x, screen_y),5
                     )
-            elif entity_type == "rubble":
-                image = obj
-                self.screen.blit(image, (screen_x, screen_y))
-
-
-    def add_rubble(self, x, y):
-        rubble_image = self.building_images["Rubble"]
-        end_time = time.time() + 5  # Display rubble for 5 seconds
-        self.rubble[(x, y)] = (rubble_image, end_time)
-
-
-    def on_building_destroyed(self, building):
-        x, y = building.position
-        self.add_rubble(x, y)
-        # Remove the building from the game data
-        self.game_data.remove_building(building)
 
 
     def initialize_pygame(self):
         pygame.init()
         self.screen = pygame.display.set_mode((self.WINDOW_WIDTH, self.WINDOW_HEIGHT))
+        pygame.display.set_caption("Age Of Empire")
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(None, 36)
         self.setup_paths()
@@ -906,6 +1091,8 @@ class GUI(threading.Thread):
             # Draw resources if enabled
         if self.show_resources:
             self.display_player_resources()
+        if self.show_units:
+            self.display_player_units()
 
         self.display_fps()
         pygame.display.flip()
@@ -945,18 +1132,13 @@ class GUI(threading.Thread):
         self.running = False
         self.join()
 
-
-
     def update_and_draw_mini_map(self):
-        """
-        Updates and draws the isometric mini-map. Resource rendering happens every 50 seconds,
-        while other components are drawn every frame.
-        """
+ 
         mini_map_width = 200
         mini_map_height = 150
         mini_map_x = self.WINDOW_WIDTH - mini_map_width - 10
         mini_map_y = self.WINDOW_HEIGHT - mini_map_height - 10
-        tile_offset_x = mini_map_width // 2  # Centering adjustment for isometric projection
+        tile_offset_x = mini_map_width // 2  
 
         # Check if it's time to update resource rendering
         current_time = time.time()
@@ -966,7 +1148,7 @@ class GUI(threading.Thread):
 
         # Calculate the source rect to only blit the visible portion of the mini-map
         source_rect = pygame.Rect(tile_offset_x, 0, mini_map_width, mini_map_height)
-        
+
         # Draw the pre-rendered mini-map surface
         self.screen.blit(self.mini_map_surface, (mini_map_x, mini_map_y), source_rect)
 
@@ -997,18 +1179,24 @@ class GUI(threading.Thread):
         view_rect_height = (self.WINDOW_HEIGHT / (self.game_data.map.height * self.TILE_HEIGHT)) * mini_map_height
         view_rect_x = mini_map_x + ((self.camera.offset_x / (self.game_data.map.width * self.TILE_WIDTH)) * mini_map_width)
         view_rect_y = mini_map_y + ((self.camera.offset_y / (self.game_data.map.height * self.TILE_HEIGHT)) * mini_map_height)
-        pygame.draw.rect(self.screen, (255, 0, 0), (view_rect_x, view_rect_y, view_rect_width, view_rect_height), 2)
+        pygame.draw.rect(self.screen, (255, 255, 255), (view_rect_x, view_rect_y, view_rect_width, view_rect_height), 2)
 
     def update_mini_map_resources(self, mini_map_width, mini_map_height, tile_offset_x):
         """
         Updates the pre-rendered resource layer of the mini-map with properly centered background.
         """
+        background_image = self.mini_map_back
+
         # Create a surface with extra width to accommodate isometric offset
         total_width = mini_map_width + tile_offset_x * 2
         self.mini_map_surface = pygame.Surface((total_width, mini_map_height), pygame.SRCALPHA)
-        
-        # Fill the entire background
-        self.mini_map_surface.fill((50, 40, 50))  # Mini-map background color
+
+        # Calculer les offsets pour centrer l'image sur la surface
+        x_offset = (total_width - background_image.get_width()) // 2
+        y_offset = (mini_map_height - background_image.get_height()) // 2
+
+        # Dessiner l'image centrée sur la surface
+        self.mini_map_surface.blit(background_image, (x_offset, y_offset))
 
         # Render resources on the mini-map
         for y in range(self.game_data.map.height):
@@ -1027,102 +1215,133 @@ class GUI(threading.Thread):
                 
                 # Draw the resource tile
                 pygame.draw.rect(self.mini_map_surface, color, (mini_map_iso_x, mini_map_iso_y, 2, 2))
-
-    def handle_mini_map_click(self, event):
+    
+    def handle_mini_map_hover(self):
         """
-        Handles user clicks on the mini-map by updating the camera position to center the view
-        relative to the red rectangle.
+        Permet un survol continu de la mini-map tout en maintenant le clic gauche de la souris,
+        en ajustant dynamiquement la position de la caméra.
         """
         mini_map_width = 200
         mini_map_height = 150
         mini_map_x = self.WINDOW_WIDTH - mini_map_width - 10
         mini_map_y = self.WINDOW_HEIGHT - mini_map_height - 10
 
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            mouse_x, mouse_y = event.pos
+        # Obtenir la position actuelle de la souris
+        mouse_x, mouse_y = pygame.mouse.get_pos()
 
-            # Check if click is within mini-map bounds
-            if mini_map_x <= mouse_x <= mini_map_x + mini_map_width and \
-            mini_map_y <= mouse_y <= mini_map_y + mini_map_height:
-                
-                # Calculate relative position within mini-map
+        # Vérifier si la souris est dans les limites de la mini-map
+        if mini_map_x <= mouse_x <= mini_map_x + mini_map_width and \
+        mini_map_y <= mouse_y <= mini_map_y + mini_map_height:
+            
+            # Si le bouton gauche est maintenu
+            if self.mouse_held:
+                # Calculer la position relative dans la mini-map
                 relative_x = (mouse_x - mini_map_x) / mini_map_width
                 relative_y = (mouse_y - mini_map_y) / mini_map_height
 
-                # Calculate the size of the red rectangle (view rectangle)
+                # Calculer la taille du rectangle de vue (zone visible)
                 view_rect_width = (self.WINDOW_WIDTH / (self.game_data.map.width * self.TILE_WIDTH)) * mini_map_width
                 view_rect_height = (self.WINDOW_HEIGHT / (self.game_data.map.height * self.TILE_HEIGHT)) * mini_map_height
 
-                # Adjust camera offsets to center the view on the click
+                # Ajuster dynamiquement les offsets de la caméra
                 self.camera.offset_x = int(relative_x * self.game_data.map.width * self.TILE_WIDTH - (view_rect_width / 2) * (self.game_data.map.width * self.TILE_WIDTH) / mini_map_width)
                 self.camera.offset_y = int(relative_y * self.game_data.map.height * self.TILE_HEIGHT - (view_rect_height / 2) * (self.game_data.map.height * self.TILE_HEIGHT) / mini_map_height)
 
     def display_player_resources(self):
-        """
-        Displays player resources in a compact HUD with icons for clarity and properly aligned text.
-        """
-        font = pygame.font.Font(None, 18)  # Smaller font for compact layout
-        x_start = 10
-        y_start = 10
-        hud_width = 250
-        hud_height = 90
-        icon_size = 16
-        padding = 8
-        spacing = 5
-        bar_height = 4
-        text_color = (255, 255, 255)
-        bar_colors = {
-            "Wood": (34, 139, 34),   
-            "Food": (255, 165, 0),   
-            "Gold": (255, 215, 0),   
-        }
-        background_color = (30, 30, 30, 200)  
 
-        resource_icons = {
-            "Wood": pygame.transform.scale(self.iconwod, (icon_size, icon_size)),
-            "Food": pygame.Surface((icon_size, icon_size)),  # Placeholder
-            "Gold": pygame.transform.scale(self.icongold, (icon_size, icon_size)),
-        }
-        resource_icons["Food"].fill((255, 165, 0))  # Fill placeholder with orange
+        font = pygame.font.Font(None, 18)  # Police pour le texte
+        x_start = 10  # Position horizontale de départ
+        y_start = 10  # Position verticale de départ
+        spacing = 10  # Espacement entre chaque joueur
+        text_color = (255, 255, 255)  # Couleur du texte (blanc pour contraste)
 
-        for i, player in enumerate(self.game_data.players):
-            y_position = y_start + i * (hud_height + spacing)
-            box_surface = pygame.Surface((hud_width, hud_height), pygame.SRCALPHA)
-            box_surface.fill(background_color)
-            self.screen.blit(box_surface, (x_start, y_position))
+        # Charger l'image HUD
+        hud_image = self.hud_image
+        hud_width, hud_height = hud_image.get_size()
 
-            name_text = f"{player.name} (Player {player.id})"
+        # Parcourir chaque joueur
+        for i, player in enumerate(self.game_data.players[:len(self.game_data.players)]):
+            y_position = y_start + i * (hud_height + spacing)  # Position verticale pour ce joueur
+            x_position = x_start  # Position horizontale de départ pour ce joueur
+
+            # Dessiner l'image HUD pour le joueur
+            self.screen.blit(hud_image, (x_position, y_position))
+
+            # Décalage initial pour commencer à écrire les données
+            text_x = x_position + 50  # Début à l'intérieur de l'image
+            text_y_centered = y_position + (hud_height // 2) - 5  # Centrer verticalement le texte
+
+            # Afficher le nom du joueur (première ligne, centrée)
+            name_text = f"{player.name}"
             name_surface = font.render(name_text, True, text_color)
-            self.screen.blit(name_surface, (x_start + padding, y_position + padding))
+            name_x = text_x - 40
+            name_y = text_y_centered - 27
+            self.screen.blit(name_surface, (name_x, name_y))
 
-            resource_y = y_position + padding + font.get_height() + spacing
-            for resource, value in player.owned_resources.items():
-                icon_x = x_start + padding
-                icon_y = resource_y
-                if resource in resource_icons:
-                    self.screen.blit(resource_icons[resource], (icon_x, icon_y))
+            # Afficher la ressource "Wood"
+            wood_text = f"{player.owned_resources.get('Wood', 0)}"
+            wood_surface = font.render(wood_text, True, text_color)
+            self.screen.blit(wood_surface, (text_x, text_y_centered))
+            text_x += 90  # Décaler pour afficher la ressource suivante
 
-                bar_x = icon_x + icon_size + spacing
-                bar_width = hud_width - (icon_size + 3 * padding)
-                bar_y = resource_y + (icon_size - bar_height) // 2
-                pygame.draw.rect(self.screen, (50, 50, 50), (bar_x, bar_y, bar_width, bar_height), border_radius=4)
-                
-                max_bar_width = min(bar_width, bar_width * (value / 100))
-                pygame.draw.rect(self.screen, bar_colors.get(resource, text_color), (bar_x, bar_y, max_bar_width, bar_height), border_radius=4)
+            # Afficher la ressource "Food"
+            food_text = f"{player.owned_resources.get('Food', 0)}"
+            food_surface = font.render(food_text, True, text_color)
+            self.screen.blit(food_surface, (text_x, text_y_centered))
+            text_x += 100  # Décaler pour afficher la ressource suivante
 
-                resource_text = f"{value}"
-                text_x = bar_x + max_bar_width + spacing
-                resource_surface = font.render(resource_text, True, text_color)
-                self.screen.blit(resource_surface, (text_x, bar_y))
+            # Afficher la ressource "Gold"
+            gold_text = f"{player.owned_resources.get('Gold', 0)}"
+            gold_surface = font.render(gold_text, True, text_color)
+            self.screen.blit(gold_surface, (text_x, text_y_centered))
+            text_x += 90  # Décaler pour afficher le nombre de bâtiments
 
-                resource_y += icon_size + spacing
-
-            buildings_text = f"Buildings: {len(player.buildings)}"
+            # Afficher le nombre de bâtiments
+            buildings_text = f"{len(player.buildings)}"
             buildings_surface = font.render(buildings_text, True, text_color)
-            buildings_x = x_start + padding
-            buildings_y = resource_y + spacing
+            self.screen.blit(buildings_surface, (text_x, text_y_centered))
 
-            if buildings_y + font.get_height() + padding <= y_position + hud_height:
-                self.screen.blit(buildings_surface, (buildings_x, buildings_y))
+    def display_player_units(self):
+        font = pygame.font.Font(None, 18)  # Police pour le texte
+        x_start = 40  # Position horizontale de départ
+        y_start = 198 if self.show_resources else 18  # Ajuster la position verticale selon show_resources
+        spacing = 5  # Espacement entre chaque joueur
+        text_color = (255, 255, 255)  # Couleur du texte (blanc pour contraste)
 
+        # Charger l'image de fond
+        background_image = self.back
 
+        # Dessiner l'image de fond
+        if self.show_resources:
+            self.screen.blit(background_image, (0, 175))
+        else:
+            self.screen.blit(background_image, (0, 0))
+
+        # Parcourir chaque joueur
+        for i, player in enumerate(self.game_data.players):
+            y_position = y_start + i * (15 + spacing)
+            x_position = x_start
+
+            # Afficher le nom du joueur
+            name_text = f"{player.name}"
+            name_surface = font.render(name_text, True, text_color)
+            self.screen.blit(name_surface, (x_position, y_position))
+
+            # Décalage initial pour afficher les unités
+            text_x = x_position + 80
+
+            # Compter et afficher les unités par type
+            unit_counts = {}
+            for unit in player.units:
+                # Vérifiez si `unit.sprite` est correct, sinon utilisez un autre attribut
+                unit_type = unit.sprite  # Utilise 'sprite' ou un fallback "Unknown"
+                if unit_type not in unit_counts:
+                    unit_counts[unit_type] = 0
+                unit_counts[unit_type] += 1
+
+            # Afficher le type d'unité et leur nombre
+            for unit_type, count in unit_counts.items():
+                unit_text = f"{unit_type}: {count}"
+                unit_surface = font.render(unit_text, True, text_color)
+                self.screen.blit(unit_surface, (text_x, y_position))
+                text_x += 100 

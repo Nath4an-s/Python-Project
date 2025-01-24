@@ -191,9 +191,8 @@ class GameEngine:
                     #action.construct_building(self.players[2].units[3], Barracks, 1, 1, self.players[2], current_time)
                     #action.construct_building(self.players[2].units[4], Barracks, 1, 1, self.players[2], current_time)
                 elif key == ord('t'):
-                    action.move_unit(self.players[2].units[0], 4, 8, self.get_current_time())
-                    action.move_unit(self.players[2].units[2], 3, 6, self.get_current_time())
-                    action.construct_building(self.players[2].units[1], Keep, 4, 4, self.players[2], self.get_current_time())
+                    action.construct_building(self.players[2].units[1], House, 4, 4, self.players[2], self.get_current_time())
+                    action.construct_building(self.players[2].units[3], Camp, 6, 6, self.players[2], self.get_current_time())
                 elif key == ord('k'):
                     action.gather_resources(self.players[2].units[1], "Food", self.get_current_time())
                     action.gather_resources(self.players[2].units[2], "Wood", self.get_current_time())
@@ -236,8 +235,7 @@ class GameEngine:
                 elif key == ord('v'):  
                     self.save_game()
                 elif key == ord('i'):
-                    for unit in self.players[2].units:
-                        action.go_battle(unit, self.players[1].units[1], self.get_current_time())
+                    action.construct_building(self.players[2].units[0], Farm, 10, 10, self.players[2], self.get_current_time())
                 elif key == ord('n'):
                     self.IA_used = not self.IA_used
                     self.debug_print(f"IA used: {self.IA_used}")
