@@ -388,6 +388,11 @@ class Action:
                 unit.task = None
 
     def go_battle(self, unit, enemy_unit, current_time_called):
+        if not enemy_unit:
+            unit.task = None
+            unit.target_attack = None
+            return
+            
         unit.task = "going_to_battle"
         unit.target_attack = enemy_unit
         
@@ -535,7 +540,7 @@ class Action:
 
             return
         
-    def attack_target(self, building, target, current_time_called, game_map):
+    def attack_target(self, building, target, current_time_called, game_map): # for the Keep
         if target is not None:
             if current_time_called - building.last_attack_time >= 1:
                 building.last_attack_time = current_time_called
