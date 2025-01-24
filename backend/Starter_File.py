@@ -7,7 +7,7 @@ from Players import *
 
 
 # Game Mode
-GameMode = "Utopia" # "Utopia" or "Gold Rush"
+GameMode = None # "Utopia" or "Gold Rush"
 
 # Set up map size
 map_size = (120, 120) #minimum 120x120
@@ -279,6 +279,10 @@ class GameSettingsMenu:
         self.screen = pygame.display.set_mode((screen_width, screen_height))
         pygame.display.set_caption("AIge of Empire - Paramètres de la partie")
         
+        # Store screen dimensions and center position
+        self.screen_width = screen_width
+        self.center_x = screen_width // 2
+        
         self.colors = {
             'background': (50, 50, 50),
             'button': (100, 100, 100),
@@ -294,46 +298,58 @@ class GameSettingsMenu:
         # Game settings
         self.game_modes = ["Utopia", "Gold Rush"]
         self.current_mode = 0
-        self.map_size = 120
+        global GameMode
+        GameMode = self.game_modes[self.current_mode]
+        self.map_width = 120
+        self.map_height = 120
         self.num_players = 3
         
         # Popup settings
         self.show_mode_popup = False
-        self.popup_rect = pygame.Rect(screen_width // 2 - 200, 200, 400, len(self.game_modes) * 50)
-        
-        # Buttons
         button_width = 200
         button_height = 50
-        center_x = screen_width // 2
         
+        # Mode button
         self.mode_button = {
             'text': self.game_modes[self.current_mode], 
-            'rect': pygame.Rect(center_x - button_width//2, 150, button_width, button_height)
+            'rect': pygame.Rect(self.center_x - button_width//2, 150, button_width, button_height)
         }
         
         # Create mode selection buttons for popup
+        popup_x = self.mode_button['rect'].right + 10  # Position popup to the right of the mode button
         self.mode_options = []
         for i, mode in enumerate(self.game_modes):
             self.mode_options.append({
                 'text': mode,
-                'rect': pygame.Rect(center_x - button_width//2, 200 + i * 50, button_width, button_height)
+                'rect': pygame.Rect(popup_x, 150 + i * 50, button_width, button_height)
             })
         
-        # Map size controls
-        self.map_decrease = {'text': '-', 'rect': pygame.Rect(center_x - 140, 250, 50, button_height)}
-        self.map_display = {'text': f"{self.map_size}x{self.map_size}", 
-                           'rect': pygame.Rect(center_x - 60, 250, 120, button_height)}
-        self.map_increase = {'text': '+', 'rect': pygame.Rect(center_x + 90, 250, 50, button_height)}
+        # Update popup background rect
+        self.popup_rect = pygame.Rect(popup_x, 150, 
+                                    button_width, len(self.game_modes) * 50)
+        
+        # Map size controls as buttons
+        self.width_button = {
+            'text': f"{self.map_width}",
+            'rect': pygame.Rect(self.center_x - 100, 250, 80, 50),
+            'active': False
+        }
+        
+        self.height_button = {
+            'text': f"{self.map_height}",
+            'rect': pygame.Rect(self.center_x + 20, 250, 80, 50),
+            'active': False
+        }
         
         # Player count controls
-        self.player_decrease = {'text': '-', 'rect': pygame.Rect(center_x - 140, 350, 50, button_height)}
+        self.player_decrease = {'text': '-', 'rect': pygame.Rect(self.center_x - 140, 350, 50, button_height)}
         self.player_display = {'text': str(self.num_players), 
-                             'rect': pygame.Rect(center_x - 60, 350, 120, button_height)}
-        self.player_increase = {'text': '+', 'rect': pygame.Rect(center_x + 90, 350, 50, button_height)}
+                             'rect': pygame.Rect(self.center_x - 60, 350, 120, button_height)}
+        self.player_increase = {'text': '+', 'rect': pygame.Rect(self.center_x + 90, 350, 50, button_height)}
         
         # Navigation buttons
-        self.start_button = {'text': 'Commencer', 'rect': pygame.Rect(center_x + 20, 500, 150, button_height)}
-        self.back_button = {'text': 'Retour', 'rect': pygame.Rect(center_x - 170, 500, 150, button_height)}
+        self.start_button = {'text': 'Commencer', 'rect': pygame.Rect(self.center_x + 20, 500, 150, button_height)}
+        self.back_button = {'text': 'Retour', 'rect': pygame.Rect(self.center_x - 170, 500, 150, button_height)}
 
     def draw(self):
         # Draw main menu
@@ -348,28 +364,26 @@ class GameSettingsMenu:
         mode_label = self.font.render("Mode de jeu:", True, self.colors['text'])
         self.screen.blit(mode_label, (200, 160))
         
-        map_label = self.font.render("Taille de la carte:", True, self.colors['text'])
-        self.screen.blit(map_label, (200, 260))
-        
         players_label = self.font.render("Nombre de joueurs:", True, self.colors['text'])
         self.screen.blit(players_label, (200, 360))
+        
+        # Draw map size label
+        map_size_label = self.font.render("Taille de la carte:", True, self.colors['text'])
+        self.screen.blit(map_size_label, (200, 250))
         
         mouse_pos = pygame.mouse.get_pos()
         
         # Draw mode button
         color = self.colors['button_hover'] if self.mode_button['rect'].collidepoint(mouse_pos) else self.colors['button']
         pygame.draw.rect(self.screen, color, self.mode_button['rect'], border_radius=5)
-        text = self.font.render(self.game_modes[self.current_mode], True, self.colors['text'])
+        text = self.font.render(self.mode_button['text'], True, self.colors['text'])
         text_rect = text.get_rect(center=self.mode_button['rect'].center)
         self.screen.blit(text, text_rect)
         
         # Draw mode selection popup if active
         if self.show_mode_popup:
-            # Draw popup background
             pygame.draw.rect(self.screen, self.colors['background'], self.popup_rect)
             pygame.draw.rect(self.screen, self.colors['button'], self.popup_rect, 2)
-            
-            # Draw mode options
             for option in self.mode_options:
                 color = self.colors['button_hover'] if option['rect'].collidepoint(mouse_pos) else self.colors['button']
                 pygame.draw.rect(self.screen, color, option['rect'], border_radius=5)
@@ -377,8 +391,8 @@ class GameSettingsMenu:
                 text_rect = text.get_rect(center=option['rect'].center)
                 self.screen.blit(text, text_rect)
         
-        # Draw map size controls
-        for button in [self.map_decrease, self.map_display, self.map_increase]:
+        # Draw width and height buttons
+        for button in [self.width_button, self.height_button]:
             color = self.colors['button_hover'] if button['rect'].collidepoint(mouse_pos) else self.colors['button']
             pygame.draw.rect(self.screen, color, button['rect'], border_radius=5)
             text = self.font.render(button['text'], True, self.colors['text'])
@@ -412,26 +426,31 @@ class GameSettingsMenu:
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = event.pos
                     
-                    # Handle game mode
+                    # Handle game mode selection
                     if self.mode_button['rect'].collidepoint(mouse_pos):
                         self.show_mode_popup = not self.show_mode_popup
                     elif self.show_mode_popup:
                         for i, option in enumerate(self.mode_options):
                             if option['rect'].collidepoint(mouse_pos):
                                 self.current_mode = i
+                                self.mode_button['text'] = self.game_modes[i]
+                                global GameMode
+                                GameMode = self.game_modes[i]
                                 self.show_mode_popup = False
                                 break
                         # Close popup if clicked outside
                         if not self.popup_rect.collidepoint(mouse_pos):
                             self.show_mode_popup = False
                     
-                    # Handle map size
-                    elif self.map_decrease['rect'].collidepoint(mouse_pos):
-                        self.map_size = max(120, self.map_size - 20)
-                        self.map_display['text'] = f"{self.map_size}x{self.map_size}"
-                    elif self.map_increase['rect'].collidepoint(mouse_pos):
-                        self.map_size = min(200, self.map_size + 20)
-                        self.map_display['text'] = f"{self.map_size}x{self.map_size}"
+                    # Handle width button click
+                    if self.width_button['rect'].collidepoint(mouse_pos):
+                        self.width_input['text'] = str(self.map_width)  # Keep the current width value
+                        self.width_input['active'] = True
+                    
+                    # Handle height button click
+                    if self.height_button['rect'].collidepoint(mouse_pos):
+                        self.height_input['text'] = str(self.map_height)  # Keep the current height value
+                        self.height_input['active'] = True
                     
                     # Handle player count
                     elif self.player_decrease['rect'].collidepoint(mouse_pos):
@@ -447,9 +466,29 @@ class GameSettingsMenu:
                     elif self.start_button['rect'].collidepoint(mouse_pos):
                         return {
                             'mode': self.game_modes[self.current_mode],
-                            'map_size': (self.map_size, self.map_size),
+                            'map_size': (self.map_width, self.map_height),
                             'num_players': self.num_players
                         }
+                    
+                elif event.type == pygame.KEYDOWN:
+                    # Handle text input for map size
+                    if self.width_input['active']:
+                        if event.key == pygame.K_BACKSPACE:
+                            self.width_input['text'] = self.width_input['text'][:-1]
+                        elif event.unicode.isnumeric():
+                            self.width_input['text'] += event.unicode
+                        elif event.key == pygame.K_RETURN:
+                            self.map_width = int(self.width_input['text']) if self.width_input['text'] else 120
+                            self.width_input['active'] = False
+                    
+                    if self.height_input['active']:
+                        if event.key == pygame.K_BACKSPACE:
+                            self.height_input['text'] = self.height_input['text'][:-1]
+                        elif event.unicode.isnumeric():
+                            self.height_input['text'] += event.unicode
+                        elif event.key == pygame.K_RETURN:
+                            self.map_height = int(self.height_input['text']) if self.height_input['text'] else 120
+                            self.height_input['active'] = False
             
             pygame.display.flip()
 
@@ -476,7 +515,8 @@ def start_menu(save_file=None):
                 new_id = len(players) + 1
                 players.append(Player(f'Player {new_id}', "Means", "aggressive", player_id=new_id))
             
-            curses.wrapper(lambda stdscr: start_game(stdscr, None))
+            # Pass the selected game mode to the GameEngine
+            curses.wrapper(lambda stdscr: GameEngine(GameMode, map_size, players, sauvegarde=False).run(stdscr))
         else:
             pygame.quit()
             sys.exit()
