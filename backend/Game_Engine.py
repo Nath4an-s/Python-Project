@@ -64,16 +64,19 @@ def check_diagonal_movement():
 
 # GameEngine Class
 class GameEngine:
-    def __init__(self, players, map_size=(120, 120),sauvegarde=False):
-        self.players = players  # List of Player objects
+    def __init__(self, game_mode, map_size, players, sauvegarde=False):
+        self.game_mode = game_mode
+        self.map_size = map_size
+        self.players = players
         self.map = Map(*map_size)  # Create a map object
         self.turn = 0
         self.is_paused = False  # Flag to track if the game is paused
         self.changed_tiles = set()  # Set to track changed tiles
-        if not sauvegarde :
+        
+        if not sauvegarde:
             Building.place_starting_buildings(self.map)   # Place starting town centers on the map
-        if not sauvegarde : 
             Unit.place_starting_units(self.players, self.map)  # Place starting units on the map
+        
         self.debug_print = debug_print
         self.ias = [IA(player, player.ai_profile, self.map, time.time()) for player in self.players]  # Instantiate IA for each player
         for i in range(len(self.players)):
@@ -85,6 +88,20 @@ class GameEngine:
         self.gui_running = False
         self.data_queue = Queue()
         self.gui_thread = None
+
+        # Initialize other game components based on the game mode
+        if self.game_mode == "Utopia":
+            self.initialize_utopia_mode()
+        elif self.game_mode == "Gold Rush":
+            self.initialize_gold_rush_mode()
+
+    def initialize_utopia_mode(self):
+        # Logic specific to Utopia mode
+        pass
+    
+    def initialize_gold_rush_mode(self):
+        # Logic specific to Gold Rush mode
+        pass
 
     def start_gui_thread(self):
         """Initialize and start the GUI thread"""
