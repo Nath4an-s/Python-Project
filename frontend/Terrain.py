@@ -12,6 +12,7 @@ class Map:
         self.resources = {"Gold": [], "Wood": []}
         self.pre_post_entities = {"pre": {"Construct" : []}, "post": {}}
         self.buildings = []
+        self.rubbles = []
         self.generate_map()
 
     def generate_map(self):
@@ -128,11 +129,17 @@ class Map:
             for i in range(building.size):
                 for j in range(building.size):
                     self.grid[y + j][x + i].building = building
+                    if self.grid[y + j][x + i].rubble == True:
+                        self.grid[y + j][x + i].rubble = False
+                    if (x + j, y + i) in self.rubbles:
+                        self.rubbles.remove((x + j, y + i))
 
     def remove_building(self, x, y, building):
         for i in range(building.size):
             for j in range(building.size):
                 self.grid[y + j][x + i].building = None
+                self.grid[y + j][x + i].rubble = True
+                self.rubbles.append((x + j, y + i))
     
     def place_unit(self, x, y, unit):
         if 0 <= x < self.width and 0 <= y < self.height:
@@ -275,6 +282,7 @@ class Tile:
         self.resource = None
         self.building = None
         self.unit = []
+        self.rubble = False
 
     def __str__(self):
         if self.unit:
@@ -283,6 +291,9 @@ class Tile:
             return getattr(self.building, 'symbol', '?')
         elif self.resource:
             return getattr(self.resource, 'symbol', '?')
+        #test, on va le supprimer plus tard
+        elif self.rubble:
+            return "x"
         else:
             return "." 
 
