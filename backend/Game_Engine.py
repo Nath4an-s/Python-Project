@@ -208,7 +208,7 @@ class GameEngine:
                     #action.construct_building(self.players[2].units[3], Barracks, 1, 1, self.players[2], current_time)
                     #action.construct_building(self.players[2].units[4], Barracks, 1, 1, self.players[2], current_time)
                 elif key == ord('t'):
-                    action.construct_building(self.players[2].units[1], House, 4, 4, self.players[2], self.get_current_time())
+                    action.construct_building(self.players[2].units[1], Keep, 4, 4, self.players[2], self.get_current_time())
                     action.construct_building(self.players[2].units[3], Camp, 6, 6, self.players[2], self.get_current_time())
                 elif key == ord('k'):
                     action.gather_resources(self.players[2].units[1], "Food", self.get_current_time())

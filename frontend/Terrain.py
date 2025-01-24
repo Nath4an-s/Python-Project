@@ -129,17 +129,22 @@ class Map:
             for i in range(building.size):
                 for j in range(building.size):
                     self.grid[y + j][x + i].building = building
-                    if self.grid[y + j][x + i].rubble == True:
-                        self.grid[y + j][x + i].rubble = False
-                    if (x + j, y + i) in self.rubbles:
-                        self.rubbles.remove((x + j, y + i))
+                    if self.grid[y + j][x + i].rubble:
+                        self.grid[y + j][x + i].rubble = None
+                        if self.grid[y + j][x + i].rubble in self.rubbles:
+                            self.rubbles.remove(self.grid[y + j][x + i].rubble)
+                        
 
     def remove_building(self, x, y, building):
         for i in range(building.size):
             for j in range(building.size):
                 self.grid[y + j][x + i].building = None
-                self.grid[y + j][x + i].rubble = True
-                self.rubbles.append((x + j, y + i))
+                if building.name == "Construct":
+                    continue
+                rubble = Rubble(size=building.size, position=(x + i, y + j))
+                self.grid[y + j][x + i].rubble = rubble
+                if i == 0 and j == 0:
+                    self.rubbles.append(rubble)
     
     def place_unit(self, x, y, unit):
         if 0 <= x < self.width and 0 <= y < self.height:
@@ -282,7 +287,7 @@ class Tile:
         self.resource = None
         self.building = None
         self.unit = []
-        self.rubble = False
+        self.rubble = None
 
     def __str__(self):
         if self.unit:
@@ -293,7 +298,7 @@ class Tile:
             return getattr(self.resource, 'symbol', '?')
         #test, on va le supprimer plus tard
         elif self.rubble:
-            return "x"
+            return getattr(self.resource, 'symbol', '?')
         else:
             return "." 
 
@@ -327,3 +332,15 @@ class Food(Resource):
 class Gold(Resource):
     def __init__(self):
         super().__init__(resource_type="Gold", amount=800, symbol="G")  # 800 per tile
+
+
+# Rubble Class
+class Rubble:
+    def __init__(self, size=1, position=(0, 0), symbol = "x"):
+        self.size = size
+        self.position = position
+        self.symbol = symbol  # Symbol for rubble
+        self.is_walkable = True  # Units cannot walk over rubble
+
+    def __str__(self):
+        return self.symbol
