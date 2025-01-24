@@ -617,20 +617,40 @@ class GUI(threading.Thread):
             "attacking": {
                 "north": [
                     self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Attack" / f"Archerattack{i:03}.png")
-                    for i in range(1, 6)
-                ],
-                "east": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Attack" / f"Archerattack{i:03}.png")
-                    for i in range(6, 9)
-                ],
-                "south": [
-                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Attack" / f"Archerattack{i:03}.png")
-                    for i in range(9, 13)
+                    for i in range(41, 50)
                 ],
                 "west": [
                     self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Attack" / f"Archerattack{i:03}.png")
-                    for i in range(13, 16)
+                    for i in range(21, 30)
                 ],
+                "south": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Attack" / f"Archerattack{i:03}.png")
+                    for i in range(41, 40)
+                ],
+                "east": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Attack" / f"Archerattack{i:03}.png")
+                    for i in range(21, 30)
+                ],
+                "northeast": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Attack" / f"Archerattack{i:03}.png")
+                    )
+                    for i in range(31, 40)
+                ],
+                "northwest": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Attack" / f"Archerattack{i:03}.png")
+                    for i in range(31, 40)
+                ],
+                "southeast": [
+                    self.flip_image_horizontally(
+                        self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Attack" / f"Archerattack{i:03}.png")
+                    )
+                    for i in range(11, 20)
+                ],
+                "southwest": [
+                    self.load_image(self.BASE_PATH / "assets" / "units" / "Archer" / "Attack" / f"Archerattack{i:03}.png")
+                    for i in range(11, 20)
+                ],    
             },
             "dying": {
                 
@@ -1106,7 +1126,8 @@ class GUI(threading.Thread):
                 elif unit_type == "archer":
                     if state in self.archer_images and direction in self.archer_images[state]:
                         images = self.archer_images[state][direction]
-                        image = images[obj.current_frame % len(images)]
+                        if images:
+                            image = images[obj.current_frame % len(images)]
 
                 elif unit_type == "horseman":
                     if state in self.horseman_images and direction in self.horseman_images[state]:
@@ -1117,6 +1138,7 @@ class GUI(threading.Thread):
                 screen_x = x - self.camera.offset_x + offset_x
                 screen_y = y - self.camera.offset_y + offset_y
                 if image:
+                    image = images[obj.current_frame % len(images)]
                     self.screen.blit(image, (screen_x, screen_y))
                     if obj.is_attacked_by:
                         self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp, image.get_height())
