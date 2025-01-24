@@ -298,7 +298,7 @@ class Tile:
             return getattr(self.resource, 'symbol', '?')
         #test, on va le supprimer plus tard
         elif self.rubble:
-            return getattr(self.resource, 'symbol', '?')
+            return "x"
         else:
             return "." 
 

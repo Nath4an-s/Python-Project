@@ -287,7 +287,7 @@ class GUI(threading.Thread):
             "TownCenter": (256, 256),  # Taille : (256, 256)
             "Barracks": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6 * 511 // 666),  # Taille : (666, 511)
             "House": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),  # Taille : (128, 128)
-            "Rubble": (64, 32),  # Taille : (64, 64)
+            "Rubble": (4*64, 4*32),  # Taille : (64, 64)
             "Stable": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6 * 471 // 612),  # Taille : (612, 471)
             "ArcheryRange": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6 * 595 // 648),  # Taille : (648, 595)
             "Camp": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),  # Taille : (128, 128)
@@ -1142,7 +1142,7 @@ class GUI(threading.Thread):
                         self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp, image.get_height())
             elif entity_type == "rubble":
                 image = self.building_images["Rubble"]
-                new_size = (image.get_width() * obj.size, image.get_height() * obj.size)
+                new_size = (image.get_width() * obj.size // 4, image.get_height() * obj.size // 4)
                 resized_image = pygame.transform.scale(image, new_size)
                 adjusted_y = screen_y - resized_image.get_height() + (2*obj.size - 1) * self.TILE_HEIGHT // 2
                 adjusted_x = screen_x - self.TILE_WIDTH * obj.size // 2 
