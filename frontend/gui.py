@@ -1,13 +1,12 @@
 import pygame
 from pygame.locals import FULLSCREEN
 from pygame.locals import HIDDEN
+from backend.Building import Farm
 import threading
 import queue as Queue
 from pathlib import Path
 import time
 import traceback
-
-from backend.Building import Farm
 
 def get_unit_offsets(state, direction):
  
@@ -69,12 +68,6 @@ def get_unit_offsets(state, direction):
 
     return offsets.get(state, {}).get(direction, (0, 0))
 
-def colorize(image, color):
-    image = image.copy()
-    image.fill((0, 0, 0, 255), None, pygame.BLEND_RGBA_MULT)
-    image.fill(color[0:3] + (0,), None, pygame.BLEND_RGBA_ADD)
-    return image
-
 class Camera:
     def __init__(self, width, height):
         self.width = width
@@ -133,9 +126,10 @@ class GUI(threading.Thread):
         self.villager_images = {}
         self.swordman_images = {}
         self.show_resources = False
+        self.show_units = False
 
         self.mouse_held = None
-        
+           
         self.PLAYER_COLORS = {
             1: (0, 0, 255),    # Blue
             2: (255, 0, 0),    # Red
@@ -205,6 +199,7 @@ class GUI(threading.Thread):
 
         self.hud_image = self.load_image(self.IMG_HUD / "Hud.png")
         self.mini_map_back = self.load_image(self.IMG_HUD / "MiniMAP.png")
+        self.back = self.load_image(self.IMG_HUD / "Hud2.png")
 
         self.villager_images = {
             "walking": {
@@ -378,8 +373,7 @@ class GUI(threading.Thread):
                 ],
             },
         }
-        
-        
+                
         self.swordman_images = {
            "walking": {
                 "south": [
@@ -452,7 +446,6 @@ class GUI(threading.Thread):
                 ],
             },
         }
-
 
         self.archer_images = {
             "walking": {
@@ -528,7 +521,6 @@ class GUI(threading.Thread):
                 ],
             },
         }
-
 
         self.horseman_images = {
             "walking": {
@@ -712,8 +704,10 @@ class GUI(threading.Thread):
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_F12:
                     self.running = False
-                elif event.key == pygame.K_F2:
+                elif event.key == pygame.K_F1:
                     self.show_resources = not self.show_resources
+                elif event.key == pygame.K_F2:
+                    self.show_units = not self.show_units
 
             # Gestion des événements de la souris
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Bouton gauche
@@ -723,8 +717,6 @@ class GUI(threading.Thread):
 
         # Appeler la fonction pour gérer le survol continu
         self.handle_mini_map_hover()
-
-
 
     def handle_keyboard_input(self):
         keys = pygame.key.get_pressed()
@@ -784,7 +776,6 @@ class GUI(threading.Thread):
                     elif tile.resource.type == "Gold":
                         image = self.IMAGES["Gold"]
                         self.pre_rendered_map.blit(image, (screen_x, screen_y))
-
 
     def render_isometric_map(self):
         if not self.pre_rendered_map:
@@ -1008,10 +999,10 @@ class GUI(threading.Thread):
                         (screen_x, screen_y),5
                     )
 
-
     def initialize_pygame(self):
         pygame.init()
         self.screen = pygame.display.set_mode((self.WINDOW_WIDTH, self.WINDOW_HEIGHT))
+        pygame.display.set_caption("Age Of Empire")
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(None, 36)
         self.setup_paths()
@@ -1033,6 +1024,8 @@ class GUI(threading.Thread):
             # Draw resources if enabled
         if self.show_resources:
             self.display_player_resources()
+        if self.show_units:
+            self.display_player_units()
 
         self.display_fps()
         pygame.display.flip()
@@ -1071,7 +1064,6 @@ class GUI(threading.Thread):
     def stop(self):
         self.running = False
         self.join()
-
 
     def update_and_draw_mini_map(self):
  
@@ -1189,9 +1181,7 @@ class GUI(threading.Thread):
                 self.camera.offset_y = int(relative_y * self.game_data.map.height * self.TILE_HEIGHT - (view_rect_height / 2) * (self.game_data.map.height * self.TILE_HEIGHT) / mini_map_height)
 
     def display_player_resources(self):
-        """
-        Affiche les informations des joueurs (Wood, Food, Gold, Nombre de bâtiments) sur une seule ligne par joueur.
-        """
+
         font = pygame.font.Font(None, 18)  # Police pour le texte
         x_start = 10  # Position horizontale de départ
         y_start = 10  # Position verticale de départ
@@ -1244,4 +1234,47 @@ class GUI(threading.Thread):
             buildings_surface = font.render(buildings_text, True, text_color)
             self.screen.blit(buildings_surface, (text_x, text_y_centered))
 
+    def display_player_units(self):
+        font = pygame.font.Font(None, 18)  # Police pour le texte
+        x_start = 40  # Position horizontale de départ
+        y_start = 198 if self.show_resources else 18  # Ajuster la position verticale selon show_resources
+        spacing = 5  # Espacement entre chaque joueur
+        text_color = (255, 255, 255)  # Couleur du texte (blanc pour contraste)
 
+        # Charger l'image de fond
+        background_image = self.back
+
+        # Dessiner l'image de fond
+        if self.show_resources:
+            self.screen.blit(background_image, (0, 175))
+        else:
+            self.screen.blit(background_image, (0, 0))
+
+        # Parcourir chaque joueur
+        for i, player in enumerate(self.game_data.players):
+            y_position = y_start + i * (15 + spacing)
+            x_position = x_start
+
+            # Afficher le nom du joueur
+            name_text = f"{player.name}"
+            name_surface = font.render(name_text, True, text_color)
+            self.screen.blit(name_surface, (x_position, y_position))
+
+            # Décalage initial pour afficher les unités
+            text_x = x_position + 80
+
+            # Compter et afficher les unités par type
+            unit_counts = {}
+            for unit in player.units:
+                # Vérifiez si `unit.sprite` est correct, sinon utilisez un autre attribut
+                unit_type = unit.sprite  # Utilise 'sprite' ou un fallback "Unknown"
+                if unit_type not in unit_counts:
+                    unit_counts[unit_type] = 0
+                unit_counts[unit_type] += 1
+
+            # Afficher le type d'unité et leur nombre
+            for unit_type, count in unit_counts.items():
+                unit_text = f"{unit_type}: {count}"
+                unit_surface = font.render(unit_text, True, text_color)
+                self.screen.blit(unit_surface, (text_x, y_position))
+                text_x += 100 
