@@ -214,6 +214,7 @@ class Villager(Unit):
         self.sprite_height = 50
         self.z = 0
         self.max_hp = 25
+        
 
     @property
     def bbox_bottom(self):

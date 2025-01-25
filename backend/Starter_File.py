@@ -111,7 +111,7 @@ class LoadGameMenu:
         
         # Get save files
         self.save_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'assets', 'annex')
-        self.save_files = sorted([f for f in os.listdir(self.save_dir) if f.startswith('game_save') and f.endswith('.dat')])
+        self.save_files = sorted([f for f in os.listdir(self.save_dir) if f.endswith('.dat')])
         
         # Scroll settings
         self.scroll_y = 0
