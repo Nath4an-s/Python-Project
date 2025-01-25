@@ -1,4 +1,5 @@
 import pygame
+import numpy as np
 from pygame.locals import FULLSCREEN
 from pygame.locals import HIDDEN
 from backend.Building import Farm
@@ -1143,11 +1144,32 @@ class GUI(threading.Thread):
                 screen_x = x - self.camera.offset_x + offset_x
                 screen_y = y - self.camera.offset_y + offset_y
                 if image:
+                    pixel_array = pygame.surfarray.pixels3d(image)
+
+                    blue_min = np.array([0, 0, 100])   
+                    blue_max = np.array([100, 100, 255]) 
+                    player_color = self.PLAYER_COLORS.get(obj.player.id)
+                    new_color = np.array(player_color)
+                    mask = (
+                        (pixel_array[:, :, 0] >= blue_min[0]) & (pixel_array[:, :, 0] <= blue_max[0]) & 
+                        (pixel_array[:, :, 1] >= blue_min[1]) & (pixel_array[:, :, 1] <= blue_max[1]) & 
+                        (pixel_array[:, :, 2] >= blue_min[2]) & (pixel_array[:, :, 2] <= blue_max[2])    
+                    )
+                    pixel_array[mask] = new_color
+                    del pixel_array
+
+                    self.screen.blit(image, (screen_x, screen_y))
+
+                    # Gestion de la barre de vie si l'unité est attaquée
+                    if obj.is_attacked_by:
+                        self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp, image.get_height())
+                """
+                if image:
                     self.screen.blit(image, (screen_x, screen_y))
 
                     if obj.is_attacked_by:
                         self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp, image.get_height())
-
+                """
           
             elif entity_type == "building":
                 # Adjust sprite rendering based on building size
