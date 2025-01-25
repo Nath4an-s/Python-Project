@@ -87,6 +87,8 @@ class GameEngine:
         self.debug_print = debug_print
         self.current_time = time.time()
 
+        self.terminalon = True
+
         # GUI thread related attributes
         self.gui_running = False
         self.data_queue = Queue()
@@ -124,11 +126,11 @@ class GameEngine:
         viewport_width, viewport_height = 30, 30
         # Display the initial viewport
         stdscr.clear()  # Clear the screen
-        self.map.display_viewport(stdscr, top_left_x, top_left_y, viewport_width, viewport_height, Map_is_paused=self.is_paused)  # Display the initial viewport
         
-        #Thread pour la gestion de touche
-        listener = Listener(on_press=press, on_release=release)
-        listener.start()
+        if self.terminalon :
+            self.map.display_viewport(stdscr, top_left_x, top_left_y, viewport_width, viewport_height, Map_is_paused=self.is_paused)  # Display the initial viewport
+            listener = Listener(on_press=press, on_release=release)
+            listener.start()
 
         try:
             while not self.check_victory():
@@ -171,10 +173,8 @@ class GameEngine:
 
                 if key == ord('r'):
                     self.debug_print(self.ias[2].decided_builds)
-
-
-
-
+                if key == ord('o'):
+                    self.terminalon = not self.terminalon
 
 
                 #########################
@@ -249,7 +249,8 @@ class GameEngine:
 
                 # Clear the screen and display the new part of the map after moving
                 stdscr.clear()
-                self.map.display_viewport(stdscr, top_left_x, top_left_y, viewport_width, viewport_height, Map_is_paused=self.is_paused)
+                if self.terminalon :
+                    self.map.display_viewport(stdscr, top_left_x, top_left_y, viewport_width, viewport_height, Map_is_paused=self.is_paused)
                 stdscr.refresh()
 
                 if self.gui_running:
@@ -257,7 +258,8 @@ class GameEngine:
                 else:
                     # Clear the screen and display the new part of the map after moving
                     stdscr.clear()
-                    self.map.display_viewport(stdscr, top_left_x, top_left_y, viewport_width, viewport_height, Map_is_paused=self.is_paused)
+                    if self.terminalon :
+                        self.map.display_viewport(stdscr, top_left_x, top_left_y, viewport_width, viewport_height, Map_is_paused=self.is_paused)
                     stdscr.refresh()
 
                 self.turn += 1
