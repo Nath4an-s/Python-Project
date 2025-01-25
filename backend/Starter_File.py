@@ -304,26 +304,11 @@ class GameSettingsMenu:
         button_width = 200
         button_height = 50
         
-        # Mode button
-        self.mode_button = {
-            'text': self.game_modes[self.current_mode], 
-            'rect': pygame.Rect(self.center_x - button_width//2, 150, button_width, button_height)
-        }
+        # Center positions
+        self.center_x = screen_width // 2
+        self.label_offset = 150  # Distance from center for labels
         
-        # Create mode selection buttons for popup
-        popup_x = self.mode_button['rect'].right + 10  # Position popup to the right of the mode button
-        self.mode_options = []
-        for i, mode in enumerate(self.game_modes):
-            self.mode_options.append({
-                'text': mode,
-                'rect': pygame.Rect(popup_x, 150 + i * 50, button_width, button_height)
-            })
-        
-        # Update popup background rect
-        self.popup_rect = pygame.Rect(popup_x, 150, 
-                                    button_width, len(self.game_modes) * 50)
-        
-        # Map size controls
+        # Add input field initializations
         self.width_input = {
             'text': str(self.map_width),
             'active': False
@@ -334,29 +319,47 @@ class GameSettingsMenu:
             'active': False
         }
         
-        # Map size buttons
-        self.width_button = {
-            'text': str(self.map_width),
-            'rect': pygame.Rect(self.center_x - 100, 250, 80, 50),
-            'active': False
-        }
-        
-        self.height_button = {
-            'text': str(self.map_height),
-            'rect': pygame.Rect(self.center_x + 20, 250, 80, 50),
-            'active': False
-        }
-        
-        # Player count controls
         self.player_input = {
             'text': str(self.num_players),
             'active': False
         }
         
-        # Player count button
+        # Mode button - centered
+        self.mode_button = {
+            'text': self.game_modes[self.current_mode], 
+            'rect': pygame.Rect(self.center_x + 20, 150, 200, 50)
+        }
+        
+        # Create mode selection buttons for popup
+        popup_x = self.mode_button['rect'].right + 10
+        self.mode_options = []
+        for i, mode in enumerate(self.game_modes):
+            self.mode_options.append({
+                'text': mode,
+                'rect': pygame.Rect(popup_x, 150 + i * 50, 200, 50)
+            })
+        
+        # Update popup background rect
+        self.popup_rect = pygame.Rect(popup_x, 150, 
+                                    200, len(self.game_modes) * 50)
+        
+        # Map size buttons - centered
+        self.width_button = {
+            'text': str(self.map_width),
+            'rect': pygame.Rect(self.center_x + 20, 250, 80, 50),
+            'active': False
+        }
+        
+        self.height_button = {
+            'text': str(self.map_height),
+            'rect': pygame.Rect(self.center_x + 140, 250, 80, 50),
+            'active': False
+        }
+        
+        # Player count button - centered
         self.player_button = {
             'text': str(self.num_players),
-            'rect': pygame.Rect(self.center_x - 40, 350, 80, button_height),
+            'rect': pygame.Rect(self.center_x + 20, 350, 80, 50),
             'active': False
         }
         
@@ -364,25 +367,34 @@ class GameSettingsMenu:
         self.start_button = {'text': 'Commencer', 'rect': pygame.Rect(self.center_x + 20, 500, 150, button_height)}
         self.back_button = {'text': 'Retour', 'rect': pygame.Rect(self.center_x - 170, 500, 150, button_height)}
 
+        # Update separator position
+        self.separator_x = 500  # Update this in the draw method
+
     def draw(self):
-        # Draw main menu
         self.screen.fill(self.colors['background'])
         
         # Draw title
         title = self.title_font.render("Paramètres de la partie", True, self.colors['text'])
-        title_rect = title.get_rect(center=(400, 80))
+        title_rect = title.get_rect(center=(self.center_x, 40))
         self.screen.blit(title, title_rect)
         
-        # Draw labels
+        # Draw labels with right alignment
         mode_label = self.font.render("Mode de jeu:", True, self.colors['text'])
-        self.screen.blit(mode_label, (200, 160))
+        mode_rect = mode_label.get_rect(right=self.center_x - 20, centery=175)
+        self.screen.blit(mode_label, mode_rect)
+        
+        map_size_label = self.font.render("Taille de la carte:", True, self.colors['text'])
+        map_rect = map_size_label.get_rect(right=self.center_x - 20, centery=275)
+        self.screen.blit(map_size_label, map_rect)
         
         players_label = self.font.render("Nombre de joueurs:", True, self.colors['text'])
-        self.screen.blit(players_label, (200, 360))
+        players_rect = players_label.get_rect(right=self.center_x - 20, centery=375)
+        self.screen.blit(players_label, players_rect)
         
-        # Draw map size label
-        map_size_label = self.font.render("Taille de la carte:", True, self.colors['text'])
-        self.screen.blit(map_size_label, (200, 250))
+        # Draw 'x' separator between width and height
+        separator = self.font.render("x", True, self.colors['text'])
+        separator_rect = separator.get_rect(center=(self.center_x + 120, 275))
+        self.screen.blit(separator, separator_rect)
         
         mouse_pos = pygame.mouse.get_pos()
         
@@ -417,11 +429,6 @@ class GameSettingsMenu:
             )
             text_rect = text.get_rect(center=button['rect'].center)
             self.screen.blit(text, text_rect)
-        
-        # Draw 'x' separator between width and height
-        separator = self.font.render("x", True, self.colors['text'])
-        separator_rect = separator.get_rect(center=(self.center_x - 10, 275))
-        self.screen.blit(separator, separator_rect)
         
         # Draw player count button/input
         color = self.colors['selected'] if self.player_input['active'] else (
@@ -650,7 +657,7 @@ class PlayerSettingsMenu:
         
         # Draw title
         title = self.title_font.render("Player Settings", True, self.colors['text'])
-        title_rect = title.get_rect(center=(400, 80))
+        title_rect = title.get_rect(center=(400, 40))
         self.screen.blit(title, title_rect)
         
         # Draw headers
