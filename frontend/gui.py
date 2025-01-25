@@ -8,6 +8,7 @@ from pathlib import Path
 import time
 import traceback
 import random
+from backend.Players import *
 
 def get_unit_offsets(unit_type, state, direction):
     """
@@ -16,7 +17,7 @@ def get_unit_offsets(unit_type, state, direction):
     # Offsets par défaut pour "villager"
     offsets_villager = {
         "idle": {
-            "south": (-14, -38),
+            "south": (-25, -37),
         },
         "walking": {
             "north": (-22, -43),
@@ -290,8 +291,8 @@ class GUI(threading.Thread):
             "Rubble": (4*64, 4*32),  # Taille : (64, 64)
             "Stable": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6 * 471 // 612),  # Taille : (612, 471)
             "ArcheryRange": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6 * 595 // 648),  # Taille : (648, 595)
-            "Camp": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4 * 245 // 364),  # Taille : (364, 245)
-            "Farm": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4 * 64 // 128),  # Taille : (128, 64)
+            "Camp": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),  # Taille : (128, 128)
+            "Farm": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 2),  # Taille : (128, 64)
             "Keep": (64, 64*481//310),  # Taille : (64, 64)
             "Construct": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 2),  # Taille : (128, 64)
         }
@@ -304,6 +305,7 @@ class GUI(threading.Thread):
         self.mini_map_back = self.load_image(self.IMG_HUD / "MiniMAP.png")
         self.back = self.load_image(self.IMG_HUD / "Hud2.png")
         self.background = self.load_image(self.IMG_HUD / "Overlay.png")
+        self.victory_image = self.load_image(self.IMG_PATH / "victory.png")
 
         self.villager_images = {
             "walking": {
@@ -1138,8 +1140,8 @@ class GUI(threading.Thread):
                 screen_x = x - self.camera.offset_x + offset_x
                 screen_y = y - self.camera.offset_y + offset_y
                 if image:
-                    image = images[obj.current_frame % len(images)]
                     self.screen.blit(image, (screen_x, screen_y))
+
                     if obj.is_attacked_by:
                         self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp, image.get_height())
 
@@ -1153,7 +1155,6 @@ class GUI(threading.Thread):
                     # Adjust position for the sprite size
                     adjusted_y = screen_y - image.get_height() + (self.TILE_HEIGHT // 2)
                     adjusted_x = screen_x + self.TILE_WIDTH * (2 - obj.size) // 2
-                    scrn_x = screen_x
 
                     if obj.size == 4:
                         adjusted_x -= (self.TILE_WIDTH // 2)
@@ -1161,11 +1162,8 @@ class GUI(threading.Thread):
                         adjusted_y -= (self.TILE_HEIGHT // 6 ) 
 
                     self.screen.blit(image, (adjusted_x, adjusted_y))
-                    if obj.is_attacked:  # Afficher la barre de vie uniquement si l'unité est attaquée
-                        if obj.size == 4:
-                            scrn_x -= (self.TILE_WIDTH // 2)
-                        self.draw_health_bar(scrn_x + self.TILE_WIDTH, screen_y + self.TILE_HEIGHT, obj.hp, obj.max_hp, image.get_height())
-            
+                    if hasattr(obj, 'is_attacked_by') and obj.is_attacked_by:  # Afficher la barre de vie uniquement si l'unité est attaquée
+                        self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp, image.get_height())
             elif entity_type == "rubble":
                 image = self.building_images["Rubble"]
                 new_size = (image.get_width() * obj.size // 4, image.get_height() * obj.size // 4)
@@ -1207,6 +1205,9 @@ class GUI(threading.Thread):
         if self.show_units:
             self.display_player_units()
 
+        if self.check_victory():
+                return True
+        
         self.display_fps()
         pygame.display.flip()
 
@@ -1226,7 +1227,12 @@ class GUI(threading.Thread):
                 self.handle_events()
                 self.handle_keyboard_input()
                 self.update_display()
+                
+                if self.check_victory():
+                    break
+                
                 self.clock.tick(1000)
+
 
         except Exception as e:
             print(f"Error in GUI thread: {e}")
@@ -1458,3 +1464,21 @@ class GUI(threading.Thread):
                 unit_surface = font.render(unit_text, True, text_color)
                 self.screen.blit(unit_surface, (text_x, y_position))
                 text_x += 100 
+
+    def check_victory(self):
+        active_players = [p for p in self.game_data.players if p.units or p.buildings]
+        if len(active_players) == 1:
+            self.display_victory_screen(active_players[0].name)
+            return True
+        return False
+    
+    def display_victory_screen(self, winner_name):
+        victory_image = self.load_image(self.IMG_PATH / "victory.png")
+        self.screen.blit(victory_image, (0, 0))
+        font = pygame.font.Font(None, 72)
+        text_surface = font.render(f"{winner_name} wins!", True, (255, 255, 255))
+        text_rect = text_surface.get_rect(center=(self.WINDOW_WIDTH // 2, self.WINDOW_HEIGHT // 2))
+        self.screen.blit(text_surface, text_rect)
+        pygame.display.flip()
+        time.sleep(5)  # Wait for 5 seconds before closing
+        self.running = False
