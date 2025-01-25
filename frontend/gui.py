@@ -1112,7 +1112,10 @@ class GUI(threading.Thread):
                 animation_speed = 40
                 obj.frame_counter += 1
                 if obj.frame_counter >= animation_speed:
-                    obj.current_frame += 1
+                    if self.game_data.is_paused :
+                        obj.current_frame = 0
+                    else :
+                        obj.current_frame += 1
                     obj.frame_counter = 0
 
                 if unit_type == "villager":
@@ -1164,6 +1167,7 @@ class GUI(threading.Thread):
                     self.screen.blit(image, (adjusted_x, adjusted_y))
                     if hasattr(obj, 'is_attacked_by') and obj.is_attacked_by:  # Afficher la barre de vie uniquement si l'unité est attaquée
                         self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp, image.get_height())
+            
             elif entity_type == "rubble":
                 image = self.building_images["Rubble"]
                 new_size = (image.get_width() * obj.size // 4, image.get_height() * obj.size // 4)
@@ -1172,7 +1176,7 @@ class GUI(threading.Thread):
                 adjusted_x = screen_x - self.TILE_WIDTH * obj.size // 2 
                 self.screen.blit(resized_image, (adjusted_x, adjusted_y))
 
-        if self.show_global_overlay:  # Exemple : Une condition pour afficher un overlay global
+        if self.show_global_overlay:
             overlay_surface = self.background
             self.screen.blit(overlay_surface, (0, 0))
 
