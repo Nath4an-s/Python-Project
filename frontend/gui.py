@@ -1031,7 +1031,7 @@ class GUI(threading.Thread):
             game_data.map.pre_post_entities[entity_type].pop(entity_index)
             print(f"Removing entity at index {entity_index} of type {entity_type}")'''
 
-    def draw_health_bar(self, screen_x, screen_y, hp, max_hp, width=30, height=4):
+    def draw_health_bar(self, screen_x, screen_y, hp, max_hp, unit_type ,width=30, height=4):
         # Calcul du pourcentage de vie restant
         health_percentage = hp / max_hp
         health_width = int(width * health_percentage)
@@ -1041,9 +1041,14 @@ class GUI(threading.Thread):
         bar_x = screen_x - width // 2 - 5
         bar_y = screen_y 
         # Dessiner le fond et la barre de vie
-        pygame.draw.rect(self.screen, (77, 164, 128), [bar_x - 2, bar_y - 2, width + 4, height + 4])
-        pygame.draw.rect(self.screen, (255, 255, 255), [bar_x, bar_y, width, height])
-        pygame.draw.rect(self.screen, color, [bar_x, bar_y, health_width, height])
+        if unit_type == "unit" : 
+            pygame.draw.rect(self.screen, (255, 255, 255), [bar_x - 2, bar_y - 2, width + 4, height + 4])
+            pygame.draw.rect(self.screen, (255, 255, 255), [bar_x, bar_y, width, height])
+            pygame.draw.rect(self.screen, color, [bar_x, bar_y, health_width, height])
+        else : #batiment
+            pygame.draw.rect(self.screen, (0,0,255), [bar_x +35 - 2, bar_y - 2, width + 4, height + 4])
+            pygame.draw.rect(self.screen, (255, 255, 255), [bar_x + 35, bar_y, width, height])
+            pygame.draw.rect(self.screen, color, [bar_x + 35, bar_y, health_width, height])
 
 
     def render_isometric_map(self):
@@ -1168,10 +1173,10 @@ class GUI(threading.Thread):
                     pixel_array[mask] = new_color
                     del pixel_array
 
-                    self.screen.blit(image, (screen_x, screen_y))
+                    self.screen.blit(image, (screen_x1, screen_y2))
 
                     if obj.is_attacked_by:
-                        self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp,width=30, height=4)
+                        self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp,entity_type,width=30, height=4)
 
             elif entity_type == "building":
                 # Adjust sprite rendering based on building size
@@ -1190,7 +1195,7 @@ class GUI(threading.Thread):
 
                     self.screen.blit(image, (adjusted_x, adjusted_y))
                     if obj.is_attacked:  # Afficher la barre de vie uniquement si l'unité est attaquée
-                        self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp,width=50, height=4)
+                        self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp,entity_type,width=50, height=4)
             
             elif entity_type == "rubble":
                 image = self.building_images["Rubble"]
