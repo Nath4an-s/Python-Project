@@ -559,7 +559,6 @@ class GameSettingsMenu:
 
 class PlayerSettingsMenu:
     def __init__(self, num_players, screen_width=800, screen_height=600):
-        # Initialize pygame and font module
         if not pygame.get_init():
             pygame.init()
         if not pygame.font.get_init():
@@ -572,42 +571,79 @@ class PlayerSettingsMenu:
         self.civilizations = ["Means", "Leans", "Marines"]
         self.ai_modes = ["aggressive", "defensive"]
         
-        # Default settings for each player
-        self.player_settings = [
-            {
-                'civilization': "Means",
-                'ai_mode': "aggressive",
-                'civ_index': 0,
-                'ai_index': 0
-            } for _ in range(num_players)
-        ]
-        
         self.colors = {
             'background': (50, 50, 50),
             'button': (100, 100, 100),
             'button_hover': (150, 150, 150),
             'text': (255, 255, 255),
-            'selected': (120, 160, 120)
+            'selected': (120, 160, 120),
+            'scrollbar': (70, 70, 70),
+            'scrollbar_hover': (90, 90, 90)
         }
         
-        # Create buttons for each player's settings
-        button_height = 50
-        spacing = 20
+        # Scroll settings
+        self.scroll_y = 0
+        self.visible_players = 5
+        self.button_height = 60
+        self.button_spacing = 0
+        self.scroll_area_height = self.visible_players * self.button_height
+        self.total_height = num_players * self.button_height
+        
+        # Scrollbar settings
+        self.scrollbar_width = 20
+        self.scrollbar_area = pygame.Rect(620, 150, self.scrollbar_width, self.scroll_area_height)
+        self.scrollbar_height = min(
+            self.scroll_area_height,
+            (self.scroll_area_height / self.total_height) * self.scroll_area_height
+        )
+        self.scrollbar_rect = pygame.Rect(
+            620,
+            150,
+            self.scrollbar_width,
+            self.scrollbar_height
+        )
+        self.scrolling = False
+        self.scroll_start_y = 0
+        self.initial_scroll_y = 0
+        
+        # Create a button for each player
         self.player_buttons = []
         for i in range(num_players):
-            y_pos = 150 + i * (button_height + spacing)
+            y_pos = 150 + i * self.button_height
             self.player_buttons.append({
                 'player': f'Player {i+1}',
-                'civ_rect': pygame.Rect(300, y_pos, 150, button_height),
-                'ai_rect': pygame.Rect(500, y_pos, 150, button_height)
+                'civ_rect': pygame.Rect(200, y_pos, 180, 50),
+                'ai_rect': pygame.Rect(400, y_pos, 180, 50),
+                'civ_index': 0,
+                'ai_index': 0
             })
         
-        # Start button
-        self.start_button = {'text': 'Start Game', 'rect': pygame.Rect(300, 500, 200, 50)}
+        # Navigation buttons
+        self.back_button = {'text': 'Back', 'rect': pygame.Rect(50, 500, 120, 50)}
+        self.start_button = {'text': 'Start Game', 'rect': pygame.Rect(630, 500, 120, 50)}
         
-        # Initialize fonts after pygame.font is initialized
         self.font = pygame.font.Font(None, 36)
         self.title_font = pygame.font.Font(None, 48)
+
+    def handle_scroll(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 4:  # Mouse wheel up
+                self.scroll_y = max(0, self.scroll_y - self.button_height)
+            elif event.button == 5:  # Mouse wheel down
+                max_scroll = self.total_height - self.scroll_area_height
+                self.scroll_y = min(max_scroll if max_scroll > 0 else 0, self.scroll_y + self.button_height)
+            elif self.scrollbar_rect.collidepoint(event.pos):
+                self.scrolling = True
+                self.scroll_start_y = event.pos[1]
+                self.initial_scroll_y = self.scroll_y
+        elif event.type == pygame.MOUSEBUTTONUP:
+            self.scrolling = False
+        elif event.type == pygame.MOUSEMOTION and self.scrolling:
+            # Calculate scroll movement based on mouse drag
+            delta_y = event.pos[1] - self.scroll_start_y
+            scroll_ratio = delta_y / (self.scroll_area_height - self.scrollbar_height)
+            self.scroll_y = self.initial_scroll_y + scroll_ratio * (self.total_height - self.scroll_area_height)
+            self.scroll_y = max(0, min(self.total_height - self.scroll_area_height, self.scroll_y))
 
     def draw(self):
         self.screen.fill(self.colors['background'])
@@ -620,37 +656,62 @@ class PlayerSettingsMenu:
         # Draw headers
         civ_header = self.font.render("Civilization", True, self.colors['text'])
         ai_header = self.font.render("AI Mode", True, self.colors['text'])
-        self.screen.blit(civ_header, (300, 110))
-        self.screen.blit(ai_header, (500, 110))
+        self.screen.blit(civ_header, (200, 110))
+        self.screen.blit(ai_header, (400, 110))
         
-        # Draw player settings buttons
+        # Draw visible player buttons
         mouse_pos = pygame.mouse.get_pos()
-        for i, button in enumerate(self.player_buttons):
-            # Draw player label
+        start_idx = max(0, int(self.scroll_y / self.button_height))
+        end_idx = min(self.num_players, start_idx + self.visible_players)
+        
+        for i in range(start_idx, end_idx):
+            button = self.player_buttons[i]
+            y_pos = 150 + (i - start_idx) * self.button_height
+            
+            # Update button positions
+            button['civ_rect'].y = y_pos
+            button['ai_rect'].y = y_pos
+            
+            # Draw the player label
             player_text = self.font.render(button['player'], True, self.colors['text'])
-            player_rect = player_text.get_rect(right=button['civ_rect'].left - 20, centery=button['civ_rect'].centery)
+            player_rect = player_text.get_rect(right=button['civ_rect'].left - 20, centery=y_pos + 25)
             self.screen.blit(player_text, player_rect)
             
             # Draw civilization button
             civ_color = self.colors['button_hover'] if button['civ_rect'].collidepoint(mouse_pos) else self.colors['button']
             pygame.draw.rect(self.screen, civ_color, button['civ_rect'], border_radius=5)
-            civ_text = self.font.render(self.player_settings[i]['civilization'], True, self.colors['text'])
+            civ_text = self.font.render(self.civilizations[button['civ_index']], True, self.colors['text'])
             civ_rect = civ_text.get_rect(center=button['civ_rect'].center)
             self.screen.blit(civ_text, civ_rect)
             
             # Draw AI mode button
             ai_color = self.colors['button_hover'] if button['ai_rect'].collidepoint(mouse_pos) else self.colors['button']
             pygame.draw.rect(self.screen, ai_color, button['ai_rect'], border_radius=5)
-            ai_text = self.font.render(self.player_settings[i]['ai_mode'], True, self.colors['text'])
+            ai_text = self.font.render(self.ai_modes[button['ai_index']], True, self.colors['text'])
             ai_rect = ai_text.get_rect(center=button['ai_rect'].center)
             self.screen.blit(ai_text, ai_rect)
         
-        # Draw start button
-        start_color = self.colors['button_hover'] if self.start_button['rect'].collidepoint(mouse_pos) else self.colors['button']
-        pygame.draw.rect(self.screen, start_color, self.start_button['rect'], border_radius=5)
-        start_text = self.font.render(self.start_button['text'], True, self.colors['text'])
-        start_rect = start_text.get_rect(center=self.start_button['rect'].center)
-        self.screen.blit(start_text, start_rect)
+        # Draw scrollbar if needed
+        if self.total_height > self.scroll_area_height:
+            # Draw scrollbar background
+            pygame.draw.rect(self.screen, self.colors['scrollbar'], self.scrollbar_area, border_radius=5)
+            
+            # Calculate and update scrollbar position
+            scroll_ratio = self.scroll_y / (self.total_height - self.scroll_area_height)
+            scrollbar_y = 150 + scroll_ratio * (self.scroll_area_height - self.scrollbar_height)
+            self.scrollbar_rect.y = scrollbar_y
+            
+            # Draw scrollbar handle
+            color = self.colors['scrollbar_hover'] if self.scrollbar_rect.collidepoint(pygame.mouse.get_pos()) else self.colors['button']
+            pygame.draw.rect(self.screen, color, self.scrollbar_rect, border_radius=5)
+        
+        # Draw navigation buttons
+        for button in [self.back_button, self.start_button]:
+            color = self.colors['button_hover'] if button['rect'].collidepoint(mouse_pos) else self.colors['button']
+            pygame.draw.rect(self.screen, color, button['rect'], border_radius=5)
+            text = self.font.render(button['text'], True, self.colors['text'])
+            text_rect = text.get_rect(center=button['rect'].center)
+            self.screen.blit(text, text_rect)
 
     def run(self):
         running = True
@@ -660,21 +721,29 @@ class PlayerSettingsMenu:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     return None
-                elif event.type == pygame.MOUSEBUTTONDOWN:
+                
+                # Handle scrolling
+                self.handle_scroll(event)
+                
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     mouse_pos = event.pos
                     
-                    # Handle civilization and AI mode selection
-                    for i, button in enumerate(self.player_buttons):
-                        if button['civ_rect'].collidepoint(mouse_pos):
-                            self.player_settings[i]['civ_index'] = (self.player_settings[i]['civ_index'] + 1) % len(self.civilizations)
-                            self.player_settings[i]['civilization'] = self.civilizations[self.player_settings[i]['civ_index']]
-                        elif button['ai_rect'].collidepoint(mouse_pos):
-                            self.player_settings[i]['ai_index'] = (self.player_settings[i]['ai_index'] + 1) % len(self.ai_modes)
-                            self.player_settings[i]['ai_mode'] = self.ai_modes[self.player_settings[i]['ai_index']]
+                    # Handle back button
+                    if self.back_button['rect'].collidepoint(mouse_pos):
+                        return None
                     
                     # Handle start button
                     if self.start_button['rect'].collidepoint(mouse_pos):
-                        return self.player_settings
+                        return [{'civilization': self.civilizations[button['civ_index']], 
+                                'ai_mode': self.ai_modes[button['ai_index']]} 
+                               for button in self.player_buttons]
+                    
+                    # Handle civilization and AI mode selection
+                    for button in self.player_buttons:
+                        if button['civ_rect'].collidepoint(mouse_pos):
+                            button['civ_index'] = (button['civ_index'] + 1) % len(self.civilizations)
+                        elif button['ai_rect'].collidepoint(mouse_pos):
+                            button['ai_index'] = (button['ai_index'] + 1) % len(self.ai_modes)
             
             pygame.display.flip()
 
