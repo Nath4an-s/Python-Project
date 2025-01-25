@@ -1171,12 +1171,8 @@ class GUI(threading.Thread):
                     self.screen.blit(image, (screen_x, screen_y))
 
                     if obj.is_attacked_by:
-                        self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp, image.get_height())
+                        self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp,width=30, height=4)
 
-                    if obj.is_attacked_by:
-                        self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp, image.get_height())
-                """
-          
             elif entity_type == "building":
                 # Adjust sprite rendering based on building size
                 building_type = obj.name.replace(" ", "")
