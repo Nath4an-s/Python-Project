@@ -228,6 +228,8 @@ class GUI(threading.Thread):
         self.show_resources = False
         self.show_units = False
 
+        self.codedetriche = False
+
         self.mouse_held = None
            
         self.PLAYER_COLORS = {
@@ -249,6 +251,7 @@ class GUI(threading.Thread):
 
         self.last_mini_map_update = time.time()
         self.mini_map_update_interval = 50
+        self.showminimap = True
         self.mini_map_surface = None
         self.show_global_overlay = True
 
@@ -305,6 +308,7 @@ class GUI(threading.Thread):
         self.mini_map_back = self.load_image(self.IMG_HUD / "MiniMAP.png")
         self.back = self.load_image(self.IMG_HUD / "Hud2.png")
         self.background = self.load_image(self.IMG_HUD / "Overlay.png")
+        self.background1 = self.load_image(self.IMG_HUD / "Overlay1.png")
         self.victory_image = self.load_image(self.IMG_PATH / "victory.png")
 
         self.villager_images = {
@@ -865,6 +869,10 @@ class GUI(threading.Thread):
                     self.show_resources = not self.show_resources
                 elif event.key == pygame.K_F2:
                     self.show_units = not self.show_units
+                elif event.key == pygame.K_F3:
+                    self.showminimap = not self.showminimap
+                elif event.key == pygame.K_F4:
+                    self.codedetriche = not self.codedetriche
 
             # Gestion des événements de la souris
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Bouton gauche
@@ -892,11 +900,12 @@ class GUI(threading.Thread):
         current_time = time.time()
         if current_time - self.last_fps_update >= self.fps_refresh_interval:
             fps = int(self.clock.get_fps())
-            self.fps_text = self.font.render(f'FPS: {fps}', True, (255, 255, 255))
+            small_font = pygame.font.Font(None, 25)
+            self.fps_text = small_font.render(f'{fps}', True, (255, 255, 255))
             self.last_fps_update = current_time
 
         if self.fps_text:
-            fps_rect = self.fps_text.get_rect(topright=(self.WINDOW_WIDTH - 10, 10))
+            fps_rect = self.fps_text.get_rect(center=(self.WINDOW_WIDTH //2, 15))
             self.screen.blit(self.fps_text, fps_rect)
 
     def pre_render_map(self):
@@ -1021,16 +1030,17 @@ class GUI(threading.Thread):
             game_data.map.pre_post_entities[entity_type].pop(entity_index)
             print(f"Removing entity at index {entity_index} of type {entity_type}")'''
 
-    def draw_health_bar(self, screen_x, screen_y, hp, max_hp, img_height, width=30, height=2):
+    def draw_health_bar(self, screen_x, screen_y, hp, max_hp, width=30, height=4):
         # Calcul du pourcentage de vie restant
         health_percentage = hp / max_hp
         health_width = int(width * health_percentage)
         # Couleur de la barre de vie
         color = (0, 255, 0) if health_percentage > 0.5 else (255, 165, 0) if health_percentage > 0.25 else (255, 0, 0)
         # Positionnement de la barre au-dessus de l'unité en tenant compte de la hauteur de l'image
-        bar_x = screen_x - width // 2
-        bar_y = screen_y - img_height   # 10 pixels au-dessus de l'unité
+        bar_x = screen_x - width // 2 - 5
+        bar_y = screen_y 
         # Dessiner le fond et la barre de vie
+        pygame.draw.rect(self.screen, (77, 164, 128), [bar_x - 2, bar_y - 2, width + 4, height + 4])
         pygame.draw.rect(self.screen, (255, 255, 255), [bar_x, bar_y, width, height])
         pygame.draw.rect(self.screen, color, [bar_x, bar_y, health_width, height])
 
@@ -1140,13 +1150,13 @@ class GUI(threading.Thread):
                         image = images[obj.current_frame % len(images)]
                         
                 offset_x, offset_y = get_unit_offsets(unit_type,state, direction)
-                screen_x = x - self.camera.offset_x + offset_x
-                screen_y = y - self.camera.offset_y + offset_y
+                screen_x1 = x - self.camera.offset_x + offset_x
+                screen_y2 = y - self.camera.offset_y + offset_y
                 if image:
-                    self.screen.blit(image, (screen_x, screen_y))
+                    self.screen.blit(image, (screen_x1, screen_y2))
 
-                    if obj.is_attacked_by:
-                        self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp, image.get_height())
+                if obj.is_attacked_by:
+                    self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp)
 
           
             elif entity_type == "building":
@@ -1165,8 +1175,8 @@ class GUI(threading.Thread):
                         adjusted_y -= (self.TILE_HEIGHT // 6 ) 
 
                     self.screen.blit(image, (adjusted_x, adjusted_y))
-                    if hasattr(obj, 'is_attacked_by') and obj.is_attacked_by:  # Afficher la barre de vie uniquement si l'unité est attaquée
-                        self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp, image.get_height())
+                    if obj.is_attacked:  # Afficher la barre de vie uniquement si l'unité est attaquée
+                        self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp,width=50, height=4)
             
             elif entity_type == "rubble":
                 image = self.building_images["Rubble"]
@@ -1177,14 +1187,17 @@ class GUI(threading.Thread):
                 self.screen.blit(resized_image, (adjusted_x, adjusted_y))
 
         if self.show_global_overlay:
-            overlay_surface = self.background
+            if self.codedetriche : 
+                overlay_surface = self.background1
+            else :    
+                overlay_surface = self.background
             self.screen.blit(overlay_surface, (0, 0))
 
 
     def initialize_pygame(self):
         pygame.init()
         self.screen = pygame.display.set_mode((self.WINDOW_WIDTH, self.WINDOW_HEIGHT))
-        pygame.display.set_caption("Age Of Empire")
+        pygame.display.set_caption("Gui")
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(None, 36)
         self.setup_paths()
@@ -1202,8 +1215,8 @@ class GUI(threading.Thread):
 
         self.screen.fill((0, 0, 0))
         self.render_isometric_map()
-        self.update_and_draw_mini_map()
-            # Draw resources if enabled
+        if self.showminimap :
+            self.update_and_draw_mini_map()
         if self.show_resources:
             self.display_player_resources()
         if self.show_units:
@@ -1484,5 +1497,5 @@ class GUI(threading.Thread):
         text_rect = text_surface.get_rect(center=(self.WINDOW_WIDTH // 2, self.WINDOW_HEIGHT // 2))
         self.screen.blit(text_surface, text_rect)
         pygame.display.flip()
-        time.sleep(5)  # Wait for 5 seconds before closing
+        time.sleep(10)  # Wait for 5 seconds before closing
         self.running = False
