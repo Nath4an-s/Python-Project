@@ -16,7 +16,7 @@ def get_unit_offsets(unit_type, state, direction):
     # Offsets par défaut pour "villager"
     offsets_villager = {
         "idle": {
-            "south": (-25, -37),
+            "south": (-14, -38),
         },
         "walking": {
             "north": (-22, -43),
