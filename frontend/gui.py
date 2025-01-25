@@ -293,7 +293,7 @@ class GUI(threading.Thread):
             "ArcheryRange": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6 * 595 // 648),  # Taille : (648, 595)
             "Camp": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),  # Taille : (128, 128)
             "Farm": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 2),  # Taille : (128, 64)
-            "Keep": (64, 64*481//310),  # Taille : (64, 64)
+            "Keep": (64*1.2, 64*481*1.3//310),  # Taille : (64, 64)
             "Construct": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 2),  # Taille : (128, 64)
         }
 
