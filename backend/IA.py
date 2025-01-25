@@ -466,7 +466,7 @@ class IA:
                 Action(self.game_map).move_unit(unit, patrol_x, patrol_y, self.current_time_called)
 
     def is_tile_free(self, x, y, game_map):
-        return game_map.grid[x][y].building or not game_map.grid[x][y].resource
+        return game_map.grid[y][x].building or not game_map.grid[y][x].resource
 
     def defend(self, unit):
                     

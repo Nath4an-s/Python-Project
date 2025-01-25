@@ -454,9 +454,13 @@ class Action:
                 else:
                     self.debug_print(f"{unit.name} is attacking {enemy_unit.name}...", 'Red')
                     enemy_unit.hp -= unit.attack
+                    if isinstance(enemy_unit, Building):
+                        enemy_unit.is_attacked = True
 
                 unit.last_hit_time = current_time_called
         else:
+            if isinstance(enemy_unit, Building):
+                enemy_unit.is_attacked = False
             unit.task = "going_to_battle"  # Reset to movement phase
             self.debug_print(f"not entering attack phase, distance: {distance}", 'Red')
 

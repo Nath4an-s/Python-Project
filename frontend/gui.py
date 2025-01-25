@@ -16,7 +16,7 @@ def get_unit_offsets(unit_type, state, direction):
     # Offsets par défaut pour "villager"
     offsets_villager = {
         "idle": {
-            "south": (-25, -37),
+            "south": (-14, -38),
         },
         "walking": {
             "north": (-22, -43),
@@ -290,8 +290,8 @@ class GUI(threading.Thread):
             "Rubble": (4*64, 4*32),  # Taille : (64, 64)
             "Stable": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6 * 471 // 612),  # Taille : (612, 471)
             "ArcheryRange": (self.TILE_WIDTH * 3, self.TILE_HEIGHT * 6 * 595 // 648),  # Taille : (648, 595)
-            "Camp": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4),  # Taille : (128, 128)
-            "Farm": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 2),  # Taille : (128, 64)
+            "Camp": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4 * 245 // 364),  # Taille : (364, 245)
+            "Farm": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 4 * 64 // 128),  # Taille : (128, 64)
             "Keep": (64, 64*481//310),  # Taille : (64, 64)
             "Construct": (self.TILE_WIDTH * 2, self.TILE_HEIGHT * 2),  # Taille : (128, 64)
         }
@@ -1153,6 +1153,7 @@ class GUI(threading.Thread):
                     # Adjust position for the sprite size
                     adjusted_y = screen_y - image.get_height() + (self.TILE_HEIGHT // 2)
                     adjusted_x = screen_x + self.TILE_WIDTH * (2 - obj.size) // 2
+                    scrn_x = screen_x
 
                     if obj.size == 4:
                         adjusted_x -= (self.TILE_WIDTH // 2)
@@ -1160,8 +1161,11 @@ class GUI(threading.Thread):
                         adjusted_y -= (self.TILE_HEIGHT // 6 ) 
 
                     self.screen.blit(image, (adjusted_x, adjusted_y))
-                    if hasattr(obj, 'is_attacked_by') and obj.is_attacked_by:  # Afficher la barre de vie uniquement si l'unité est attaquée
-                        self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp, image.get_height())
+                    if obj.is_attacked:  # Afficher la barre de vie uniquement si l'unité est attaquée
+                        if obj.size == 4:
+                            scrn_x -= (self.TILE_WIDTH // 2)
+                        self.draw_health_bar(scrn_x + self.TILE_WIDTH, screen_y + self.TILE_HEIGHT, obj.hp, obj.max_hp, image.get_height())
+            
             elif entity_type == "rubble":
                 image = self.building_images["Rubble"]
                 new_size = (image.get_width() * obj.size // 4, image.get_height() * obj.size // 4)

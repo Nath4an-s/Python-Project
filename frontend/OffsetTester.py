@@ -228,5 +228,5 @@ if __name__ == "__main__":
     target_position = (400, 300)  # Position au centre de la fenêtre
     
     # Lancer le test
-    tester = OffsetTester(imagedetree, target_position=target_position)
+    tester = OffsetTester(image_data, target_position=target_position)
     tester.run()
