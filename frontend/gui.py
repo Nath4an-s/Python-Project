@@ -1264,7 +1264,7 @@ class GUI(threading.Thread):
                                 target_y = iso_target_y - self.camera.offset_y
 
                                 # Calcul de la progression
-                                progress = min(obj.arrow_progress / 70.0, 1.0)  # Ajustez la vitesse ici (50 frames pour atteindre)
+                                progress = min(obj.arrow_progress / 260.0, 1.0)  # Ajustez la vitesse ici (50 frames pour atteindre)
 
                                 # Dessiner la flèche
                                 fireball_image = self.fleche  # Assurez-vous que c'est l'image de la flèche
