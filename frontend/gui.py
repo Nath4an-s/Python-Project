@@ -401,6 +401,7 @@ class GUI(threading.Thread):
         self.back = self.load_image(self.IMG_HUD / "Hud2.png")
         self.background = self.load_image(self.IMG_HUD / "Overlay.png")
         self.background1 = self.load_image(self.IMG_HUD / "Overlay1.png")
+        self.pause_image = self.load_image(self.IMG_HUD / "Pause.png")
         self.victory_image = self.load_image(self.IMG_PATH / "victory.png")
         self.fireball = self.load_image(self.RESOURCES_PATH / "boule.png")
         self.fleche = self.load_image(self.RESOURCES_PATH / "fleche.png")
@@ -1367,9 +1368,29 @@ class GUI(threading.Thread):
         if not self.game_data:
             return
 
+        # Si le jeu est en pause, afficher une image de pause avec transparence
+        if self.game_data.is_paused:
+            # Dessiner la carte normalement en arrière-plan
+            self.screen.fill((0, 0, 0))
+            self.render_isometric_map()
+
+            # Créer une surface semi-transparente
+            overlay = pygame.Surface((self.WINDOW_WIDTH, self.WINDOW_HEIGHT), pygame.SRCALPHA)  # Surface avec support alpha
+            overlay.fill((0, 0, 0, 128))  # Remplir avec une couleur noire semi-transparente (128 = 50% d'opacité)
+            self.screen.blit(overlay, (0, 0))  # Dessiner la surface sur l'écran
+
+            # Afficher l'image de pause
+            pause_image = self.pause_image  # Assurez-vous que `self.pause_image` contient l'image de pause
+            pause_rect = pause_image.get_rect(center=(self.WINDOW_WIDTH // 2, self.WINDOW_HEIGHT // 2))
+            self.screen.blit(pause_image, pause_rect)
+
+            pygame.display.flip()  # Met à jour l'écran
+            return
+
+        # Continuer l'affichage normal si le jeu n'est pas en pause
         self.screen.fill((0, 0, 0))
         self.render_isometric_map()
-        if self.showminimap :
+        if self.showminimap:
             self.update_and_draw_mini_map()
         if self.show_resources:
             self.display_player_resources()
@@ -1377,10 +1398,11 @@ class GUI(threading.Thread):
             self.display_player_units()
 
         if self.check_victory():
-                return True
-        
+            return True
+
         self.display_fps()
         pygame.display.flip()
+
 
     def run(self):
         try:
