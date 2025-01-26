@@ -37,7 +37,7 @@ class StartMenu:
         }
         
         # Charger l'image de fond
-        self.background_image = pygame.image.load(r'C:\Users\Asus\Desktop\Python-Project\assets\MenuPhoto\menu.png')
+        self.background_image = pygame.image.load(r'..\assets\MenuPhoto\menu.png')
         self.background_image = pygame.transform.scale(self.background_image, (screen_width, screen_height))  # Adapter l'image à la taille de l'écran
 
         # Adjusted button positions for 3 buttons
