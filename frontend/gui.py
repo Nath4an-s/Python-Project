@@ -13,6 +13,16 @@ from backend.Players import *
 from PIL import Image
 import copy
 
+def custom_deepcopy(data):
+    if isinstance(data, dict):
+        return {key: custom_deepcopy(value) for key, value in data.items()}
+    elif isinstance(data, list):
+        return [custom_deepcopy(item) for item in data]
+    elif isinstance(data, pygame.Surface):
+        return data.copy()  # Utiliser la méthode copy() pour les surfaces pygame
+    else:
+        return data  # Retourner tel quel pour les autres types simples
+
 def get_unit_offsets(unit_type, state, direction):
     """
     Retourne les offsets pour une unité en fonction de son type, de son état et de sa direction.
@@ -290,8 +300,11 @@ class GUI(threading.Thread):
 
         return img
 
+
+
     def generate_player_images(self, unit_images):
-        player_images = {player_id: copy.deepcopy(unit_images) for player_id in self.PLAYER_COLORS}
+        # Remplace deepcopy par custom_deepcopy
+        player_images = {player_id: custom_deepcopy(unit_images) for player_id in self.PLAYER_COLORS}
 
         for player_id, color in self.PLAYER_COLORS.items():
             for state in player_images[player_id]:
@@ -302,8 +315,10 @@ class GUI(threading.Thread):
 
         return player_images
 
+
     def generate_player_buildings_images(self, buildings_images):
-        player_images = {player_id: copy.deepcopy(buildings_images) for player_id in self.PLAYER_COLORS}
+        # Remplace deepcopy par custom_deepcopy
+        player_images = {player_id: custom_deepcopy(buildings_images) for player_id in self.PLAYER_COLORS}
 
         for player_id, color in self.PLAYER_COLORS.items():
             for building_type in player_images[player_id]:
