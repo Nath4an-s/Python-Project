@@ -6,6 +6,7 @@ from backend.Building import Farm
 import threading
 import queue as Queue
 from pathlib import Path
+from backend.Starter_File import *
 import time
 import traceback
 import random
@@ -1597,12 +1598,22 @@ class GUI(threading.Thread):
         return False
     
     def display_victory_screen(self, winner_name):
+        # Charger l'image de victoire et préparer le texte du gagnant
         victory_image = self.load_image(self.IMG_PATH / "victory.png")
-        self.screen.blit(victory_image, (0, 0))
-        font = pygame.font.Font(None, 72)
+        font = pygame.font.Font(None, 36)
         text_surface = font.render(f"{winner_name} wins!", True, (255, 255, 255))
-        text_rect = text_surface.get_rect(center=(self.WINDOW_WIDTH // 2, self.WINDOW_HEIGHT // 2))
-        self.screen.blit(text_surface, text_rect)
-        pygame.display.flip()
-        time.sleep(10)  # Wait for 5 seconds before closing
-        self.running = False
+        text_rect = text_surface.get_rect(center=(self.WINDOW_WIDTH // 2, self.WINDOW_HEIGHT // 2 + 50))
+
+        # Commencer l'animation de fade-in
+        for alpha in range(0, 256, 5):  # Augmenter alpha de 0 à 255 par pas de 5
+            victory_image.set_alpha(alpha)  # Définir le niveau de transparence de l'image
+            self.screen.fill((0, 0, 0))  # Effacer l'écran avec du noir
+            self.screen.blit(victory_image, (0, 0))  # Afficher l'image de victoire
+            text_surface.set_alpha(alpha)  # Appliquer le même effet de transparence au texte
+            self.screen.blit(text_surface, text_rect)  # Afficher le texte
+            pygame.display.flip()  # Mettre à jour l'écran avec le nouveau frame
+            pygame.time.wait(50)  # Attendre un peu pour ralentir l'animation
+
+        # Attendre quelques secondes avant de quitter l'écran de victoire
+        pygame.time.wait(2000)  # Attendre 5 secondes
+        #start_menu()
