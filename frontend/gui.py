@@ -301,19 +301,24 @@ class GUI(threading.Thread):
 
 
 
-    def generate_player_images(self, unit_images):
-        # Remplace deepcopy par custom_deepcopy
+    def generate_player_units_images(self, unit_images):
+        # Sao chép đơn vị hình ảnh cho từng người chơi
         player_images = {player_id: custom_deepcopy(unit_images) for player_id in self.PLAYER_COLORS}
 
         for player_id, color in self.PLAYER_COLORS.items():
             for state in player_images[player_id]:
+                if not isinstance(player_images[player_id][state], dict):
+                    continue  # Bỏ qua nếu không phải từ điển
+            
                 for direction in player_images[player_id][state]:
+                    if not isinstance(player_images[player_id][state][direction], list):
+                        continue  # Bỏ qua nếu không phải danh sách hình ảnh
+                
                     player_images[player_id][state][direction] = [
                         self.recolor_image(img, color) for img in player_images[player_id][state][direction]
                     ]
 
         return player_images
-
 
     def generate_player_buildings_images(self, buildings_images):
         # Remplace deepcopy par custom_deepcopy
@@ -909,31 +914,19 @@ class GUI(threading.Thread):
                 ],
             },
         }
-        """
-        self.player_villager_images = self.generate_player_images(self.villager_images)
-        self.player_swordman_images = self.generate_player_images(self.swordman_images)
-        """
-
+        
+        self.player_villager_images = self.generate_player_units_images(self.villager_images)
+        self.player_swordman_images = self.generate_player_units_images(self.swordman_images)
+        self.player_archer_images = self.generate_player_units_images(self.archer_images)
+        self.player_horseman_images = self.generate_player_units_images(self.horseman_images)
+        
+      
         self.iconwod = self.load_image(self.RESOURCES_PATH / "iconwood.png")
         self.icongold = self.load_image(self.RESOURCES_PATH / "icongold.png")
 
         self.IMAGES["Gold"] = pygame.transform.scale(self.IMAGES["Gold"], (self.TILE_WIDTH, self.TILE_HEIGHT))
         self.IMAGES["Wood"] = pygame.transform.scale(self.IMAGES["Wood"], (int(self.TILE_WIDTH * 2), int(self.TILE_HEIGHT * 2.5)))
-    """
-    def replace_color_range(self, image, player):
-        pixel_array = pygame.surfarray.pixels3d(image)
-        blue_min = np.array([0, 0, 100])
-        blue_max = np.array([100, 100, 255])
-        new_color = np.array(self.PLAYER_COLORS.get(player.id))
-        mask = (
-            (pixel_array[:, :, 0] >= blue_min[0]) & (pixel_array[:, :, 0] <= blue_max[0]) & 
-            (pixel_array[:, :, 1] >= blue_min[1]) & (pixel_array[:, :, 1] <= blue_max[1]) &  
-            (pixel_array[:, :, 2] >= blue_min[2]) & (pixel_array[:, :, 2] <= blue_max[2])    
-        )
-        pixel_array[mask] = new_color
-        del pixel_array
-        return image
-    """
+
     def calculate_damage_from_enemies(building, enemies):
         """Calcul des dégâts basés sur la distance des ennemis."""
         damage = 0
@@ -1227,34 +1220,23 @@ class GUI(threading.Thread):
 
                 if unit_type == "villager":
                     if state in self.villager_images and direction in self.villager_images[state]:
-                        images = self.villager_images[state][direction]
-                        """
-                        if obj.player.id not in self.player_villager_images:
-                            raise ValueError(f"Player ID {obj.player.id} not found in player_villager_images.")
-                        if state not in self.player_villager_images[obj.player.id]:
-                            raise ValueError(f"State '{state}' not found for Player ID {obj.player.id}.")
-                        if direction not in self.player_villager_images[obj.player.id][state]:
-                            raise ValueError(f"Direction '{direction}' not found in state '{state}' for Player ID {obj.player.id}.")
-                        
                         images = self.player_villager_images[obj.player.id][state][direction]
-                        """
                         image = images[obj.current_frame % len(images)]
 
                 elif unit_type == "swordman":
                    if state in self.swordman_images and direction in self.swordman_images[state]:
-                    images = self.swordman_images[state][direction]
-                    #images = self.player_swordman_images[obj.player.id][state][direction]
+                    images = self.player_swordman_images[obj.player.id][state][direction]
                     image = images[obj.current_frame % len(images)]
 
                 elif unit_type == "archer":
                     if state in self.archer_images and direction in self.archer_images[state]:
-                        images = self.archer_images[state][direction]
+                        images = self.player_archer_images[obj.player.id][state][direction]
                         if images:
                             image = images[obj.current_frame % len(images)]
 
                 elif unit_type == "horseman":
                     if state in self.horseman_images and direction in self.horseman_images[state]:
-                        images = self.horseman_images[state][direction]
+                        images = self.player_horseman_images[obj.player.id][state][direction]
                         image = images[obj.current_frame % len(images)]
                         
                 offset_x, offset_y = get_unit_offsets(unit_type,state, direction)
