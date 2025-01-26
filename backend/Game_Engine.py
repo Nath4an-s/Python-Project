@@ -7,7 +7,6 @@ import tkinter as tk
 from queue import Queue
 from frontend.gui import GUI
 
-from pynput.keyboard import Key, Listener
 from logger import debug_print
 from Units import *
 from Building import *
@@ -23,44 +22,6 @@ except ImportError:
 from html_report import generate_html_report
 
 from IA import IA
-
-#Partie Gestion de Touche en Simultanée
-
-allowedKeys = [
-    Key.up,
-    Key.down,
-    Key.left,
-    Key.right
-]
-
-key_buffer = []
-
-def press(key):
-    global key_buffer
-    if key in allowedKeys and key not in key_buffer and len(key_buffer) < 3:
-        key_buffer.append(key)
-
-def release(key):
-    global key_buffer
-    if key in key_buffer:
-        key_buffer.remove(key)
-
-def check_diagonal_movement():
-    up = Key.up in key_buffer
-    down = Key.down in key_buffer
-    left = Key.left in key_buffer
-    right = Key.right in key_buffer
-    
-    if up and left:
-        return -1, -1
-    elif up and right:
-        return 1, -1
-    elif down and left:
-        return -1, 1
-    elif down and right:
-        return 1, 1
-    return 0, 0
-
 
 # GameEngine Class
 class GameEngine:
@@ -129,8 +90,6 @@ class GameEngine:
         
         if self.terminalon :
             self.map.display_viewport(stdscr, top_left_x, top_left_y, viewport_width, viewport_height, Map_is_paused=self.is_paused)  # Display the initial viewport
-            listener = Listener(on_press=press, on_release=release)
-            listener.start()
 
         try:
             while not self.check_victory():
@@ -144,31 +103,23 @@ class GameEngine:
                 key = stdscr.getch()  # Get the key pressed by the user
                 action = Action(self.map)
 
-                dx, dy = check_diagonal_movement()
+                if key == curses.KEY_UP or key == ord('z'):
+                    top_left_y = max(0, top_left_y - 1)
+                elif key == curses.KEY_DOWN or key == ord('s'):
+                    top_left_y = min(self.map.height - viewport_height, top_left_y + 1)
+                elif key == curses.KEY_LEFT or key == ord('q'):
+                    top_left_x = max(0, top_left_x - 1)
+                elif key == curses.KEY_RIGHT or key == ord('d'):
+                    top_left_x = min(self.map.width - viewport_width, top_left_x + 1)
+                elif key == ord('Z'):
+                    top_left_y = max(0, top_left_y - 5)
+                elif key == ord('S'):
+                    top_left_y = min(self.map.height - viewport_height, top_left_y + 5)
+                elif key == ord('Q'):
+                    top_left_x = max(0, top_left_x - 5)
+                elif key == ord('D'):   
+                    top_left_x = min(self.map.width - viewport_width, top_left_x + 5)
 
-                if dx == 0 and dy == 0:
-                    if key == curses.KEY_UP or key == ord('z'):
-                        top_left_y = max(0, top_left_y - 1)
-                    elif key == curses.KEY_DOWN or key == ord('s'):
-                        top_left_y = min(self.map.height - viewport_height, top_left_y + 1)
-                    elif key == curses.KEY_LEFT or key == ord('q'):
-                        top_left_x = max(0, top_left_x - 1)
-                    elif key == curses.KEY_RIGHT or key == ord('d'):
-                        top_left_x = min(self.map.width - viewport_width, top_left_x + 1)
-                    elif key == ord('Z'):
-                        top_left_y = max(0, top_left_y - 5)
-                    elif key == ord('S'):
-                        top_left_y = min(self.map.height - viewport_height, top_left_y + 5)
-                    elif key == ord('Q'):
-                        top_left_x = max(0, top_left_x - 5)
-                    elif key == ord('D'):   
-                        top_left_x = min(self.map.width - viewport_width, top_left_x + 5)
-                    
-                else :
-                    # Apply diagonal movement
-                    top_left_x = max(0, min(self.map.width - viewport_width, top_left_x + dx))
-                    top_left_y = max(0, min(self.map.height - viewport_height, top_left_y + dy))
-                
                 ###### TEST KEYS #######
 
                 if key == ord('r'):
@@ -232,25 +183,25 @@ class GameEngine:
                             if unit.target_position:
                                 target_x, target_y = unit.target_position
                                 action.move_unit(unit, target_x, target_y, self.get_current_time())
-                            if unit.task == "gathering" or unit.task == "returning":
+                            elif unit.task == "gathering" or unit.task == "returning":
                                 action._gather(unit, unit.last_gathered, self.get_current_time())
-                            if unit.task == "marching":
+                            elif unit.task == "marching":
                                 action.gather_resources(unit, unit.last_gathered, self.get_current_time())
-                            if unit.task == "attacking":
+                            elif unit.task == "attacking":
                                 action._attack(unit, unit.target_attack, self.get_current_time())
-                            if unit.task == "going_to_battle":
+                            elif unit.task == "going_to_battle":
                                 action.go_battle(unit, unit.target_attack, self.get_current_time())
-                            if unit.task == "is_attacked":
+                            elif unit.task == "is_attacked":
                                 action._attack(unit, unit.is_attacked_by, self.get_current_time())
-                            if unit.task == "going_to_construction_site":
+                            elif unit.task == "going_to_construction_site":
                                 action.construct_building(unit, unit.construction_type, unit.target_building[0], unit.target_building[1], player, self.get_current_time())
-                            if unit.task == "constructing":
+                            elif unit.task == "constructing":
                                 action._construct(unit, unit.construction_type, unit.target_building[0], unit.target_building[1], player, self.get_current_time())
                         for building in player.buildings:
                             if hasattr(building, 'training_queue') and building.training_queue != []:
                                 unit = building.training_queue[0]
                                 Unit.train_unit(unit, unit.spawn_position[0], unit.spawn_position[1], player, unit.spawn_building, self.map, self.get_current_time())
-                            if type(building).__name__ == "Keep":
+                            elif type(building).__name__ == "Keep":
                                 nearby_enemies = IA.find_nearby_enemies(building.player.ai, max_distance=building.range, unit_position=building.position)  # 5 tile radius
                                 if nearby_enemies:
                                     closest_enemy = min(nearby_enemies, 
