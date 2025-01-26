@@ -38,7 +38,8 @@ class StartMenu:
         
         # Charger l'image de fond
         self.background_image = pygame.image.load(r'..\assets\MenuPhoto\menu.png')
-        self.background_image = pygame.transform.scale(self.background_image, (screen_width, screen_height))  # Adapter l'image à la taille de l'écran
+        self.background_image = pygame.transform.scale(self.background_image, (screen_width, screen_height))
+        # Adapter l'image à la taille de l'écran
 
         # Adjusted button positions for 3 buttons
         self.buttons = [
@@ -275,6 +276,8 @@ class LoadGameMenu:
 
 class GameSettingsMenu:
     def __init__(self, screen_width=800, screen_height=600):
+
+
         self.screen = pygame.display.set_mode((screen_width, screen_height))
         pygame.display.set_caption("AIge of Empire - Paramètres de la partie")
         
@@ -291,6 +294,9 @@ class GameSettingsMenu:
             'input_bg': (70, 70, 70)
         }
         
+        self.settingmenu_image = pygame.image.load(r'..\assets\MenuPhoto\parametre.gif')
+        self.settingmenu_image = pygame.transform.scale(self.settingmenu_image, (screen_width, screen_height))
+
         self.font = pygame.font.Font(None, 36)
         self.title_font = pygame.font.Font(None, 48)
         
@@ -363,7 +369,7 @@ class GameSettingsMenu:
         self.back_button = {'text': 'Retour', 'rect': pygame.Rect(self.center_x - 170, 500, 150, button_height)}
 
     def draw(self):
-        self.screen.fill(self.colors['background'])
+        self.screen.blit(self.settingmenu_image, (0, 0))
         
         # Draw title
         title = self.title_font.render("Paramètres de la partie", True, self.colors['text'])
@@ -550,6 +556,9 @@ class PlayerSettingsMenu:
             'scrollbar': (70, 70, 70),
             'scrollbar_hover': (90, 90, 90)
         }
+
+        self.settingmenu_image = pygame.image.load(r'..\assets\MenuPhoto\parametre.gif')
+        self.settingmenu_image = pygame.transform.scale(self.settingmenu_image, (screen_width, screen_height))
         
         # Scroll settings
         self.scroll_y = 0
@@ -616,7 +625,7 @@ class PlayerSettingsMenu:
             self.scroll_y = max(0, min(self.total_height - self.scroll_area_height, self.scroll_y))
 
     def draw(self):
-        self.screen.fill(self.colors['background'])
+        self.screen.blit(self.settingmenu_image, (0, 0))
         
         # Draw title
         title = self.title_font.render("Player Settings", True, self.colors['text'])
