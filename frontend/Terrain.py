@@ -140,10 +140,11 @@ class Map:
                 self.grid[y + j][x + i].building = None
                 if building.name == "Construct":
                     continue
-                rubble = Rubble(size=building.size, position=(x + i, y + j))
-                self.grid[y + j][x + i].rubble = rubble
-                if i == 0 and j == 0:
-                    self.rubbles.append(rubble)
+                if building.is_attacked == True:
+                    rubble = Rubble(size=building.size, position=(x + i, y + j))
+                    self.grid[y + j][x + i].rubble = rubble
+                    if i == 0 and j == 0:
+                        self.rubbles.append(rubble)
     
     def place_unit(self, x, y, unit):
         if 0 <= x < self.width and 0 <= y < self.height:

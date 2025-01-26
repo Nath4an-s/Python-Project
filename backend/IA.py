@@ -296,6 +296,10 @@ class IA:
             "Construct": {"Wood": float('inf'), "Gold": float('inf')}
         }
 
+        # Define military buildings and their max count
+        military_buildings = ["Barracks", "Stable", "ArcheryRange"]
+        MAX_MILITARY_BUILDINGS = 4
+
         building_counts = {building.__name__: 0 for building in building_types}
         for building in self.player.buildings:
             building_counts[type(building).__name__] += 1
@@ -312,12 +316,12 @@ class IA:
             least_constructed_building = "House"
             self.debug_print("Population limit reached, building a House############################################", 'Blue')
         else:
-            # Identify the building type that is least constructed
-            # Filter buildings that can be constructed based on available resources
+            # Filter out military buildings that have reached their limit
             constructable_buildings = [
                 b_name for b_name, costs in building_costs.items()
                 if all(self.player.owned_resources[resource] >= amount 
                       for resource, amount in costs.items())
+                and (b_name not in military_buildings or building_counts[b_name] < MAX_MILITARY_BUILDINGS)
             ]
             
             # Find the least constructed among constructable buildings

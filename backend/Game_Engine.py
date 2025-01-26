@@ -180,17 +180,17 @@ class GameEngine:
                     # Move units toward their target position
                     for player in self.players:
                         for unit in player.units:
-                            if unit.target_position:
+                            if unit.task == "going_to_battle":
+                                action.go_battle(unit, unit.target_attack, self.get_current_time())
+                            elif unit.task == "attacking":
+                                action._attack(unit, unit.target_attack, self.get_current_time())
+                            elif unit.target_position:
                                 target_x, target_y = unit.target_position
                                 action.move_unit(unit, target_x, target_y, self.get_current_time())
                             elif unit.task == "gathering" or unit.task == "returning":
                                 action._gather(unit, unit.last_gathered, self.get_current_time())
                             elif unit.task == "marching":
                                 action.gather_resources(unit, unit.last_gathered, self.get_current_time())
-                            elif unit.task == "attacking":
-                                action._attack(unit, unit.target_attack, self.get_current_time())
-                            elif unit.task == "going_to_battle":
-                                action.go_battle(unit, unit.target_attack, self.get_current_time())
                             elif unit.task == "is_attacked":
                                 action._attack(unit, unit.is_attacked_by, self.get_current_time())
                             elif unit.task == "going_to_construction_site":
