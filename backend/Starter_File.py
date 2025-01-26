@@ -295,8 +295,7 @@ class GameSettingsMenu:
         self.current_mode = 0
         global GameMode
         GameMode = self.game_modes[self.current_mode]
-        self.map_width = 120
-        self.map_height = 120
+        self.map_size = 120  # minimum size
         self.num_players = 3
         
         # Popup settings
@@ -308,14 +307,19 @@ class GameSettingsMenu:
         self.center_x = screen_width // 2
         self.label_offset = 150  # Distance from center for labels
         
-        # Add input field initializations
-        self.width_input = {
-            'text': str(self.map_width),
+        # Single map size
+        self.map_size = 120  # minimum size
+        
+        # Remove width_input and height_input, replace with single size_input
+        self.size_input = {
+            'text': str(self.map_size),
             'active': False
         }
         
-        self.height_input = {
-            'text': str(self.map_height),
+        # Single size button
+        self.size_button = {
+            'text': str(self.map_size),
+            'rect': pygame.Rect(self.center_x + 20, 250, 80, 50),
             'active': False
         }
         
@@ -343,19 +347,6 @@ class GameSettingsMenu:
         self.popup_rect = pygame.Rect(popup_x, 150, 
                                     200, len(self.game_modes) * 50)
         
-        # Map size buttons - centered
-        self.width_button = {
-            'text': str(self.map_width),
-            'rect': pygame.Rect(self.center_x + 20, 250, 80, 50),
-            'active': False
-        }
-        
-        self.height_button = {
-            'text': str(self.map_height),
-            'rect': pygame.Rect(self.center_x + 140, 250, 80, 50),
-            'active': False
-        }
-        
         # Player count button - centered
         self.player_button = {
             'text': str(self.num_players),
@@ -366,9 +357,6 @@ class GameSettingsMenu:
         # Navigation buttons
         self.start_button = {'text': 'Commencer', 'rect': pygame.Rect(self.center_x + 20, 500, 150, button_height)}
         self.back_button = {'text': 'Retour', 'rect': pygame.Rect(self.center_x - 170, 500, 150, button_height)}
-
-        # Update separator position
-        self.separator_x = 500  # Update this in the draw method
 
     def draw(self):
         self.screen.fill(self.colors['background'])
@@ -383,18 +371,27 @@ class GameSettingsMenu:
         mode_rect = mode_label.get_rect(right=self.center_x - 20, centery=175)
         self.screen.blit(mode_label, mode_rect)
         
-        map_size_label = self.font.render("Taille de la carte:", True, self.colors['text'])
-        map_rect = map_size_label.get_rect(right=self.center_x - 20, centery=275)
-        self.screen.blit(map_size_label, map_rect)
+        # Draw map size label and button
+        size_label = self.font.render("Taille de la carte:", True, self.colors['text'])
+        size_rect = size_label.get_rect(right=self.center_x - 20, centery=275)
+        self.screen.blit(size_label, size_rect)
+        
+        # Draw size button/input
+        color = self.colors['selected'] if self.size_input['active'] else (
+            self.colors['button_hover'] if self.size_button['rect'].collidepoint(pygame.mouse.get_pos()) 
+            else self.colors['button']
+        )
+        pygame.draw.rect(self.screen, color, self.size_button['rect'], border_radius=5)
+        text = self.font.render(
+            self.size_input['text'] if self.size_input['active'] else self.size_button['text'],
+            True, self.colors['text']
+        )
+        text_rect = text.get_rect(center=self.size_button['rect'].center)
+        self.screen.blit(text, text_rect)
         
         players_label = self.font.render("Nombre de joueurs:", True, self.colors['text'])
         players_rect = players_label.get_rect(right=self.center_x - 20, centery=375)
         self.screen.blit(players_label, players_rect)
-        
-        # Draw 'x' separator between width and height
-        separator = self.font.render("x", True, self.colors['text'])
-        separator_rect = separator.get_rect(center=(self.center_x + 120, 275))
-        self.screen.blit(separator, separator_rect)
         
         mouse_pos = pygame.mouse.get_pos()
         
@@ -415,20 +412,6 @@ class GameSettingsMenu:
                 text = self.font.render(option['text'], True, self.colors['text'])
                 text_rect = text.get_rect(center=option['rect'].center)
                 self.screen.blit(text, text_rect)
-        
-        # Draw width and height buttons/inputs
-        for button, input_field in [(self.width_button, self.width_input), (self.height_button, self.height_input)]:
-            color = self.colors['selected'] if input_field['active'] else (
-                self.colors['button_hover'] if button['rect'].collidepoint(mouse_pos) 
-                else self.colors['button']
-            )
-            pygame.draw.rect(self.screen, color, button['rect'], border_radius=5)
-            text = self.font.render(
-                input_field['text'] if input_field['active'] else button['text'],
-                True, self.colors['text']
-            )
-            text_rect = text.get_rect(center=button['rect'].center)
-            self.screen.blit(text, text_rect)
         
         # Draw player count button/input
         color = self.colors['selected'] if self.player_input['active'] else (
@@ -478,23 +461,16 @@ class GameSettingsMenu:
                         if not self.popup_rect.collidepoint(mouse_pos):
                             self.show_mode_popup = False
                     
-                    # Handle width button click
-                    elif self.width_button['rect'].collidepoint(mouse_pos):
-                        self.width_input['active'] = True
-                        self.height_input['active'] = False
-                        self.width_input['text'] = ''
-                    
-                    # Handle height button click
-                    elif self.height_button['rect'].collidepoint(mouse_pos):
-                        self.height_input['active'] = True
-                        self.width_input['active'] = False
-                        self.height_input['text'] = ''
+                    # Handle size button click
+                    elif self.size_button['rect'].collidepoint(mouse_pos):
+                        self.size_input['active'] = True
+                        self.player_input['active'] = False
+                        self.size_input['text'] = ''
                     
                     # Handle player count button click
                     elif self.player_button['rect'].collidepoint(mouse_pos):
                         self.player_input['active'] = True
-                        self.width_input['active'] = False
-                        self.height_input['active'] = False
+                        self.size_input['active'] = False
                         self.player_input['text'] = ''
                     
                     # Handle navigation
@@ -503,22 +479,17 @@ class GameSettingsMenu:
                     elif self.start_button['rect'].collidepoint(mouse_pos):
                         return {
                             'mode': self.game_modes[self.current_mode],
-                            'map_size': (self.map_width, self.map_height),
+                            'map_size': (self.map_size, self.map_size),
                             'num_players': self.num_players
                         }
                     
                     # Deactivate inputs if clicking elsewhere
                     else:
-                        if self.width_input['active']:
-                            if self.width_input['text']:
-                                self.map_width = max(120, min(500, int(self.width_input['text'])))
-                                self.width_button['text'] = str(self.map_width)
-                            self.width_input['active'] = False
-                        if self.height_input['active']:
-                            if self.height_input['text']:
-                                self.map_height = max(120, min(500, int(self.height_input['text'])))
-                                self.height_button['text'] = str(self.map_height)
-                            self.height_input['active'] = False
+                        if self.size_input['active']:
+                            if self.size_input['text']:
+                                self.map_size = max(120, min(500, int(self.size_input['text'])))
+                                self.size_button['text'] = str(self.map_size)
+                            self.size_input['active'] = False
                         if self.player_input['active']:
                             if self.player_input['text']:
                                 self.num_players = max(2, min(8, int(self.player_input['text'])))
@@ -526,29 +497,17 @@ class GameSettingsMenu:
                             self.player_input['active'] = False
                 
                 elif event.type == pygame.KEYDOWN:
-                    # Handle width input
-                    if self.width_input['active']:
+                    # Handle size input
+                    if self.size_input['active']:
                         if event.key == pygame.K_RETURN:
-                            if self.width_input['text']:
-                                self.map_width = max(120, min(500, int(self.width_input['text'])))
-                                self.width_button['text'] = str(self.map_width)
-                            self.width_input['active'] = False
+                            if self.size_input['text']:
+                                self.map_size = max(120, min(500, int(self.size_input['text'])))
+                                self.size_button['text'] = str(self.map_size)
+                            self.size_input['active'] = False
                         elif event.key == pygame.K_BACKSPACE:
-                            self.width_input['text'] = self.width_input['text'][:-1]
+                            self.size_input['text'] = self.size_input['text'][:-1]
                         elif event.unicode.isnumeric():
-                            self.width_input['text'] += event.unicode
-                    
-                    # Handle height input
-                    if self.height_input['active']:
-                        if event.key == pygame.K_RETURN:
-                            if self.height_input['text']:
-                                self.map_height = max(120, min(500, int(self.height_input['text'])))
-                                self.height_button['text'] = str(self.map_height)
-                            self.height_input['active'] = False
-                        elif event.key == pygame.K_BACKSPACE:
-                            self.height_input['text'] = self.height_input['text'][:-1]
-                        elif event.unicode.isnumeric():
-                            self.height_input['text'] += event.unicode
+                            self.size_input['text'] += event.unicode
                     
                     # Handle player count input
                     if self.player_input['active']:
