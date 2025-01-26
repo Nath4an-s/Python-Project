@@ -302,18 +302,15 @@ class GUI(threading.Thread):
 
 
     def generate_player_units_images(self, unit_images):
-        # Sao chép đơn vị hình ảnh cho từng người chơi
         player_images = {player_id: custom_deepcopy(unit_images) for player_id in self.PLAYER_COLORS}
 
         for player_id, color in self.PLAYER_COLORS.items():
             for state in player_images[player_id]:
                 if not isinstance(player_images[player_id][state], dict):
-                    continue  # Bỏ qua nếu không phải từ điển
-            
+                    continue 
                 for direction in player_images[player_id][state]:
                     if not isinstance(player_images[player_id][state][direction], list):
-                        continue  # Bỏ qua nếu không phải danh sách hình ảnh
-                
+                        continue  
                     player_images[player_id][state][direction] = [
                         self.recolor_image(img, color) for img in player_images[player_id][state][direction]
                     ]
