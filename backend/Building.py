@@ -264,6 +264,8 @@ class Keep(Building):
         self.sizeizo = (64, 64)  # (width, height)
         self.z = 60
         self.max_hp = 800
+        self.target = None
+        self.fireball_progress = 0
 
     
     def is_walkable(self):

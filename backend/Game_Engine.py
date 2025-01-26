@@ -174,8 +174,10 @@ class GameEngine:
                 if key == ord('r'):
                     self.debug_print(self.ias[2].decided_builds)
                 if key == ord('o'):
-                    self.terminalon = not self.terminalon
-
+                    self.terminalon = not self.terminalon   
+                if key == ord('i'):
+                    action.construct_building(self.players[2].units[1], Keep, 10, 10, self.players[2], self.get_current_time())
+                    action.move_unit(self.players[1].units[1],15,15,self.get_current_time())
 
                 #########################
 
@@ -254,7 +256,8 @@ class GameEngine:
                                     closest_enemy = min(nearby_enemies, 
                                         key=lambda e: IA.calculate_distance(building.player.ai, pos1=unit.position, pos2=e.position))
                                     action.attack_target(building, target=closest_enemy, current_time_called=self.current_time, game_map=self.map)
-
+                                else: 
+                                    building.target = None
                 # Clear the screen and display the new part of the map after moving
                 stdscr.clear()
                 if self.terminalon :

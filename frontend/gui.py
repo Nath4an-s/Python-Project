@@ -6,12 +6,28 @@ from backend.Building import Farm
 import threading
 import queue as Queue
 from pathlib import Path
+from backend.Starter_File import *
 import time
 import traceback
 import random
 from backend.Players import *
 from PIL import Image
 import copy
+
+def draw_fireball(screen, start_pos, target_pos, progress, fireball_image):
+
+    # Calcul de la position intermédiaire en fonction de la progression
+    current_x = start_pos[0] + (target_pos[0] - start_pos[0]) * progress
+    current_y = start_pos[1] + (target_pos[1] - start_pos[1]) * progress
+
+    # Centrer l'image de la boule de feu
+    fireball_rect = fireball_image.get_rect(center=(current_x, current_y))
+
+    # Dessiner la boule de feu sur l'écran
+    screen.blit(fireball_image, fireball_rect)
+
+
+
 def custom_deepcopy(data):
     if isinstance(data, dict):
         return {key: custom_deepcopy(value) for key, value in data.items()}
@@ -302,18 +318,15 @@ class GUI(threading.Thread):
 
 
     def generate_player_units_images(self, unit_images):
-        # Sao chép đơn vị hình ảnh cho từng người chơi
         player_images = {player_id: custom_deepcopy(unit_images) for player_id in self.PLAYER_COLORS}
 
         for player_id, color in self.PLAYER_COLORS.items():
             for state in player_images[player_id]:
                 if not isinstance(player_images[player_id][state], dict):
-                    continue  # Bỏ qua nếu không phải từ điển
-            
+                    continue 
                 for direction in player_images[player_id][state]:
                     if not isinstance(player_images[player_id][state][direction], list):
-                        continue  # Bỏ qua nếu không phải danh sách hình ảnh
-                
+                        continue  
                     player_images[player_id][state][direction] = [
                         self.recolor_image(img, color) for img in player_images[player_id][state][direction]
                     ]
@@ -389,7 +402,7 @@ class GUI(threading.Thread):
         self.background = self.load_image(self.IMG_HUD / "Overlay.png")
         self.background1 = self.load_image(self.IMG_HUD / "Overlay1.png")
         self.victory_image = self.load_image(self.IMG_PATH / "victory.png")
-
+        self.fireball = self.load_image(self.RESOURCES_PATH / "boule.png")
         self.villager_images = {
             "walking": {
                 "south": [
@@ -1266,7 +1279,31 @@ class GUI(threading.Thread):
                     self.screen.blit(image, (adjusted_x, adjusted_y))
                     if obj.is_attacked:  # Afficher la barre de vie uniquement si l'unité est attaquée
                         self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp,entity_type,width=50, height=4)
-            
+                
+                if obj.sprite == "keep" and obj.target:
+                    # Position de départ : Centre de la "keep"
+                    start_x = screen_x + self.TILE_WIDTH // 2
+                    start_y = screen_y - image.get_height() // 2
+
+                    # Position de la cible
+                    target_pos = obj.target.position
+                    iso_target_x, iso_target_y = self.cart_to_iso(target_pos[0], target_pos[1])
+                    target_x = iso_target_x + (self.game_data.map.width * self.TILE_WIDTH // 2) - self.camera.offset_x
+                    target_y = iso_target_y - self.camera.offset_y
+
+                    # Calcul de la progression (vous pouvez stocker une valeur de progression pour chaque attaque)
+                    progress = min(obj.fireball_progress / 200.0, 1.0)  # Exemple avec 100 frames pour atteindre la cible
+
+                    # Afficher la boule de feu
+                    fireball_image = self.fireball
+                    draw_fireball(self.screen, (start_x + 10, start_y), (target_x, target_y), progress, fireball_image)
+
+                    # Mettre à jour la progression de la boule de feu
+                    obj.fireball_progress += 1
+                    if progress >= 1.0:
+                        obj.fireball_progress = 0  # Réinitialiser après impact
+
+
             elif entity_type == "rubble":
                 image = self.building_images["Rubble"]
                 new_size = (image.get_width() * obj.size // 4, image.get_height() * obj.size // 4)
@@ -1579,12 +1616,22 @@ class GUI(threading.Thread):
         return False
     
     def display_victory_screen(self, winner_name):
+        # Charger l'image de victoire et préparer le texte du gagnant
         victory_image = self.load_image(self.IMG_PATH / "victory.png")
-        self.screen.blit(victory_image, (0, 0))
-        font = pygame.font.Font(None, 72)
+        font = pygame.font.Font(None, 36)
         text_surface = font.render(f"{winner_name} wins!", True, (255, 255, 255))
-        text_rect = text_surface.get_rect(center=(self.WINDOW_WIDTH // 2, self.WINDOW_HEIGHT // 2))
-        self.screen.blit(text_surface, text_rect)
-        pygame.display.flip()
-        time.sleep(10)  # Wait for 5 seconds before closing
-        self.running = False
+        text_rect = text_surface.get_rect(center=(self.WINDOW_WIDTH // 2, self.WINDOW_HEIGHT // 2 + 50))
+
+        # Commencer l'animation de fade-in
+        for alpha in range(0, 256, 5):  # Augmenter alpha de 0 à 255 par pas de 5
+            victory_image.set_alpha(alpha)  # Définir le niveau de transparence de l'image
+            self.screen.fill((0, 0, 0))  # Effacer l'écran avec du noir
+            self.screen.blit(victory_image, (0, 0))  # Afficher l'image de victoire
+            text_surface.set_alpha(alpha)  # Appliquer le même effet de transparence au texte
+            self.screen.blit(text_surface, text_rect)  # Afficher le texte
+            pygame.display.flip()  # Mettre à jour l'écran avec le nouveau frame
+            pygame.time.wait(50)  # Attendre un peu pour ralentir l'animation
+
+        # Attendre quelques secondes avant de quitter l'écran de victoire
+        pygame.time.wait(2000)  # Attendre 5 secondes
+        #start_menu()
