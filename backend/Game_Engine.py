@@ -207,10 +207,18 @@ class GameEngine:
                 elif key == curses.KEY_F10: 
                     self.save_game()
                 elif key == curses.KEY_F12:
-                    self.load_game()
+                    # Find the latest save file in the directory
+                    save_dir = os.path.join(os.path.dirname(__file__), '..', 'assets', 'annex')
+                    save_files = [f for f in os.listdir(save_dir) if f.endswith('.dat')]
+                    if save_files:
+                        latest_save_file = max(save_files, key=lambda f: os.path.getctime(os.path.join(save_dir, f)))
+                        latest_save_path = os.path.join(save_dir, latest_save_file)
+                        self.load_game(latest_save_path)
+                    else:
+                        self.debug_print("No save files found.")
 
                 #call the IA
-                if not self.is_paused and self.turn % 10 == 0 and self.IA_used == True: # Call the IA every 5 turns: change 0, 5, 10, 15, ... depending on lag
+                if not self.is_paused and self.turn % 500 == 0 and self.IA_used == True: # Call the IA every 5 turns: change 0, 5, 10, 15, ... depending on lag
                     for ia in self.ias:
                         ia.current_time_called = self.get_current_time()  # Update the current time for each IA
                         ia.run()  # Run the AI logic for each player

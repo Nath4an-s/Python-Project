@@ -95,7 +95,6 @@ class Map:
                 tile = self.grid[y][x]
 
                 if tile.resource is None:  # Avoid overwriting existing resources
-                    resource.amount = random.randint(50, 200)
                     resource = Wood()
                     tile.resource = resource
                     self.resources["Wood"].append((x, y))  # Store Wood resource position
