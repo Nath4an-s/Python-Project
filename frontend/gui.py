@@ -1292,7 +1292,7 @@ class GUI(threading.Thread):
                     target_y = iso_target_y - self.camera.offset_y
 
                     # Calcul de la progression (vous pouvez stocker une valeur de progression pour chaque attaque)
-                    progress = min(obj.fireball_progress / 200.0, 1.0)  # Exemple avec 100 frames pour atteindre la cible
+                    progress = min(obj.fireball_progress / 150.0, 1.0)
 
                     # Afficher la boule de feu
                     fireball_image = self.fireball
