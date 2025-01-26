@@ -36,9 +36,13 @@ class StartMenu:
             'disabled': (80, 80, 80)  # Color for disabled buttons
         }
         
+        # Charger l'image de fond
+        self.background_image = pygame.image.load(r'C:\Users\Asus\Desktop\Python-Project\assets\MenuPhoto\menu.png')
+        self.background_image = pygame.transform.scale(self.background_image, (screen_width, screen_height))  # Adapter l'image à la taille de l'écran
+
         # Adjusted button positions for 3 buttons
         self.buttons = [
-            {'text': 'Start Game', 'rect': pygame.Rect(300, 250, 200, 50)},
+            {'text': 'Start Game', 'rect': pygame.Rect(300, 250, 200    , 50)},
             {'text': 'Load Game', 'rect': pygame.Rect(300, 320, 200, 50)},
             {'text': 'Exit', 'rect': pygame.Rect(300, 390, 200, 50)}
         ]
@@ -53,7 +57,7 @@ class StartMenu:
         return len(save_files) > 0
     
     def draw(self):
-        self.screen.fill(self.colors['background'])
+        self.screen.blit(self.background_image, (0, 0))
         
         title = self.font.render("AIge of Empire", True, self.colors['text'])
         title_rect = title.get_rect(center=(400, 150))
