@@ -403,6 +403,7 @@ class GUI(threading.Thread):
         self.background1 = self.load_image(self.IMG_HUD / "Overlay1.png")
         self.victory_image = self.load_image(self.IMG_PATH / "victory.png")
         self.fireball = self.load_image(self.RESOURCES_PATH / "boule.png")
+        self.fleche = self.load_image(self.RESOURCES_PATH / "fleche.png")
         self.villager_images = {
             "walking": {
                 "south": [
@@ -666,7 +667,7 @@ class GUI(threading.Thread):
             "idle": {
                 "south": [
                     self.load_image(self.BASE_PATH / "assets" / "units" / "Swordman" / "Stand" / f"Axethrowerstand{i:03}.png")
-                    for i in range(1, 10)  
+                    for i in range(2, 10)  
                 ],
             },
         }
@@ -1245,7 +1246,34 @@ class GUI(threading.Thread):
                     if state in self.archer_images and direction in self.archer_images[state]:
                         images = self.player_archer_images[obj.player.id][state][direction]
                         if images:
+                            # Dessiner l'archer
                             image = images[obj.current_frame % len(images)]
+                            screen_x1 = x - self.camera.offset_x
+                            screen_y1 = y - self.camera.offset_y
+
+                            # Si l'archer attaque, dessiner une flèche
+                            if state == "attacking" and obj.target_attack:
+                                # Position de départ : Centre de l'archer
+                                start_x = screen_x1
+                                start_y = screen_y1 - image.get_height() // 2
+
+                                # Position de la cible
+                                target_pos = obj.target_attack.position
+                                iso_target_x, iso_target_y = self.cart_to_iso(target_pos[0], target_pos[1])
+                                target_x = iso_target_x + (self.game_data.map.width * self.TILE_WIDTH // 2) - self.camera.offset_x
+                                target_y = iso_target_y - self.camera.offset_y
+
+                                # Calcul de la progression
+                                progress = min(obj.arrow_progress / 70.0, 1.0)  # Ajustez la vitesse ici (50 frames pour atteindre)
+
+                                # Dessiner la flèche
+                                fireball_image = self.fleche  # Assurez-vous que c'est l'image de la flèche
+                                draw_fireball(self.screen, (start_x, start_y), (target_x, target_y), progress, fireball_image)
+
+                                # Mettre à jour la progression de la flèche
+                                obj.arrow_progress += 1
+                                if progress >= 1.0:
+                                    obj.arrow_progress = 0  # Réinitialiser après impact
 
                 elif unit_type == "horseman":
                     if state in self.horseman_images and direction in self.horseman_images[state]:
