@@ -273,6 +273,7 @@ class Archer(Unit):
         self.sprite_height = 54
         self.z = 64
         self.max_hp = 30
+        self.arrow_progress = 0
 
     @property
     def bbox_bottom(self):
