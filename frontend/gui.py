@@ -10,8 +10,6 @@ import time
 import traceback
 import random
 from backend.Players import *
-from PIL import Image
-import copy
 
 def get_unit_offsets(unit_type, state, direction):
     """
@@ -225,12 +223,9 @@ class GUI(threading.Thread):
         self.pre_rendered_map = None
 
         self.building_images = {}
-        self.player_building_images = {}
         self.IMAGES = {}
         self.villager_images = {}
-        self.player_villager_images = {}
         self.swordman_images = {}
-        self.player_swordman_images = {}
         self.show_resources = False
         self.show_units = False
 
@@ -260,58 +255,6 @@ class GUI(threading.Thread):
         self.showminimap = True
         self.mini_map_surface = None
         self.show_global_overlay = True
-
-    def is_blue_shade(self, pixel, threshold=50):
-        r, g, b, a = pixel  # unpacking the tuple directly
-        return b > r + threshold and b > g + threshold
-
-        
-    def recolor_image(self, img, target_color):
-        # Create a copy of the surface to avoid modifying the original
-        img = img.copy()
-        # If target_color has 3 components, assume full opacity (alpha = 255)
-        if len(target_color) == 3:
-            target_r, target_g, target_b = target_color
-            target_a = 255  # Set default alpha value to 255 (fully opaque)
-        elif len(target_color) == 4:
-            target_r, target_g, target_b, target_a = target_color
-        else:
-            raise ValueError("target_color must be a 3 or 4 component tuple")
-
-        for y in range(img.get_height()):
-            for x in range(img.get_width()):
-                r, g, b, a = img.get_at((x, y))
-                if self.is_blue_shade((r, g, b, a)):
-                    intensity = b / 255.0
-                    new_r = int(target_r * intensity)
-                    new_g = int(target_g * intensity)
-                    new_b = int(target_b * intensity)
-                    img.set_at((x, y), (new_r, new_g, new_b, target_a))
-
-        return img
-
-    def generate_player_images(self, unit_images):
-        player_images = {player_id: copy.deepcopy(unit_images) for player_id in self.PLAYER_COLORS}
-
-        for player_id, color in self.PLAYER_COLORS.items():
-            for state in player_images[player_id]:
-                for direction in player_images[player_id][state]:
-                    player_images[player_id][state][direction] = [
-                        self.recolor_image(img, color) for img in player_images[player_id][state][direction]
-                    ]
-
-        return player_images
-
-    def generate_player_buildings_images(self, buildings_images):
-        player_images = {player_id: copy.deepcopy(buildings_images) for player_id in self.PLAYER_COLORS}
-
-        for player_id, color in self.PLAYER_COLORS.items():
-            for building_type in player_images[player_id]:
-                player_images[player_id][building_type] = self.recolor_image(player_images[player_id][building_type], color)
-
-        return player_images
-
-
 
     def flip_image_horizontally(self, image):
         return pygame.transform.flip(image, True, False)
@@ -361,8 +304,6 @@ class GUI(threading.Thread):
         for building_type, size in building_types.items():
             image = self.load_image(self.BUILDINGS_PATH / f"{building_type.lower()}.png")
             self.building_images[building_type] = pygame.transform.scale(image, size)
-
-        self.player_building_images = self.generate_player_buildings_images(self.building_images)
 
         self.hud_image = self.load_image(self.IMG_HUD / "Hud.png")
         self.mini_map_back = self.load_image(self.IMG_HUD / "MiniMAP.png")
@@ -895,31 +836,13 @@ class GUI(threading.Thread):
                 ],
             },
         }
-        """
-        self.player_villager_images = self.generate_player_images(self.villager_images)
-        self.player_swordman_images = self.generate_player_images(self.swordman_images)
-        """
 
         self.iconwod = self.load_image(self.RESOURCES_PATH / "iconwood.png")
         self.icongold = self.load_image(self.RESOURCES_PATH / "icongold.png")
 
         self.IMAGES["Gold"] = pygame.transform.scale(self.IMAGES["Gold"], (self.TILE_WIDTH, self.TILE_HEIGHT))
         self.IMAGES["Wood"] = pygame.transform.scale(self.IMAGES["Wood"], (int(self.TILE_WIDTH * 2), int(self.TILE_HEIGHT * 2.5)))
-    """
-    def replace_color_range(self, image, player):
-        pixel_array = pygame.surfarray.pixels3d(image)
-        blue_min = np.array([0, 0, 100])
-        blue_max = np.array([100, 100, 255])
-        new_color = np.array(self.PLAYER_COLORS.get(player.id))
-        mask = (
-            (pixel_array[:, :, 0] >= blue_min[0]) & (pixel_array[:, :, 0] <= blue_max[0]) & 
-            (pixel_array[:, :, 1] >= blue_min[1]) & (pixel_array[:, :, 1] <= blue_max[1]) &  
-            (pixel_array[:, :, 2] >= blue_min[2]) & (pixel_array[:, :, 2] <= blue_max[2])    
-        )
-        pixel_array[mask] = new_color
-        del pixel_array
-        return image
-    """
+
     def calculate_damage_from_enemies(building, enemies):
         """Calcul des dégâts basés sur la distance des ennemis."""
         damage = 0
@@ -1214,22 +1137,11 @@ class GUI(threading.Thread):
                 if unit_type == "villager":
                     if state in self.villager_images and direction in self.villager_images[state]:
                         images = self.villager_images[state][direction]
-                        """
-                        if obj.player.id not in self.player_villager_images:
-                            raise ValueError(f"Player ID {obj.player.id} not found in player_villager_images.")
-                        if state not in self.player_villager_images[obj.player.id]:
-                            raise ValueError(f"State '{state}' not found for Player ID {obj.player.id}.")
-                        if direction not in self.player_villager_images[obj.player.id][state]:
-                            raise ValueError(f"Direction '{direction}' not found in state '{state}' for Player ID {obj.player.id}.")
-                        
-                        images = self.player_villager_images[obj.player.id][state][direction]
-                        """
                         image = images[obj.current_frame % len(images)]
 
                 elif unit_type == "swordman":
                    if state in self.swordman_images and direction in self.swordman_images[state]:
                     images = self.swordman_images[state][direction]
-                    #images = self.player_swordman_images[obj.player.id][state][direction]
                     image = images[obj.current_frame % len(images)]
 
                 elif unit_type == "archer":
@@ -1247,8 +1159,22 @@ class GUI(threading.Thread):
                 screen_x1 = x - self.camera.offset_x + offset_x
                 screen_y2 = y - self.camera.offset_y + offset_y
                 if image:
-                    #img = self.replace_color_range(image,obj.player)
+                    pixel_array = pygame.surfarray.pixels3d(image)
+
+                    blue_min = np.array([0, 0, 100])   
+                    blue_max = np.array([100, 100, 255]) 
+                    player_color = self.PLAYER_COLORS.get(obj.player.id)
+                    new_color = np.array(player_color)
+                    mask = (
+                        (pixel_array[:, :, 0] >= blue_min[0]) & (pixel_array[:, :, 0] <= blue_max[0]) & 
+                        (pixel_array[:, :, 1] >= blue_min[1]) & (pixel_array[:, :, 1] <= blue_max[1]) & 
+                        (pixel_array[:, :, 2] >= blue_min[2]) & (pixel_array[:, :, 2] <= blue_max[2])    
+                    )
+                    pixel_array[mask] = new_color
+                    del pixel_array
+
                     self.screen.blit(image, (screen_x1, screen_y2))
+
                     if obj.is_attacked_by:
                         self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp,entity_type,width=30, height=4)
 
@@ -1256,7 +1182,7 @@ class GUI(threading.Thread):
                 # Adjust sprite rendering based on building size
                 building_type = obj.name.replace(" ", "")
                 if building_type in self.building_images:
-                    image = self.player_building_images[obj.player.id][building_type]
+                    image = self.building_images[building_type]
 
                     # Adjust position for the sprite size
                     adjusted_y = screen_y - image.get_height() + (self.TILE_HEIGHT // 2)
