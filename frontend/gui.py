@@ -12,6 +12,21 @@ import random
 from backend.Players import *
 from PIL import Image
 import copy
+
+def draw_fireball(screen, start_pos, target_pos, progress, fireball_image):
+
+    # Calcul de la position intermédiaire en fonction de la progression
+    current_x = start_pos[0] + (target_pos[0] - start_pos[0]) * progress
+    current_y = start_pos[1] + (target_pos[1] - start_pos[1]) * progress
+
+    # Centrer l'image de la boule de feu
+    fireball_rect = fireball_image.get_rect(center=(current_x, current_y))
+
+    # Dessiner la boule de feu sur l'écran
+    screen.blit(fireball_image, fireball_rect)
+
+
+
 def custom_deepcopy(data):
     if isinstance(data, dict):
         return {key: custom_deepcopy(value) for key, value in data.items()}
@@ -389,7 +404,7 @@ class GUI(threading.Thread):
         self.background = self.load_image(self.IMG_HUD / "Overlay.png")
         self.background1 = self.load_image(self.IMG_HUD / "Overlay1.png")
         self.victory_image = self.load_image(self.IMG_PATH / "victory.png")
-
+        self.fireball = self.load_image(self.RESOURCES_PATH / "boule.png")
         self.villager_images = {
             "walking": {
                 "south": [
@@ -1266,7 +1281,31 @@ class GUI(threading.Thread):
                     self.screen.blit(image, (adjusted_x, adjusted_y))
                     if obj.is_attacked:  # Afficher la barre de vie uniquement si l'unité est attaquée
                         self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp,entity_type,width=50, height=4)
-            
+                
+                if obj.sprite == "keep" and obj.target:
+                    # Position de départ : Centre de la "keep"
+                    start_x = screen_x + self.TILE_WIDTH // 2
+                    start_y = screen_y - image.get_height() // 2
+
+                    # Position de la cible
+                    target_pos = obj.target.position
+                    iso_target_x, iso_target_y = self.cart_to_iso(target_pos[0], target_pos[1])
+                    target_x = iso_target_x + (self.game_data.map.width * self.TILE_WIDTH // 2) - self.camera.offset_x
+                    target_y = iso_target_y - self.camera.offset_y
+
+                    # Calcul de la progression (vous pouvez stocker une valeur de progression pour chaque attaque)
+                    progress = min(obj.fireball_progress / 200.0, 1.0)  # Exemple avec 100 frames pour atteindre la cible
+
+                    # Afficher la boule de feu
+                    fireball_image = self.fireball
+                    draw_fireball(self.screen, (start_x + 10, start_y), (target_x, target_y), progress, fireball_image)
+
+                    # Mettre à jour la progression de la boule de feu
+                    obj.fireball_progress += 1
+                    if progress >= 1.0:
+                        obj.fireball_progress = 0  # Réinitialiser après impact
+
+
             elif entity_type == "rubble":
                 image = self.building_images["Rubble"]
                 new_size = (image.get_width() * obj.size // 4, image.get_height() * obj.size // 4)

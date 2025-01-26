@@ -587,6 +587,7 @@ class Action:
         
     def attack_target(self, building, target, current_time_called, game_map): # for the Keep
         if target is not None:
+            building.target = target
             if current_time_called - building.last_attack_time >= 1:
                 building.last_attack_time = current_time_called
                 if building.attack >= target.hp:
