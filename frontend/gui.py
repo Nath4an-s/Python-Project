@@ -1563,7 +1563,7 @@ class GUI(threading.Thread):
 
         font = pygame.font.Font(None, 18)  # Police pour le texte
         x_start = 10  # Position horizontale de départ
-        y_start = 10  # Position verticale de départ
+        y_start = 30  # Position verticale de départ
         spacing = 10  # Espacement entre chaque joueur
         text_color = (255, 255, 255)  # Couleur du texte (blanc pour contraste)
 
@@ -1615,32 +1615,40 @@ class GUI(threading.Thread):
 
     def display_player_units(self):
         font = pygame.font.Font(None, 18)  # Police pour le texte
-        x_start = 40  # Position horizontale de départ
-        y_start = 198 if self.show_resources else 18  # Ajuster la position verticale selon show_resources
-        spacing = 5  # Espacement entre chaque joueur
+        y_start = 50  # Position verticale de départ
+        spacing = 6  # Espacement entre chaque joueur
         text_color = (255, 255, 255)  # Couleur du texte (blanc pour contraste)
+        player_display_height = 15 + spacing  # Hauteur totale occupée par un joueur
+        player_name_width = 60  # Largeur réservée pour afficher les noms des joueurs
+        unit_text_width = 80  # Largeur par unité affichée
 
-        # Charger l'image de fond
-        background_image = self.back
+        # Calculer la hauteur dynamique en fonction du nombre de joueurs
+        num_players = len(self.game_data.players)
+        dynamic_height = y_start + num_players * player_display_height   # Hauteur nécessaire pour tous les joueurs
 
-        # Dessiner l'image de fond
-        if self.show_resources:
-            self.screen.blit(background_image, (0, 175))
-        else:
-            self.screen.blit(background_image, (0, 0))
+        # Définir une largeur fixe pour l'image
+        fixed_width = 415  # Largeur fixe de l'image de fond
+
+        # Obtenir la largeur de l'écran pour placer l'image dans le coin supérieur droit
+        screen_width = self.screen.get_width()
+        x_start_background = screen_width - fixed_width  # Calculer la position horizontale pour le fond
+        x_start = x_start_background + 20  # Décalage interne pour le texte à l'intérieur de l'image
+
+        # Redimensionner l'image de fond pour qu'elle corresponde à la largeur fixe et à la hauteur dynamique
+        background_image = pygame.transform.scale(self.back, (fixed_width, dynamic_height))
+        self.screen.blit(background_image, (x_start_background, 30))  # Placer l'image dans le coin supérieur droit
 
         # Parcourir chaque joueur
         for i, player in enumerate(self.game_data.players):
-            y_position = y_start + i * (15 + spacing)
-            x_position = x_start
+            y_position = y_start + i * player_display_height
 
             # Afficher le nom du joueur
             name_text = f"{player.name}"
             name_surface = font.render(name_text, True, text_color)
-            self.screen.blit(name_surface, (x_position, y_position))
+            self.screen.blit(name_surface, (x_start, y_position))
 
             # Décalage initial pour afficher les unités
-            text_x = x_position + 80
+            text_x = x_start + player_name_width
 
             # Compter et afficher les unités par type
             unit_counts = {}
@@ -1656,7 +1664,8 @@ class GUI(threading.Thread):
                 unit_text = f"{unit_type}: {count}"
                 unit_surface = font.render(unit_text, True, text_color)
                 self.screen.blit(unit_surface, (text_x, y_position))
-                text_x += 100 
+                text_x += unit_text_width
+
 
     def check_victory(self):
         active_players = [p for p in self.game_data.players if p.units or p.buildings]
