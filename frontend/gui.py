@@ -1312,7 +1312,7 @@ class GUI(threading.Thread):
 
                                 # Mettre à jour la progression de la flèche
                                 if not self.game_data.is_paused:
-                                    obj.fireball_progress += 1
+                                    obj.arrow_progress += 1
                                 if progress >= 1.0:
                                     obj.arrow_progress = 0  # Réinitialiser après impact
 
