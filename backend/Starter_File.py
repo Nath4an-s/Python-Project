@@ -331,13 +331,13 @@ class GameSettingsMenu:
         # Map size buttons
         self.width_button = {
             'text': str(self.map_width),
-            'rect': pygame.Rect(self.center_x - 100, 250, 80, 50),
+            'rect': pygame.Rect(self.center_x + 20, 250, 80, 50),
             'active': False
         }
         
         self.height_button = {
             'text': str(self.map_height),
-            'rect': pygame.Rect(self.center_x + 20, 250, 80, 50),
+            'rect': pygame.Rect(self.center_x + 160, 250, 80, 50),
             'active': False
         }
         
@@ -411,7 +411,7 @@ class GameSettingsMenu:
         
         # Draw 'x' separator between width and height
         separator = self.font.render("x", True, self.colors['text'])
-        separator_rect = separator.get_rect(center=(self.center_x - 10, 275))
+        separator_rect = separator.get_rect(center=(self.center_x + 130, 275))
         self.screen.blit(separator, separator_rect)
         
         players_label = self.font.render("Nombre de joueurs:", True, self.colors['text'])
