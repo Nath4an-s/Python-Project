@@ -134,6 +134,23 @@ class GameEngine:
 
                 #########################
 
+                ###### CHEAT KEYS #######
+
+                elif key == ord('g'):
+                    self.players[0].owned_resources["Gold"] += 5000
+                elif key == ord('w'):
+                    self.players[0].owned_resources["Wood"] += 5000
+                elif key == ord('f'):
+                    self.players[0].owned_resources["Food"] += 5000
+                elif key == ord('h'):
+                    for player in self.players[1:]:
+                        player.owned_resources["Gold"] = 0
+                        player.owned_resources["Wood"] = 0
+                        player.owned_resources["Food"] = 0
+
+                #########################
+
+
                 elif key == curses.KEY_F9:
                     if not self.gui_running:
                         self.start_gui_thread()
