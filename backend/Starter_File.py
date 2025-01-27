@@ -276,8 +276,6 @@ class LoadGameMenu:
 
 class GameSettingsMenu:
     def __init__(self, screen_width=800, screen_height=600):
-
-
         self.screen = pygame.display.set_mode((screen_width, screen_height))
         pygame.display.set_caption("AIge of Empire - Paramètres de la partie")
         
@@ -300,13 +298,21 @@ class GameSettingsMenu:
         self.font = pygame.font.Font(None, 36)
         self.title_font = pygame.font.Font(None, 48)
         
-        # Game settings
+        # Default settings
+        self.default_settings = {
+            'mode': 0,  # Utopia
+            'map_size': 120,
+            'num_players': 3
+        }
+        
+        # Current settings
         self.game_modes = ["Utopia", "Gold Rush"]
-        self.current_mode = 0
+        self.current_mode = self.default_settings['mode']
+        self.map_size = self.default_settings['map_size']
+        self.num_players = self.default_settings['num_players']
+        
         global GameMode
         GameMode = self.game_modes[self.current_mode]
-        self.map_size = 120  # minimum size
-        self.num_players = 3
         
         # Popup settings
         self.show_mode_popup = False
@@ -316,9 +322,6 @@ class GameSettingsMenu:
         # Center positions
         self.center_x = screen_width // 2
         self.label_offset = 150  # Distance from center for labels
-        
-        # Single map size
-        self.map_size = 120  # minimum size
         
         # Remove width_input and height_input, replace with single size_input
         self.size_input = {
@@ -367,6 +370,21 @@ class GameSettingsMenu:
         # Navigation buttons
         self.start_button = {'text': 'Commencer', 'rect': pygame.Rect(self.center_x + 20, 500, 150, button_height)}
         self.back_button = {'text': 'Retour', 'rect': pygame.Rect(self.center_x - 170, 500, 150, button_height)}
+
+    def reset_settings(self):
+        # Reset all settings to default
+        self.current_mode = self.default_settings['mode']
+        self.map_size = self.default_settings['map_size']
+        self.num_players = self.default_settings['num_players']
+        
+        # Update button texts
+        self.mode_button['text'] = self.game_modes[self.current_mode]
+        self.size_button['text'] = str(self.map_size)
+        self.player_button['text'] = str(self.num_players)
+        
+        # Update global GameMode
+        global GameMode
+        GameMode = self.game_modes[self.current_mode]
 
     def draw(self):
         self.screen.blit(self.settingmenu_image, (0, 0))
@@ -463,8 +481,6 @@ class GameSettingsMenu:
                             if option['rect'].collidepoint(mouse_pos):
                                 self.current_mode = i
                                 self.mode_button['text'] = self.game_modes[i]
-                                global GameMode
-                                GameMode = self.game_modes[i]
                                 self.show_mode_popup = False
                                 break
                         # Close popup if clicked outside
@@ -483,8 +499,9 @@ class GameSettingsMenu:
                         self.size_input['active'] = False
                         self.player_input['text'] = ''
                     
-                    # Handle navigation
+                    # Handle back button with reset
                     elif self.back_button['rect'].collidepoint(mouse_pos):
+                        self.reset_settings()
                         return 'back'
                     elif self.start_button['rect'].collidepoint(mouse_pos):
                         return {
