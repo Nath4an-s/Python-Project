@@ -100,7 +100,7 @@ class LoadGameMenu:
         
         self.colors = {
             'background': (50, 50, 50),
-            'button': (100, 100, 100),
+            'button': (175, 128, 79),
             'button_hover': (150, 150, 150),
             'text': (255, 255, 255),
             'selected': (120, 160, 120),
@@ -190,7 +190,7 @@ class LoadGameMenu:
         self.screen.blit(self.loadmenu_image, (0, 0))
         
         # Draw title
-        title = self.title_font.render("Charger une partie", True, self.colors['text'])
+        title = self.title_font.render("Load a game", True, self.colors['text'])
         title_rect = title.get_rect(center=(400, 80))
         self.screen.blit(title, title_rect)
         
