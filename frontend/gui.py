@@ -1272,7 +1272,8 @@ class GUI(threading.Thread):
                                 draw_fireball(self.screen, (start_x, start_y), (target_x, target_y), progress, fireball_image)
 
                                 # Mettre à jour la progression de la flèche
-                                obj.arrow_progress += 1
+                                if not self.game_data.is_paused:
+                                    obj.fireball_progress += 1
                                 if progress >= 1.0:
                                     obj.arrow_progress = 0  # Réinitialiser après impact
 
@@ -1326,11 +1327,10 @@ class GUI(threading.Thread):
                     # Afficher la boule de feu
                     fireball_image = self.fireball
                     draw_fireball(self.screen, (start_x + 10, start_y), (target_x, target_y), progress, fireball_image)
-
-                    # Mettre à jour la progression de la boule de feu
-                    obj.fireball_progress += 1
+                    if not self.game_data.is_paused:
+                        obj.fireball_progress += 1
                     if progress >= 1.0:
-                        obj.fireball_progress = 0  # Réinitialiser après impact
+                        obj.fireball_progress = 0  
 
 
             elif entity_type == "rubble":
