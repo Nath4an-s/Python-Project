@@ -288,7 +288,7 @@ class GameSettingsMenu:
         
         self.colors = {
             'background': (50, 50, 50),
-            'button': (100, 100, 100),
+            'button': (175, 128, 79),
             'button_hover': (150, 150, 150),
             'text': (255, 255, 255),
             'selected': (120, 160, 120),
@@ -355,16 +355,21 @@ class GameSettingsMenu:
         }
         
         # Create mode selection buttons for popup
-        popup_x = self.mode_button['rect'].right + 10
+        popup_x = self.mode_button['rect'].right + 10  # Position to the right of the mode button
         self.mode_options = []
         for i, mode in enumerate(self.game_modes):
             self.mode_options.append({
                 'text': mode,
-                'rect': pygame.Rect(popup_x, 150 + i * 50, 200, 50)
+                'rect': pygame.Rect(popup_x, 195 + i * 50, 200, 50)  # Align with mode button vertically
             })
         
         # Update popup background rect
-        self.popup_rect = pygame.Rect(popup_x, 150, 200, len(self.game_modes) * 50)
+        self.popup_rect = pygame.Rect(
+            popup_x, 
+            195,  # Same Y as mode button
+            200,  # Same width as mode button
+            len(self.game_modes) * 50  # Height for all options
+        )
         
         # Player count button - centered
         self.player_button = {
@@ -431,8 +436,12 @@ class GameSettingsMenu:
         if self.show_mode_popup:
             pygame.draw.rect(self.screen, self.colors['background'], self.popup_rect)
             pygame.draw.rect(self.screen, self.colors['button'], self.popup_rect, 2)
+            
+            # Draw the options
             for option in self.mode_options:
                 color = self.colors['button_hover'] if option['rect'].collidepoint(mouse_pos) else self.colors['button']
+                if option['text'] == self.mode_button['text']:
+                    color = self.colors['selected']
                 pygame.draw.rect(self.screen, color, option['rect'], border_radius=5)
                 text = self.font.render(option['text'], True, self.colors['text'])
                 text_rect = text.get_rect(center=option['rect'].center)
