@@ -96,7 +96,7 @@ class StartMenu:
 class LoadGameMenu:
     def __init__(self, screen_width=800, screen_height=600):
         self.screen = pygame.display.set_mode((screen_width, screen_height))
-        pygame.display.set_caption("AIge of Empire - Charger une partie")
+        pygame.display.set_caption("AIge of Empire - Load a game")
         
         self.colors = {
             'background': (50, 50, 50),
@@ -117,7 +117,7 @@ class LoadGameMenu:
         
         # Scroll settings
         self.scroll_y = 0
-        self.visible_saves = 6  # Number of saves visible at once
+        self.visible_saves = 5  # Number of saves visible at once
         self.button_height = 60
         self.button_spacing = 0
         self.scroll_area_height = self.visible_saves * (self.button_height + self.button_spacing)
@@ -126,13 +126,13 @@ class LoadGameMenu:
         # Scrollbar
         self.scrollbar_width = 20
         self.scrollbar_height = (self.scroll_area_height / self.total_height) * self.scroll_area_height if self.total_height > self.scroll_area_height else 0
-        self.scrollbar_rect = pygame.Rect(620, 150, self.scrollbar_width, self.scrollbar_height)
+        self.scrollbar_rect = pygame.Rect(620, 180, self.scrollbar_width, self.scrollbar_height)
         self.scrolling = False
         
         # Create buttons for save files
         self.save_buttons = []
         for i, save_file in enumerate(self.save_files):
-            y_pos = 150 + i * self.button_height
+            y_pos = 180 + i * self.button_height
             self.save_buttons.append({
                 'text': save_file,
                 'rect': pygame.Rect(200, y_pos, 400, 50),
@@ -182,7 +182,7 @@ class LoadGameMenu:
         if self.total_height > self.scroll_area_height:
             scroll_ratio = self.scroll_y / (self.total_height - self.scroll_area_height)
             scroll_range = self.scroll_area_height - self.scrollbar_height
-            self.scrollbar_rect.y = 150 + scroll_ratio * scroll_range
+            self.scrollbar_rect.y = 180 + scroll_ratio * scroll_range
 
     def draw(self):
         mouse_pos = pygame.mouse.get_pos()
@@ -195,17 +195,17 @@ class LoadGameMenu:
         self.screen.blit(title, title_rect)
         
         # Create a surface for the save list area
-        save_list_surface = pygame.Surface((400, self.scroll_area_height))
+        save_list_surface = pygame.Surface((430, self.scroll_area_height))
         save_list_surface.fill(self.colors['background'])
         
         # Draw save file buttons
-        visible_area = pygame.Rect(200, 150, 400, self.scroll_area_height)
+        visible_area = pygame.Rect(200, 180, 400, self.scroll_area_height)
         
         for i, button in enumerate(self.save_buttons):
             button_y = i * self.button_height - self.scroll_y
             if -self.button_height <= button_y <= self.scroll_area_height:
                 # Update button rect position
-                button['rect'].y = button_y + 150
+                button['rect'].y = button_y + 180
                 
                 # Determine button color based on state
                 color = self.colors['selected'] if button == self.selected_save else \
@@ -222,7 +222,7 @@ class LoadGameMenu:
         # Draw scrollbar background
         if self.total_height > self.scroll_area_height:
             pygame.draw.rect(self.screen, self.colors['scrollbar'], 
-                           (620, 150, self.scrollbar_width, self.scroll_area_height))
+                           (620, 180, self.scrollbar_width, self.scroll_area_height))
             
             # Draw scrollbar
             scrollbar_color = self.colors['scrollbar_hover'] if self.scrollbar_rect.collidepoint(mouse_pos) else self.colors['button']
@@ -280,7 +280,7 @@ class GameSettingsMenu:
     def __init__(self, screen_width=800, screen_height=600):
 
         self.screen = pygame.display.set_mode((screen_width, screen_height))
-        pygame.display.set_caption("AIge of Empire - Paramètres de la partie")
+        pygame.display.set_caption("AIge of Empire - Setting of the game")
         
         # Store screen dimensions and center position
         self.screen_width = screen_width
@@ -333,13 +333,13 @@ class GameSettingsMenu:
         # Map size buttons
         self.width_button = {
             'text': str(self.map_width),
-            'rect': pygame.Rect(self.center_x + 20, 250, 80, 50),
+            'rect': pygame.Rect(self.center_x + 40, 295, 80, 50),
             'active': False
         }
         
         self.height_button = {
             'text': str(self.map_height),
-            'rect': pygame.Rect(self.center_x + 160, 250, 80, 50),
+            'rect': pygame.Rect(self.center_x + 180, 295, 80, 50),
             'active': False
         }
         
@@ -351,7 +351,7 @@ class GameSettingsMenu:
         # Mode button - centered
         self.mode_button = {
             'text': self.game_modes[self.current_mode], 
-            'rect': pygame.Rect(self.center_x + 20, 150, 200, 50)
+            'rect': pygame.Rect(self.center_x + 45, 195, 200, 50)
         }
         
         # Create mode selection buttons for popup
@@ -364,39 +364,42 @@ class GameSettingsMenu:
             })
         
         # Update popup background rect
-        self.popup_rect = pygame.Rect(popup_x, 150, 
-                                    200, len(self.game_modes) * 50)
+        self.popup_rect = pygame.Rect(popup_x, 150, 200, len(self.game_modes) * 50)
         
         # Player count button - centered
         self.player_button = {
             'text': str(self.num_players),
-            'rect': pygame.Rect(self.center_x + 20, 350, 80, 50),
+            'rect': pygame.Rect(self.center_x + 105, 395, 80, 50),
             'active': False
         }
         
         # Navigation buttons
-        self.start_button = {'text': 'Commencer', 'rect': pygame.Rect(self.center_x + 20, 500, 150, button_height)}
-        self.back_button = {'text': 'Retour', 'rect': pygame.Rect(self.center_x - 170, 500, 150, button_height)}
+        self.start_button = {'text': 'Continue', 'rect': pygame.Rect(self.center_x + 70, 510, 150, button_height)}
+        self.back_button = {'text': 'Back', 'rect': pygame.Rect(self.center_x - 210, 510, 150, button_height)}
 
     def draw(self):
         mouse_pos = pygame.mouse.get_pos()
         self.screen.blit(self.settingmenu_image, (0, 0))
         
         # Draw title
-        title = self.title_font.render("Paramètres de la partie", True, self.colors['text'])
-        title_rect = title.get_rect(center=(self.center_x, 40))
+        title = self.title_font.render("Setting of the map", True, self.colors['text'])
+        title_rect = title.get_rect(center=(self.center_x, 80))
         self.screen.blit(title, title_rect)
         
         # Draw labels with right alignment
-        mode_label = self.font.render("Mode de jeu:", True, self.colors['text'])
-        mode_rect = mode_label.get_rect(right=self.center_x - 20, centery=175)
+        mode_label = self.font.render("Game mode :", True, self.colors['text'])
+        mode_rect = mode_label.get_rect(right=self.center_x - 60, centery=220)
         self.screen.blit(mode_label, mode_rect)
         
         # Draw map size label and button
-        size_label = self.font.render("Taille de la carte:", True, self.colors['text'])
-        size_rect = size_label.get_rect(right=self.center_x - 20, centery=275)
+        size_label = self.font.render("Size of the map :", True, self.colors['text'])
+        size_rect = size_label.get_rect(right=self.center_x - 40, centery=320)
         self.screen.blit(size_label, size_rect)
         
+        players_label = self.font.render("Number of players :", True, self.colors['text'])
+        players_rect = players_label.get_rect(right=self.center_x - 25, centery=420)
+        self.screen.blit(players_label, players_rect)
+
         # Draw width and height buttons/inputs
         for button, input_field in [(self.width_button, self.width_input), (self.height_button, self.height_input)]:
             color = self.colors['selected'] if input_field['active'] else (
@@ -413,12 +416,9 @@ class GameSettingsMenu:
         
         # Draw 'x' separator between width and height
         separator = self.font.render("x", True, self.colors['text'])
-        separator_rect = separator.get_rect(center=(self.center_x + 130, 275))
+        separator_rect = separator.get_rect(center=(self.center_x + 150, 320))
         self.screen.blit(separator, separator_rect)
         
-        players_label = self.font.render("Nombre de joueurs:", True, self.colors['text'])
-        players_rect = players_label.get_rect(right=self.center_x - 20, centery=375)
-        self.screen.blit(players_label, players_rect)
         
         # Draw mode button
         color = self.colors['button_hover'] if self.mode_button['rect'].collidepoint(mouse_pos) else self.colors['button']
