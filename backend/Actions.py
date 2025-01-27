@@ -408,21 +408,24 @@ class Action:
         if not enemy_unit:
             unit.task = None
             unit.target_attack = None
+            if hasattr(unit, 'path'):
+                del unit.path
+            if hasattr(unit, 'last_move_time'):
+                del unit.last_move_time
             return
-            
+
         unit.task = "going_to_battle"
         unit.target_attack = enemy_unit
-        
+
         # Get the current position of the enemy
-        if enemy_unit is not None:
-            target_x, target_y = enemy_unit.position
+        if isinstance(enemy_unit, Building):
+            free_tiles = self.get_adjacent_positions(enemy_unit.position[0], enemy_unit.position[1], enemy_unit.size)
+            for tile in free_tiles:
+                if self.map.is_tile_free_for_unit(tile[0], tile[1]):
+                    target_x, target_y = tile
+                    break
         else:
-            unit.task = None
-            unit.target_attack = None
-            return
-        # Check if the target position has changed
-        if unit.target_position != (target_x, target_y):
-            unit.path = None  # Reset path if target position has changed
+            target_x, target_y = enemy_unit.position
 
         # Check if the unit is within range to attack
         if ((unit.position[0] - target_x)**2 + (unit.position[1] - target_y)**2)**0.5 <= unit.range + 0.25: # Add a small threshold to ensure the unit is within range
@@ -450,7 +453,7 @@ class Action:
             unit.target_attack = None
             return
         distance = ((unit.position[0] - enemy_unit.position[0])**2 + (unit.position[1] - enemy_unit.position[1])**2)**0.5
-        if distance <= unit.range + 0.25: # Add a small threshold to ensure the unit is within range
+        if distance <= unit.range + 0.6: # Add a small threshold to ensure the unit is within range
             if not hasattr(unit, 'last_hit_time'):
                 unit.last_hit_time = 0
 
@@ -467,16 +470,21 @@ class Action:
                     unit.task = None
                     del unit.last_hit_time
                     unit.target_attack = None
+                    if hasattr(unit, 'path'):
+                        del unit.path
+                    if hasattr(unit, 'last_move_time'):
+                        del unit.last_move_time
                 else:
                     self.debug_print(f"{unit.name} is attacking {enemy_unit.name}...", 'Red')
                     enemy_unit.hp -= unit.attack
                     if isinstance(enemy_unit, Building):
-                        enemy_unit.is_attacked = True
+                            enemy_unit.is_attacked = True
+                    if not isinstance(enemy_unit, Building):
+                        enemy_unit.is_attacked_by = unit
+                        enemy_unit.task = "is_attacked"
 
                 unit.last_hit_time = current_time_called
         else:
-            if isinstance(enemy_unit, Building):
-                enemy_unit.is_attacked = False
             unit.task = "going_to_battle"  # Reset to movement phase
             self.debug_print(f"not entering attack phase, distance: {distance}", 'Red')
 
@@ -489,6 +497,10 @@ class Action:
                 # Reset task if trying to build at a different location
                 unit.task = None
                 del unit.target_building
+                if hasattr(unit, 'path'):
+                    del unit.path
+                if hasattr(unit, 'last_move_time'):
+                    del unit.last_move_time
                 return False
 
         # Validate construction site
