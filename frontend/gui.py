@@ -315,33 +315,72 @@ class GUI(threading.Thread):
 
         return img
 
-
-
     def generate_player_units_images(self, unit_images):
-        player_images = {player_id: custom_deepcopy(unit_images) for player_id in self.PLAYER_COLORS}
+        player_images = {}
 
         for player_id, color in self.PLAYER_COLORS.items():
-            for state in player_images[player_id]:
-                if not isinstance(player_images[player_id][state], dict):
-                    continue 
-                for direction in player_images[player_id][state]:
-                    if not isinstance(player_images[player_id][state][direction], list):
+            player_images[player_id] = {}
+            for state in unit_images:
+                if not isinstance(unit_images[state], dict):
+                    continue
+                player_images[player_id][state] = {}
+
+                for direction in unit_images[state]:
+                    if not isinstance(unit_images[state][direction], list):
                         continue  
-                    player_images[player_id][state][direction] = [
-                        self.recolor_image(img, color) for img in player_images[player_id][state][direction]
-                    ]
+
+                    save_dir = self.BASE_PATH / "assets" / "units" / str(player_id) / state / direction
+                    save_dir.mkdir(parents=True, exist_ok=True)
+
+                    loaded_images = []
+                    all_exist = True
+
+                    for idx, img in enumerate(unit_images[state][direction]):
+                        img_path = save_dir / f"{idx}.png"
+                        if img_path.exists():
+                            loaded_images.append(pygame.image.load(str(img_path)))
+                        else:
+                            all_exist = False
+                            break  
+
+                    if all_exist:
+                        #print(f"Loaded existing unit images for player {player_id}, state {state}, direction {direction}")
+                        pass
+                    else:
+                        recolored_images = [
+                            self.recolor_image(img, color) for img in unit_images[state][direction]
+                        ]
+                        for idx, img in enumerate(recolored_images):
+                            img_path = save_dir / f"{idx}.png"
+                            pygame.image.save(img, str(img_path))
+                            loaded_images.append(img)
+
+                    player_images[player_id][state][direction] = loaded_images
 
         return player_images
 
     def generate_player_buildings_images(self, buildings_images):
-        # Remplace deepcopy par custom_deepcopy
-        player_images = {player_id: custom_deepcopy(buildings_images) for player_id in self.PLAYER_COLORS}
+        player_buildings = {}
 
         for player_id, color in self.PLAYER_COLORS.items():
-            for building_type in player_images[player_id]:
-                player_images[player_id][building_type] = self.recolor_image(player_images[player_id][building_type], color)
+            player_buildings[player_id] = {}
 
-        return player_images
+            for building_type, img in buildings_images.items():
+                save_dir = self.BUILDINGS_PATH / str(player_id)
+                save_dir.mkdir(parents=True, exist_ok=True)
+
+                img_path = save_dir / f"{building_type}.png"
+
+                if img_path.exists():
+                    #print(f"Loaded existing building image for player {player_id}, type {building_type}")
+                    player_buildings[player_id][building_type] = pygame.image.load(str(img_path))
+                else:
+                    recolored_image = self.recolor_image(img, color)
+                    pygame.image.save(recolored_image, str(img_path))
+                    player_buildings[player_id][building_type] = recolored_image
+
+        return player_buildings
+
 
 
 
