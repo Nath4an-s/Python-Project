@@ -608,7 +608,7 @@ class PlayerSettingsMenu:
         
         # Scroll settings
         self.scroll_y = 0
-        self.visible_players = 5
+        self.visible_players = 4
         self.button_height = 60
         self.button_spacing = 0
         self.scroll_area_height = self.visible_players * self.button_height
@@ -616,14 +616,14 @@ class PlayerSettingsMenu:
         
         # Scrollbar settings
         self.scrollbar_width = 20
-        self.scrollbar_area = pygame.Rect(670, 200, self.scrollbar_width, self.scroll_area_height)
+        self.scrollbar_area = pygame.Rect(680, 250, self.scrollbar_width, self.scroll_area_height)  # Adjusted x and y position
         self.scrollbar_height = min(
             self.scroll_area_height,
             (self.scroll_area_height / self.total_height) * self.scroll_area_height
         )
         self.scrollbar_rect = pygame.Rect(
-            670,
-            180,
+            680, 
+            250, 
             self.scrollbar_width,
             self.scrollbar_height
         )
@@ -634,18 +634,18 @@ class PlayerSettingsMenu:
         # Create a button for each player
         self.player_buttons = []
         for i in range(num_players):
-            y_pos = 200 + i * self.button_height
+            y_pos = 250 + i * self.button_height 
             self.player_buttons.append({
                 'player': f'Player {i+1}',
                 'civ_rect': pygame.Rect(250, y_pos, 180, 50),
-                'ai_rect': pygame.Rect(450, y_pos, 180, 50),
+                'ai_rect': pygame.Rect(480, y_pos + 30, 180, 50),
                 'civ_index': 0,
                 'ai_index': 0
             })
         
         # Navigation buttons
-        self.back_button = {'text': 'Back', 'rect': pygame.Rect(250, 500, 120, 50)}
-        self.start_button = {'text': 'Start Game', 'rect': pygame.Rect(510, 500, 120, 50)}
+        self.back_button = {'text': 'Back', 'rect': pygame.Rect(210, 520, 120, 50)}
+        self.start_button = {'text': 'Start Game', 'rect': pygame.Rect(505, 520, 120, 50)}
         
         self.font = pygame.font.Font(None, 36)
         self.title_font = pygame.font.Font(None, 48)
@@ -676,14 +676,14 @@ class PlayerSettingsMenu:
         
         # Draw title
         title = self.title_font.render("Player Settings", True, self.colors['text'])
-        title_rect = title.get_rect(center=(400, 90))
+        title_rect = title.get_rect(center=(400, 80))
         self.screen.blit(title, title_rect)
         
-        # Draw headers
+        # Draw headers - moved down
         civ_header = self.font.render("Civilization", True, self.colors['text'])
         ai_header = self.font.render("AI Mode", True, self.colors['text'])
-        self.screen.blit(civ_header, (290, 140))
-        self.screen.blit(ai_header, (500, 140))
+        self.screen.blit(civ_header, (215, 200))  
+        self.screen.blit(ai_header, (515, 200))  
         
         # Draw visible player buttons
         start_idx = max(0, int(self.scroll_y / self.button_height))
@@ -691,7 +691,7 @@ class PlayerSettingsMenu:
         
         for i in range(start_idx, end_idx):
             button = self.player_buttons[i]
-            y_pos = 230 + (i - start_idx) * self.button_height
+            y_pos = 250 + (i - start_idx) * self.button_height  # Adjusted to match new initial position
             
             # Update button positions
             button['civ_rect'].y = y_pos
@@ -699,7 +699,7 @@ class PlayerSettingsMenu:
             
             # Draw the player label
             player_text = self.font.render(button['player'], True, self.colors['text'])
-            player_rect = player_text.get_rect(right=button['civ_rect'].left - 30, centery=y_pos + 25)
+            player_rect = player_text.get_rect(right=button['civ_rect'].left - 20, centery=y_pos + 25)
             self.screen.blit(player_text, player_rect)
             
             # Draw civilization button
@@ -723,7 +723,7 @@ class PlayerSettingsMenu:
             
             # Calculate and update scrollbar position
             scroll_ratio = self.scroll_y / (self.total_height - self.scroll_area_height)
-            scrollbar_y = 200 + scroll_ratio * (self.scroll_area_height - self.scrollbar_height)
+            scrollbar_y = 250 + scroll_ratio * (self.scroll_area_height - self.scrollbar_height)  # Adjusted base y position
             self.scrollbar_rect.y = scrollbar_y
             
             # Draw scrollbar handle
