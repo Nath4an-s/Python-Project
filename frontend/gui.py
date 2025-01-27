@@ -315,7 +315,7 @@ class GUI(threading.Thread):
 
         return img
 
-    def generate_player_units_images(self, unit_images):
+    def generate_player_units_images(self, unit_images, unit_type):
         player_images = {}
 
         for player_id, color in self.PLAYER_COLORS.items():
@@ -329,7 +329,7 @@ class GUI(threading.Thread):
                     if not isinstance(unit_images[state][direction], list):
                         continue  
 
-                    save_dir = self.BASE_PATH / "assets" / "units" / str(player_id) / state / direction
+                    save_dir = self.BASE_PATH / "assets" / "units" / str(player_id) / unit_type / state / direction
                     save_dir.mkdir(parents=True, exist_ok=True)
 
                     loaded_images = []
@@ -969,10 +969,10 @@ class GUI(threading.Thread):
             },
         }
         
-        self.player_villager_images = self.generate_player_units_images(self.villager_images)
-        self.player_swordman_images = self.generate_player_units_images(self.swordman_images)
-        self.player_archer_images = self.generate_player_units_images(self.archer_images)
-        self.player_horseman_images = self.generate_player_units_images(self.horseman_images)
+        self.player_villager_images = self.generate_player_units_images(self.villager_images,"villager")
+        self.player_swordman_images = self.generate_player_units_images(self.swordman_images,"swordman")
+        self.player_archer_images = self.generate_player_units_images(self.archer_images,"archer")
+        self.player_horseman_images = self.generate_player_units_images(self.horseman_images,"horseman")
         
       
         self.iconwod = self.load_image(self.RESOURCES_PATH / "iconwood.png")
