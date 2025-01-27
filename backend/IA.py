@@ -5,7 +5,7 @@ from Actions import *
 from logger import debug_print
 from Building import *
 from Units import *
-from backend.Starter_File import players
+from backend.Starter_File import players, GameMode
 
 class IA:
     def __init__(self, player, mode, game_map, current_time_called): #only one player --> IA class will be called for each player in GameEngine
@@ -20,6 +20,8 @@ class IA:
         self.target_player = None  # Targeted player for attacks
         self.defending_units = []  # List to track defending units
         self.min_villagers = 2  # Minimum villagers to keep
+        self.recovery_strategy = False
+        self.secure_gold = [0, 0, 0] # True/False(need to secure), Number of Keep, True/False(presence of Camp), True/False(Camp just placed)
 
 
 #### PRIORITIES and UNIT_RESOURCES ####
@@ -37,12 +39,11 @@ class IA:
         
         # Count active villagers
         active_builders = len([u for u in self.player.units if isinstance(u, Villager) and (u.task == "constructing" or u.task == "going_to_construction_site")])
-        active_gatherers = len([u for u in self.player.units if isinstance(u, Villager) and u.task == "gathering"])
+        active_gatherers = len([u for u in self.player.units if isinstance(u, Villager) and u.task == "gathering" or u.task == "marching"])
         
         total_villagers = active_builders + active_gatherers + len(inactive_villagers)
         
         desired_builders = max(1, total_villagers // 3)
-
         
         # Allocate inactive villagers based on desired ratios
         building_villagers = []
@@ -109,6 +110,10 @@ class IA:
         self.manage_defenders()  # New call to manage defenders
         building_villagers, gathering_villagers, inactive_troops = self.get_inactive_units()
         
+        if self.recovery_strategy and self.player.owned_resources["Wood"] < 350:
+            gathering_villagers.extend(building_villagers)
+            building_villagers = []
+
         # Assign defenders first
         for defender in self.defending_units:
             if defender.task == "defending":
@@ -241,11 +246,14 @@ class IA:
         #if villagers : self.debug_print(f"Farm : {[villager.name for villager in villagers]}")
         for villager in villagers:
             # Determine the resource type that the player has the least of
-            resource_types = sorted(self.player.owned_resources, key=self.player.owned_resources.get)
-            for resource_type in resource_types:
-                #self.debug_print(f"{villager.name} : Gathering {resource_type}")
-                if Action(self.game_map).gather_resources(villager, resource_type, self.current_time_called):
-                    break
+            if not self.recovery_strategy or "Town Center" not in [building.name for building in self.player.buildings]:
+                resource_types = sorted(self.player.owned_resources, key=self.player.owned_resources.get) # Sorted in ascending order
+                for resource_type in resource_types: # Gather the resource that the player has the least of
+                    #self.debug_print(f"{villager.name} : Gathering {resource_type}")
+                    if Action(self.game_map).gather_resources(villager, resource_type, self.current_time_called): # Gather the resource
+                        break
+            else:
+                Action(self.game_map).gather_resources(villager, "Wood", self.current_time_called)
 
     def is_position_valid(self, x, y, building_size, is_building=True):
         # Check map boundaries
@@ -304,17 +312,52 @@ class IA:
         for building in self.player.buildings:
             building_counts[type(building).__name__] += 1
 
-        if building_counts["TownCenter"] == 0 and self.player.owned_resources["Wood"] >= 350:
-            least_constructed_building = "TownCenter"
-            self.debug_print("Building a TownCenter############################################", 'Blue')
+        if building_counts["TownCenter"] == 0:
+            if self.player.owned_resources["Wood"] >= 350:
+                least_constructed_building = "TownCenter"
+                self.debug_print("Strategy : No Town Center, building a Town Center", 'Magenta')
+                self.recovery_strategy = False
+            elif building_counts["Camp"] == 0:
+                if self.player.owned_resources["Wood"] >= 100:
+                    least_constructed_building = "Camp"
+                    self.recovery_strategy = True
+                    self.debug_print("Strategy : No Town Center, not enough Wood, building a Camp", 'Magenta')
+                    
         # Check if food is low and prioritize building a Farm
         elif self.player.owned_resources["Food"] < 50 and self.player.owned_resources["Wood"] >= 60:
             least_constructed_building = "Farm"
+            self.debug_print("Strategy : Low food, building a Farm", 'Magenta')
         # Check if population limit is reached and prioritize building a House
         elif (self.player.population + len(self.player.training_units) >= sum(building.population_increase for building in self.player.buildings)
               and self.player.owned_resources["Wood"] >= 25):
             least_constructed_building = "House"
-            self.debug_print("Population limit reached, building a House############################################", 'Blue')
+            self.debug_print("Strategy : Population limit reached, building a House", 'Blue')
+        elif GameMode == "Gold Rush":
+            if self.player.owned_resources["Wood"] >= 100 and not self.secure_gold[2]:
+                least_constructed_building = "Camp"
+                self.secure_gold[2] = 1
+                self.secure_gold[0] = 1
+                self.debug_print("Strategy : Gold Rush, building a Camp near gold", 'Magenta')
+            elif self.player.owned_resources["Gold"] >= 125 and self.player.owned_resources["Wood"] >= 35 and self.secure_gold[1] < 3:
+                least_constructed_building = "Keep"
+                self.secure_gold[0] = 1
+                self.debug_print("Strategy : Gold Rush, building a Keep to secure gold", 'Magenta')
+            else:
+                # Filter out military buildings that have reached their limit
+                constructable_buildings = [
+                    b_name for b_name, costs in building_costs.items()
+                    if all(self.player.owned_resources[resource] >= amount 
+                        for resource, amount in costs.items())
+                    and (b_name not in military_buildings or building_counts[b_name] < MAX_MILITARY_BUILDINGS)
+                ]
+                
+                # Find the least constructed among constructable buildings
+                least_constructed_building = min(
+                    constructable_buildings,
+                    key=lambda b: building_counts[b],
+                    default="Farm"  # Default to Farm if no buildings are constructable
+                )
+                self.debug_print(f"No Particular strategy, building {least_constructed_building}", 'Magenta')
         else:
             # Filter out military buildings that have reached their limit
             constructable_buildings = [
@@ -330,30 +373,41 @@ class IA:
                 key=lambda b: building_counts[b],
                 default="Farm"  # Default to Farm if no buildings are constructable
             )
-        
-        building_class = eval(least_constructed_building)
+            self.debug_print(f"No Particular strategy, building {least_constructed_building}", 'Magenta')
+        building_class = eval(least_constructed_building) # Get the class of the least constructed building
         # Check if the player has enough resources to construct the identified building
         build_position = None
-        for existing_building in self.player.buildings:
-            x, y = existing_building.position
+        #Trick to build where we want
+        if not self.player.buildings:
+            player_should_build = [villagers[0]]
+        elif self.secure_gold[0]:
+            player_should_build = [Map.find_nearest_resource(self.game_map, villagers[0].position, "Gold", self.player)]
+        else:
+            player_should_build = self.player.buildings
+
+        for existing_building in player_should_build:
+            x, y = existing_building.position if isinstance(existing_building, Building) else existing_building
             for radius in range(5, 15): # buildings not too close to each other nor too far
                 for dx in range(-radius, radius + 1):
                     for dy in range(-radius, radius + 1):
                         new_x = x + dx
                         new_y = y + dy
-                        
-                        if self.is_position_valid(new_x, new_y, building_class(self.player).size, is_building=True):
-                            build_position = (new_x, new_y)
-                            break
+                        if GameMode == "Gold Rush" and building_class.__name__ == "Camp":
+                            if self.is_position_valid(new_x, new_y, building_class(self.player).size + 1, is_building=True):
+                                build_position = (new_x, new_y)
+                                break
+                        else:
+                            if self.is_position_valid(new_x, new_y, building_class(self.player).size, is_building=True):
+                                build_position = (new_x, new_y)
+                                break
                     if build_position:
                         break
                 if build_position:
                     break
             if build_position:
                 break
-
         if build_position:
-            self.debug_print(f"{self.player.name} : #################################Building {building_class.__name__} at {build_position}", 'Blue')
+            self.debug_print(f"{self.player.name} : Building {building_class.__name__} at {build_position}", 'Blue')
             for villager in villagers:
                 Action(self.game_map).construct_building(
                     villager, 
@@ -365,6 +419,10 @@ class IA:
                 )
                 if build_position not in self.decided_builds:
                     self.decided_builds.append((build_position[0], build_position[1], building_class(self.player).size))
+                if self.secure_gold[0]:
+                    if building_class.__name__ == "Keep":
+                        self.secure_gold[1] += 1
+                    self.secure_gold[0] = 0
 
 
 #### ATTACK STRATEGY ####

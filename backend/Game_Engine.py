@@ -122,17 +122,19 @@ class GameEngine:
 
                 ###### TEST KEYS #######
 
-                if key == ord('r'):
+                elif key == ord('r'):
                     self.debug_print(self.ias[2].decided_builds)
-                if key == ord('o'):
+                elif key == ord('o'):
                     self.terminalon = not self.terminalon   
-                if key == ord('i'):
+                elif key == ord('i'):
                     action.construct_building(self.players[2].units[1], Keep, 10, 10, self.players[2], self.get_current_time())
                     action.move_unit(self.players[1].units[1],15,15,self.get_current_time())
+                elif key == ord('u'):
+                    Building.kill_building(self.players[0], self.players[0].buildings[0], self.map)
 
                 #########################
 
-                if key == curses.KEY_F9:
+                elif key == curses.KEY_F9:
                     if not self.gui_running:
                         self.start_gui_thread()
                     else:
