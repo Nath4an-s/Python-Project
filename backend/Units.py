@@ -274,6 +274,7 @@ class Archer(Unit):
         self.z = 64
         self.max_hp = 30
         self.arrow_progress = 0
+        self.fireball_progress = 0
 
     @property
     def bbox_bottom(self):
