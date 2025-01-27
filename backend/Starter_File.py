@@ -691,7 +691,7 @@ class PlayerSettingsMenu:
         
         for i in range(start_idx, end_idx):
             button = self.player_buttons[i]
-            y_pos = 200 + (i - start_idx) * self.button_height
+            y_pos = 230 + (i - start_idx) * self.button_height
             
             # Update button positions
             button['civ_rect'].y = y_pos
