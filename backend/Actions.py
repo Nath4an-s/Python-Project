@@ -362,28 +362,44 @@ class Action:
                 tile.building.is_farmed = False
             returning_position = Map.find_drop_point(self.map, unit.position, unit.player)
 
-            # Move the unit to the returning position if found
+            # Move the unit to a tile around the building at the returning position if found
             if returning_position:
-                self.move_unit(unit, returning_position[0], returning_position[1], current_time_called)
+                building = self.map.grid[returning_position[1]][returning_position[0]].building
+                if building:
+                    building_size = building.size  # Assuming building has a size attribute
+                    building_position = building.position
 
-                # Check if unit has reached the drop-off destination to deposit resources
-                if abs(unit.position[0] - (returning_position[0])) < 1.01 and abs(unit.position[1] - (returning_position[1])) < 1.01:
-                    # Deposit resources and reset carrying load
-                    building = next(b for b in unit.player.buildings if b.position == returning_position)
-                    if isinstance(building, Building):
-                        building.drop_point(unit, resource_type)
-                    unit.carrying[resource_type] = 0
-                    unit.task = None
-                    unit.target_resource = None
-                    unit.target_position = None
-                    
-                    #clear movement-related attributes
-                    if hasattr(unit, 'last_gather_time'):
-                        del unit.last_gather_time
-                    if hasattr(unit, 'path'):
-                        del unit.path
-                    if hasattr(unit, 'last_move_time'):
-                        del unit.last_move_time
+                    # Find a tile around the building
+                    surrounding_tiles = []
+                    for dx in range(-1, building_size + 1):
+                        for dy in range(-1, building_size + 1):
+                            if (dx == -1 or dx == building_size) or (dy == -1 or dy == building_size):
+                                tile_x = building_position[0] + dx
+                                tile_y = building_position[1] + dy
+                                if self.map.is_tile_free_for_unit(tile_x, tile_y):
+                                    surrounding_tiles.append((tile_x, tile_y))
+
+                    if surrounding_tiles:
+                        new_position = surrounding_tiles[0]  # Choose the first accessible tile
+                        self.move_unit(unit, new_position[0], new_position[1], current_time_called)
+
+                        # Check if unit has reached the drop-off destination to deposit resources
+                        if abs(unit.position[0] - new_position[0]) < 1.01 and abs(unit.position[1] - new_position[1]) < 1.01:
+                            # Deposit resources and reset carrying load
+                            if isinstance(building, Building):
+                                building.drop_point(unit, resource_type)
+                            unit.carrying[resource_type] = 0
+                            unit.task = None
+                            unit.target_resource = None
+                            unit.target_position = None
+
+                            # Clear movement-related attributes
+                            if hasattr(unit, 'last_gather_time'):
+                                del unit.last_gather_time
+                            if hasattr(unit, 'path'):
+                                del unit.path
+                            if hasattr(unit, 'last_move_time'):
+                                del unit.last_move_time
             else:
                 self.debug_print("No valid building found for resource return.", 'Yellow')
                 unit.task = None
@@ -592,7 +608,13 @@ class Action:
                 building.last_attack_time = current_time_called
                 if building.attack >= target.hp:
                     target.hp = 0
-                    Unit.kill_unit(target.player, target, game_map)
+                    if isinstance(target, Building):
+                        Building.kill_building(target.player, target, game_map)
+                    else:
+                        Unit.kill_unit(target.player, target, game_map)
                 else:
                     target.hp -= building.attack
+                    if isinstance(target, Building):
+                        target.is_attacked = True
+                    self.debug_print(f"{building.name} is attacking {target.name}...", 'Red')
                 return True

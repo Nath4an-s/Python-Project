@@ -211,6 +211,9 @@ class GameEngine:
                                     action.attack_target(building, target=closest_enemy, current_time_called=self.current_time, game_map=self.map)
                                 else: 
                                     building.target = None
+                            elif type(building).__name__ == "Construct" and building.is_attacked:
+                                Building.kill_building(building.player, building, self.map)
+
                 # Clear the screen and display the new part of the map after moving
                 stdscr.clear()
                 if self.terminalon :
