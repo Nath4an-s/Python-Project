@@ -108,6 +108,8 @@ class LoadGameMenu:
             'scrollbar': (70, 70, 70),
             'scrollbar_hover': (90, 90, 90)
         }
+        self.loadmenu_image = pygame.image.load(r'..\assets\MenuPhoto\parametrebueno2.png')
+        self.loadmenu_image = pygame.transform.scale(self.loadmenu_image, (screen_width, screen_height))
         
         # Get save files
         self.save_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'assets', 'annex')
@@ -185,7 +187,7 @@ class LoadGameMenu:
     def draw(self):
         mouse_pos = pygame.mouse.get_pos()
         # Draw background
-        self.screen.fill(self.colors['background'])
+        self.screen.blit(self.loadmenu_image, (0, 0))
         
         # Draw title
         title = self.title_font.render("Charger une partie", True, self.colors['text'])
@@ -293,7 +295,7 @@ class GameSettingsMenu:
             'input_bg': (70, 70, 70)
         }
         
-        self.settingmenu_image = pygame.image.load(r'..\assets\MenuPhoto\parametre.gif')
+        self.settingmenu_image = pygame.image.load(r'..\assets\MenuPhoto\parametrebueno.png')
         self.settingmenu_image = pygame.transform.scale(self.settingmenu_image, (screen_width, screen_height))
 
         self.font = pygame.font.Font(None, 36)
@@ -592,7 +594,7 @@ class PlayerSettingsMenu:
             'scrollbar_hover': (90, 90, 90)
         }
 
-        self.settingmenu_image = pygame.image.load(r'..\assets\MenuPhoto\parametre.gif')
+        self.settingmenu_image = pygame.image.load(r'..\assets\MenuPhoto\parametrebueno3.png')
         self.settingmenu_image = pygame.transform.scale(self.settingmenu_image, (screen_width, screen_height))
         
         # Scroll settings
