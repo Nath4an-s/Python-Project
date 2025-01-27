@@ -118,6 +118,7 @@ class IA:
         for defender in self.defending_units:
             if defender.task == "defending":
                 self.defend_position(defender, self.get_base_position())
+                self.debug_print(f"{defender.name} : Defending base", 'Red')
 
         self.build_structures(list(set(building_villagers)))
         
