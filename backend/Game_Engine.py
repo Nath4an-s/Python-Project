@@ -190,7 +190,7 @@ class GameEngine:
                         self.debug_print("No save files found.")
 
                 #call the IA
-                if not self.is_paused and self.turn % 500 == 0 and self.IA_used == True: # Call the IA every 5 turns: change 0, 5, 10, 15, ... depending on lag
+                if not self.is_paused and self.turn % 200 == 0 and self.IA_used == True: # Call the IA every 5 turns: change 0, 5, 10, 15, ... depending on lag
                     for ia in self.ias:
                         ia.current_time_called = self.get_current_time()  # Update the current time for each IA
                         ia.run()  # Run the AI logic for each player
@@ -251,7 +251,7 @@ class GameEngine:
                 self.stop_gui_thread()
 
     def check_victory(self):
-        if self.turn % 100 == 0: # Check if the game is over
+        if self.turn % 500 == 0: # Check if the game is over
             active_players = [p for p in self.players if p.units or p.buildings] # Check if the player has units and buildings
             return len(active_players) == 1 # Check if there is only one player left
         else:

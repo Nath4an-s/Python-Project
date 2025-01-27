@@ -168,6 +168,8 @@ class Unit:
     def kill_unit(cls, player, unit_to_kill, game_map):
         if unit_to_kill in player.units:
             player.units.remove(unit_to_kill)  # Remove the unit from the player's list of units
+            if unit_to_kill in player.ai.defending_units:
+                player.ai.defending_units.remove(unit_to_kill)
             player.population -= 1  # Decrease the player's population
             x, y = unit_to_kill.position
             game_map.remove_unit(int(x), int(y), unit_to_kill)  # Assuming game_map is a property of the player

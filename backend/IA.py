@@ -114,12 +114,6 @@ class IA:
             gathering_villagers.extend(building_villagers)
             building_villagers = []
 
-        # Assign defenders first
-        for defender in self.defending_units:
-            if defender.task == "defending":
-                self.defend_position(defender, self.get_base_position())
-                self.debug_print(f"{defender.name} : Defending base", 'Red')
-
         self.build_structures(list(set(building_villagers)))
         
         _, remaining_builders, _ = self.get_inactive_units()
@@ -500,33 +494,6 @@ class IA:
             defensive_troops.extend(troops[:needed_defenders])
 
         return defensive_troops
-
-    def defend_position(self, unit, position):
-        patrol_radius = 10
-        x, y = position
-
-        
-        # List of potential patrol locations around the building
-        if unit.target_position is None:
-            patrol_locations = [
-                (x + dx, y + dy) 
-                for dx in range(-patrol_radius, patrol_radius + 1) 
-                for dy in range(-patrol_radius, patrol_radius + 1)
-                if (dx != 0 or dy != 0)  # Exclude the original position
-            ]
-
-            # Choose a random free location
-            free_locations = [
-                loc for loc in patrol_locations 
-                if self.is_tile_free(loc[0], loc[1], self.game_map)
-            ]
-            
-            # If free locations exist, move to a random free location
-            if free_locations:
-                patrol_x, patrol_y = random.choice(free_locations)
-                
-                # Use the existing move_unit method from Actions class
-                Action(self.game_map).move_unit(unit, patrol_x, patrol_y, self.current_time_called)
 
     def is_tile_free(self, x, y, game_map):
         if 0 <= y < len(game_map.grid) and 0 <= x < len(game_map.grid[y]):
