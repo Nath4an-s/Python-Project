@@ -614,7 +614,6 @@ class Action:
                         Unit.kill_unit(target.player, target, game_map)
                 else:
                     target.hp -= building.attack
-                    if isinstance(target, Building):
-                        target.is_attacked = True
+                    target.is_attacked = True
                     self.debug_print(f"{building.name} is attacking {target.name}...", 'Red')
                 return True
