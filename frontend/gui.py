@@ -224,7 +224,6 @@ class Camera:
         self.offset_x = max(min_x, min(self.offset_x + dx, max_x))
         self.offset_y = max(min_y, min(self.offset_y + dy, max_y))
 
-
 class GUI(threading.Thread):
     def __init__(self, data_queue):
         super().__init__()
@@ -289,8 +288,7 @@ class GUI(threading.Thread):
     def is_blue_shade(self, pixel, threshold=50):
         r, g, b, a = pixel  # unpacking the tuple directly
         return b > r + threshold and b > g + threshold
-
-        
+  
     def recolor_image(self, img, target_color):
         # Create a copy of the surface to avoid modifying the original
         img = img.copy()
@@ -381,9 +379,6 @@ class GUI(threading.Thread):
 
         return player_buildings
 
-
-
-
     def flip_image_horizontally(self, image):
         return pygame.transform.flip(image, True, False)
 
@@ -412,7 +407,6 @@ class GUI(threading.Thread):
             "Gold": self.load_image(self.RESOURCES_PATH / "gold.png"),
             "Soil": self.load_image(self.RESOURCES_PATH / "soil.png"),
             "Flower": self.load_image(self.RESOURCES_PATH / "Flower.png"),
-            "Soil1": self.load_image(self.RESOURCES_PATH / "soil1.png"),
         }
 
         # Load and scale building images
@@ -1026,14 +1020,17 @@ class GUI(threading.Thread):
         keys = pygame.key.get_pressed()
         move_speed = 10
 
+        map_width_px = (max(self.game_data.map.width,self.game_data.map.height) + 1) * self.TILE_WIDTH
+        map_height_px = (max(self.game_data.map.height,self.game_data.map.width) + 1) * self.TILE_HEIGHT
+
         if keys[pygame.K_LEFT]:
-            self.camera.move(-move_speed, 0, self.game_data.map.width * self.TILE_WIDTH, self.game_data.map.height * self.TILE_HEIGHT)
+            self.camera.move(-move_speed, 0, map_width_px , map_height_px)
         if keys[pygame.K_RIGHT]:
-            self.camera.move(move_speed, 0, self.game_data.map.width * self.TILE_WIDTH, self.game_data.map.height * self.TILE_HEIGHT)
+            self.camera.move(move_speed, 0, map_width_px , map_height_px)
         if keys[pygame.K_UP]:
-            self.camera.move(0, -move_speed, self.game_data.map.width * self.TILE_WIDTH, self.game_data.map.height * self.TILE_HEIGHT)
+            self.camera.move(0, -move_speed, map_width_px , map_height_px)
         if keys[pygame.K_DOWN]:
-            self.camera.move(0, move_speed, self.game_data.map.width * self.TILE_WIDTH, self.game_data.map.height * self.TILE_HEIGHT)
+            self.camera.move(0, move_speed, map_width_px , map_height_px)
 
     def display_fps(self):
         current_time = time.time()
@@ -1048,8 +1045,8 @@ class GUI(threading.Thread):
             self.screen.blit(self.fps_text, fps_rect)
 
     def pre_render_map(self):
-        map_width_px = (self.game_data.map.width + 1) * self.TILE_WIDTH
-        map_height_px = (self.game_data.map.height + 1) * self.TILE_HEIGHT
+        map_width_px = (max(self.game_data.map.width,self.game_data.map.height) + 1) * self.TILE_WIDTH
+        map_height_px = (max(self.game_data.map.height,self.game_data.map.width) + 1) * self.TILE_HEIGHT
         self.pre_rendered_map = pygame.Surface((map_width_px, map_height_px), pygame.SRCALPHA)
         self.trees_drawn = {}
 
@@ -1057,7 +1054,7 @@ class GUI(threading.Thread):
             for x in range(self.game_data.map.width):
                 # Convertir en coordonnées isométriques
                 iso_x, iso_y = self.cart_to_iso(x, y)
-                tile_x = iso_x + (self.game_data.map.width * self.TILE_WIDTH // 2)
+                tile_x = iso_x + (self.game_data.map.height * self.TILE_WIDTH // 2)
                 tile_y = iso_y
 
                 # Dessiner les polygones pour observer les limites des tuiles
@@ -1065,14 +1062,13 @@ class GUI(threading.Thread):
                     (tile_x + point[0], tile_y + point[1]) for point in self.tile_polygon
                 ]
                 
-                if "Soil" in self.IMAGES and "Soil1" in self.IMAGES:
-                    # Alterner entre Soil et Soil1 en fonction de la parité de (x + y)
-                    tile_type = "Soil1" if random.random() < 0.01 else "Soil"
+                if "Soil" in self.IMAGES:
+                    tile_type = "Soil"
                     tile_image = self.IMAGES[tile_type]
                     tile_rect = tile_image.get_rect(center=(tile_x, tile_y))
                     self.pre_rendered_map.blit(tile_image, tile_rect)
 
-                pygame.draw.lines(self.pre_rendered_map, (200, 200, 200), True, transformed_polygon, 1)  # Bordures
+                pygame.draw.lines(self.pre_rendered_map, (0, 0, 0), True, transformed_polygon, 1)  # Bordures
 
                 # Récupérer les informations de la tuile et placer les ressources
                 tile = self.game_data.map.grid[y][x]
@@ -1102,7 +1098,6 @@ class GUI(threading.Thread):
                             tile_x - (image.get_width() // 2),
                             tile_y - image.get_height() + (self.TILE_HEIGHT // 2)
                         ))
-
 
     '''def render_dying_entities(self, game_data):
         """
@@ -1188,7 +1183,6 @@ class GUI(threading.Thread):
             pygame.draw.rect(self.screen, (255, 255, 255), [bar_x + 35, bar_y, width, height])
             pygame.draw.rect(self.screen, color, [bar_x + 35, bar_y, health_width, height])
 
-
     def render_isometric_map(self):
         if not self.pre_rendered_map:
             self.pre_render_map()
@@ -1206,7 +1200,7 @@ class GUI(threading.Thread):
         for player in self.game_data.players:
             for unit in player.units:
                 iso_x, iso_y = self.cart_to_iso(unit.position[0], unit.position[1])
-                unit_x = iso_x + (self.game_data.map.width * self.TILE_WIDTH // 2)
+                unit_x = iso_x + (self.game_data.map.height * self.TILE_WIDTH // 2)
                 unit_y = iso_y
                 if visible_rect.collidepoint(unit_x, unit_y):
                     entities.append((unit_x, unit_y, "unit", unit,unit.z))
@@ -1216,7 +1210,7 @@ class GUI(threading.Thread):
                 bottom_right_y = building.position[1] + building.size
 
                 iso_x, iso_y = self.cart_to_iso(bottom_right_x, bottom_right_y)
-                building_x = iso_x + (self.game_data.map.width * self.TILE_WIDTH // 2)
+                building_x = iso_x + (self.game_data.map.height * self.TILE_WIDTH // 2)
                 building_y = iso_y
 
                 if visible_rect.collidepoint(building_x, building_y):
@@ -1224,7 +1218,7 @@ class GUI(threading.Thread):
 
             for rubble in self.game_data.map.rubbles:
                 iso_x, iso_y = self.cart_to_iso(rubble.position[0], rubble.position[1])
-                rubble_x = iso_x + (self.game_data.map.width * self.TILE_WIDTH // 2)
+                rubble_x = iso_x + (self.game_data.map.height * self.TILE_WIDTH // 2)
                 rubble_y = iso_y
                 if visible_rect.collidepoint(rubble_x, rubble_y):
                     entities.append((rubble_x, rubble_y, "rubble", rubble, 0))
@@ -1462,9 +1456,6 @@ class GUI(threading.Thread):
 
             clock.tick(1)
 
-        
-        
-
     def initialize_pygame(self):
         """Initialize pygame and load resources."""
         pygame.init()
@@ -1524,7 +1515,6 @@ class GUI(threading.Thread):
         self.display_fps()
         pygame.display.flip()
 
-
     def run(self):
         try:
             self.initialize_pygame()
@@ -1570,8 +1560,10 @@ class GUI(threading.Thread):
         mini_map_width = 200
         mini_map_height = 150
         mini_map_x = self.WINDOW_WIDTH - mini_map_width - 10
-        mini_map_y = self.WINDOW_HEIGHT - mini_map_height - 10
-        tile_offset_x = mini_map_width // 2  
+        mini_map_y = self.WINDOW_HEIGHT - mini_map_height - 10 
+        map_width_px = (max(self.game_data.map.width, self.game_data.map.height) + 1) * self.TILE_WIDTH
+        map_height_px = (max(self.game_data.map.height, self.game_data.map.width) + 1) * self.TILE_HEIGHT
+        tile_offset_x = mini_map_width // 2 
 
         # Check if it's time to update resource rendering
         current_time = time.time()
@@ -1592,41 +1584,41 @@ class GUI(threading.Thread):
             # Draw player units
             for unit in player.units:
                 iso_x, iso_y = self.cart_to_iso(unit.position[0], unit.position[1])
-                tile_x = iso_x + (self.game_data.map.width * self.TILE_WIDTH // 2)
+                tile_x = iso_x + (self.game_data.map.height * self.TILE_WIDTH // 2)
                 tile_y = iso_y
-                mini_map_iso_x = mini_map_x + (tile_x * (mini_map_width / (self.game_data.map.width * self.TILE_WIDTH)))
-                mini_map_iso_y = mini_map_y + (tile_y * (mini_map_height / (self.game_data.map.height * self.TILE_HEIGHT)))
+                mini_map_iso_x = mini_map_x + (tile_x * (mini_map_width / map_width_px ))
+                mini_map_iso_y = mini_map_y + (tile_y * (mini_map_height / map_height_px))
                 pygame.draw.circle(self.screen, player_color, (int(mini_map_iso_x), int(mini_map_iso_y)), 2)
 
             # Draw player buildings
             for building in player.buildings:
                 iso_x, iso_y = self.cart_to_iso(building.position[0], building.position[1])
-                tile_x = iso_x + (self.game_data.map.width * self.TILE_WIDTH // 2)
+                tile_x = iso_x + (self.game_data.map.height * self.TILE_WIDTH // 2)
                 tile_y = iso_y
-                mini_map_iso_x = mini_map_x + (tile_x * (mini_map_width / (self.game_data.map.width * self.TILE_WIDTH)))
-                mini_map_iso_y = mini_map_y + (tile_y * (mini_map_height / (self.game_data.map.height * self.TILE_HEIGHT)))
+                mini_map_iso_x = mini_map_x + (tile_x * (mini_map_width / map_width_px ))
+                mini_map_iso_y = mini_map_y + (tile_y * (mini_map_height / map_height_px))
                 pygame.draw.rect(self.screen, player_color, (mini_map_iso_x - 1, mini_map_iso_y - 1, 3, 3))
 
         # Draw the viewing rectangle
-        view_rect_width = (self.WINDOW_WIDTH / (self.game_data.map.width * self.TILE_WIDTH)) * mini_map_width
-        view_rect_height = (self.WINDOW_HEIGHT / (self.game_data.map.height * self.TILE_HEIGHT)) * mini_map_height
-        view_rect_x = mini_map_x + ((self.camera.offset_x / (self.game_data.map.width * self.TILE_WIDTH)) * mini_map_width)
-        view_rect_y = mini_map_y + ((self.camera.offset_y / (self.game_data.map.height * self.TILE_HEIGHT)) * mini_map_height)
-        pygame.draw.rect(self.screen, (255, 255, 255), (view_rect_x, view_rect_y, view_rect_width, view_rect_height), 2)
+        view_rect_x = ((self.camera.offset_x / map_width_px) * mini_map_width) + mini_map_x
+        view_rect_y = ((self.camera.offset_y / map_height_px) * mini_map_height) + mini_map_y
+        view_rect_width = (self.camera.width / map_width_px) * mini_map_width
+        view_rect_height = (self.camera.height / map_height_px) * mini_map_height
+        pygame.draw.rect(self.screen, (255, 255, 255), (view_rect_x, view_rect_y, view_rect_width, view_rect_height),2)
 
     def update_mini_map_resources(self, mini_map_width, mini_map_height, tile_offset_x):
-        """
-        Updates the pre-rendered resource layer of the mini-map with properly centered background.
-        """
+        map_width_px = (max(self.game_data.map.width, self.game_data.map.height) + 1) * self.TILE_WIDTH
+        map_height_px = (max(self.game_data.map.height, self.game_data.map.width) + 1) * self.TILE_HEIGHT
+
         background_image = self.mini_map_back
 
         # Create a surface with extra width to accommodate isometric offset
-        total_width = mini_map_width + tile_offset_x * 2
+        total_width = int((map_width_px) * (mini_map_width / map_width_px) + tile_offset_x * 2)
         self.mini_map_surface = pygame.Surface((total_width, mini_map_height), pygame.SRCALPHA)
 
         # Calculer les offsets pour centrer l'image sur la surface
         x_offset = (total_width - background_image.get_width()) // 2
-        y_offset = (mini_map_height - background_image.get_height()) // 2
+        y_offset = (mini_map_height - background_image.get_height())// 2
 
         # Dessiner l'image centrée sur la surface
         self.mini_map_surface.blit(background_image, (x_offset, y_offset))
@@ -1639,12 +1631,12 @@ class GUI(threading.Thread):
                 color = self.COLORS[resource_type]
 
                 iso_x, iso_y = self.cart_to_iso(x, y)
-                tile_x = iso_x + (self.game_data.map.width * self.TILE_WIDTH // 2)
+                tile_x = iso_x + (self.game_data.map.height * self.TILE_WIDTH // 2)
                 tile_y = iso_y
                 
                 # Calculate position on mini-map, including the offset
-                mini_map_iso_x = (tile_x * (mini_map_width / (self.game_data.map.width * self.TILE_WIDTH))) + tile_offset_x
-                mini_map_iso_y = (tile_y * (mini_map_height / (self.game_data.map.height * self.TILE_HEIGHT)))
+                mini_map_iso_x = (tile_x * (mini_map_width / (map_width_px))) + tile_offset_x
+                mini_map_iso_y = (tile_y * (mini_map_height / (map_height_px)))
                 
                 # Draw the resource tile
                 pygame.draw.rect(self.mini_map_surface, color, (mini_map_iso_x, mini_map_iso_y, 2, 2))
@@ -1656,6 +1648,8 @@ class GUI(threading.Thread):
         """
         mini_map_width = 200
         mini_map_height = 150
+        map_width_px = (max(self.game_data.map.width, self.game_data.map.height) + 1) * self.TILE_WIDTH
+        map_height_px = (max(self.game_data.map.height, self.game_data.map.width) + 1) * self.TILE_HEIGHT
         mini_map_x = self.WINDOW_WIDTH - mini_map_width - 10
         mini_map_y = self.WINDOW_HEIGHT - mini_map_height - 10
 
@@ -1673,12 +1667,12 @@ class GUI(threading.Thread):
                 relative_y = (mouse_y - mini_map_y) / mini_map_height
 
                 # Calculer la taille du rectangle de vue (zone visible)
-                view_rect_width = (self.WINDOW_WIDTH / (self.game_data.map.width * self.TILE_WIDTH)) * mini_map_width
-                view_rect_height = (self.WINDOW_HEIGHT / (self.game_data.map.height * self.TILE_HEIGHT)) * mini_map_height
+                view_rect_width = (self.WINDOW_WIDTH / (map_width_px)) * mini_map_width
+                view_rect_height = (self.WINDOW_HEIGHT / (map_height_px)) * mini_map_height
 
                 # Ajuster dynamiquement les offsets de la caméra
-                self.camera.offset_x = int(relative_x * self.game_data.map.width * self.TILE_WIDTH - (view_rect_width / 2) * (self.game_data.map.width * self.TILE_WIDTH) / mini_map_width)
-                self.camera.offset_y = int(relative_y * self.game_data.map.height * self.TILE_HEIGHT - (view_rect_height / 2) * (self.game_data.map.height * self.TILE_HEIGHT) / mini_map_height)
+                self.camera.offset_x = int(relative_x * map_width_px - (view_rect_width / 2) * (map_width_px) / mini_map_width)
+                self.camera.offset_y = int(relative_y * map_height_px - (view_rect_height / 2) * (map_height_px) / mini_map_height)
 
     def display_player_resources(self):
 
@@ -1786,7 +1780,6 @@ class GUI(threading.Thread):
                 unit_surface = font.render(unit_text, True, text_color)
                 self.screen.blit(unit_surface, (text_x, y_position))
                 text_x += unit_text_width
-
 
     def check_victory(self):
         active_players = [p for p in self.game_data.players if p.units or p.buildings]
