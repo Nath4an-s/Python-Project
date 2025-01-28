@@ -13,6 +13,7 @@ import random
 from backend.Players import *
 from PIL import Image
 import copy
+import sys
 
 def draw_fireball(screen, start_pos, target_pos, progress, fireball_image):
 
@@ -260,7 +261,6 @@ class GUI(threading.Thread):
         self.show_units = False
 
         self.codedetriche = False
-
         self.mouse_held = None
            
         self.PLAYER_COLORS = {
@@ -1386,14 +1386,96 @@ class GUI(threading.Thread):
             else :    
                 overlay_surface = self.background
             self.screen.blit(overlay_surface, (0, 0))
+    
+    def show_loading_screen(self):
+        #Display a loading screen while initializing the game.
+        if not self.screen:
+            return
 
+        # Colors for loading screen
+        colors = {
+            'text': (255, 255, 255),
+            'loading_bar': (107, 28, 35)
+        }
+
+        self.load_screen = pygame.image.load(r'..\assets\MenuPhoto\loading_screen.png')
+        self.load_screen = pygame.transform.scale(self.load_screen, (800, 600))
+
+        # Loading messages
+        messages = [
+            "Initializing isometric view...",
+            "Loading resources...",
+            "Preparing terrain...",
+            "Loading units...",
+            "Almost ready..."
+        ]
+
+        # Font setup
+        font = pygame.font.Font(None, 48)
+        small_font = pygame.font.Font(None, 36)
+
+        # Loading animation variables
+        progress = 0
+        message_index = 0
+        clock = pygame.time.Clock()
+
+        while progress < 100:
+            self.screen.blit(self.load_screen, (0, 0))
+
+            # Draw title
+            title = font.render("AIge of Empire", True, colors['text'])
+            title_rect = title.get_rect(center=(400, 150))
+            self.screen.blit(title, title_rect)
+
+            # Draw current loading message
+            message = small_font.render(messages[message_index], True, colors['text'])
+            message_rect = message.get_rect(center=(400, 240))  
+            self.screen.blit(message, message_rect)
+
+            # Draw loading bar
+            bar_width = 400
+            bar_height = 20
+            border = pygame.Rect(200, 270, bar_width, bar_height) 
+            progress_width = int((progress / 100) * bar_width)
+            progress_bar = pygame.Rect(200, 270, progress_width, bar_height) 
+
+            pygame.draw.rect(self.screen, colors['text'], border, 2, border_radius=10)
+            pygame.draw.rect(self.screen, colors['loading_bar'], progress_bar, border_radius=10)
+
+            # Draw progress percentage - moved up by 20
+            progress_text = small_font.render(f"{int(progress)}%", True, colors['text'])
+            progress_rect = progress_text.get_rect(center=(400, 310))  
+            self.screen.blit(progress_text, progress_rect)
+
+            pygame.display.flip()
+
+            # Update progress
+            progress += 7
+            if progress % 21 == 0:
+                message_index = min(message_index + 1, len(messages) - 1)
+
+            # Handle events
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+            clock.tick(1)
+
+        
+        
 
     def initialize_pygame(self):
+        """Initialize pygame and load resources."""
         pygame.init()
         self.screen = pygame.display.set_mode((self.WINDOW_WIDTH, self.WINDOW_HEIGHT))
         pygame.display.set_caption("Gui")
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(None, 36)
+        
+        self.show_loading_screen()
+        
+        # Load resources
         self.setup_paths()
         self.load_resources()
         self.tile_polygon = [
