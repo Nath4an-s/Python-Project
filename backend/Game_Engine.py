@@ -144,7 +144,7 @@ class GameEngine:
                 elif key == ord('f'):
                     self.players[0].owned_resources["Food"] += 5000
                 elif key == ord('h'):
-                    for player in self.players[1:]:
+                    for player in self.players:
                         player.owned_resources["Gold"] = 0
                         player.owned_resources["Wood"] = 0
                         player.owned_resources["Food"] = 0
