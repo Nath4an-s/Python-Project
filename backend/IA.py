@@ -286,6 +286,22 @@ class IA:
             
         villagers = list(set(villagers))  # Ensure no duplicates
         
+        # Check if we should join existing construction (1/3 chance)
+        if self.player.constructing_buildings and random.random() < 0.33:
+            latest_construction = self.player.constructing_buildings[-1]
+            # Add villager to existing construction
+            for villager in villagers:
+                Action(self.game_map).construct_building(
+                    villager, 
+                    latest_construction["type"],
+                    latest_construction["position"][0], 
+                    latest_construction["position"][1],
+                    self.player,
+                    self.current_time_called
+                )
+            self.debug_print(f"{self.player.name} : Villager joining existing {latest_construction['type'].__name__} construction at {latest_construction['position']}", 'Blue')
+            return
+        
         building_types = [Farm, Barracks, House, TownCenter, Stable, ArcheryRange, Keep, Camp, Construct]
         building_costs = {
             "Farm": {"Wood": 60, "Gold": 0},
