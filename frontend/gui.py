@@ -1294,7 +1294,7 @@ class GUI(threading.Thread):
                                 # Position de la cible
                                 target_pos = obj.target_attack.position
                                 iso_target_x, iso_target_y = self.cart_to_iso(target_pos[0], target_pos[1])
-                                target_x = iso_target_x + (self.game_data.map.width * self.TILE_WIDTH // 2) - self.camera.offset_x
+                                target_x = iso_target_x + (self.game_data.map.height * self.TILE_WIDTH // 2) - self.camera.offset_x
                                 target_y = iso_target_y - self.camera.offset_y
 
                                 # Calcul de la progression
@@ -1351,7 +1351,7 @@ class GUI(threading.Thread):
                     # Position de la cible
                     target_pos = obj.target.position
                     iso_target_x, iso_target_y = self.cart_to_iso(target_pos[0], target_pos[1])
-                    target_x = iso_target_x + (self.game_data.map.width * self.TILE_WIDTH // 2) - self.camera.offset_x
+                    target_x = iso_target_x + (self.game_data.map.height * self.TILE_WIDTH // 2) - self.camera.offset_x
                     target_y = iso_target_y - self.camera.offset_y
 
                     # Calcul de la progression (vous pouvez stocker une valeur de progression pour chaque attaque)
