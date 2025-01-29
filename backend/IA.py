@@ -146,6 +146,7 @@ class IA:
             self.player.owned_resources["Gold"] >= 2000 and 
             any(type(building).__name__ in ["Barracks", "Stable", "ArcheryRange"] for building in self.player.buildings) and 
             self.mode == "aggressive"):
+            self.debug_print("Training strategy : Aggressive mode, training troops", 'Magenta')
             
             # Keep minimum villagers instead of killing all
             villagers = [unit for unit in self.player.units if isinstance(unit, Villager)]
@@ -409,7 +410,7 @@ class IA:
                     for dy in range(-radius, radius + 1):
                         new_x = x + dx
                         new_y = y + dy
-                        if self.is_position_valid(new_x, new_y, building_class(self.player).size, is_building=True):
+                        if self.is_position_valid(new_x, new_y, building_class(self.player).size + 1, is_building=True):
                             build_position = (new_x, new_y)
                             break
                     if build_position:
