@@ -212,7 +212,7 @@ class Action:
 
             # Right side (vertical from y to y+size-1, column x + size)
             if 0 <= x + size < self.map.width:  # Check if right is within bounds
-                adjacent_positions.append((x + size - 1, y + i))
+                adjacent_positions.append((x + size, y + i))
 
             # Top side (horizontal from x to x+size-1, row y-1)
             if 0 <= y - 1 < self.map.height:  # Check if top is within bounds
@@ -220,7 +220,7 @@ class Action:
 
             # Bottom side (horizontal from x to x+size-1, row y + size)
             if 0 <= y + size - 1 < self.map.height:  # Check if bottom is within bounds
-                adjacent_positions.append((x + i, y + size - 1))  # y + size - 1 is the bottom row, use y+size for adjacent
+                adjacent_positions.append((x + i, y + size))  # y + size - 1 is the bottom row, use y+size for adjacent
 
         # Corners (if not already included)
         if 0 <= x - 1 < self.map.width and 0 <= y - 1 < self.map.height:  # Top-left corner
