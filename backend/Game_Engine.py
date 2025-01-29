@@ -133,7 +133,9 @@ class GameEngine:
                 elif key == ord('u'):
                     Building.kill_building(self.players[0], self.players[0].buildings[0], self.map)
                 elif key == ord('y'):
-                    Building.kill_building(self.players[2], self.players[2].buildings[-1], self.map)
+                    Building.kill_building(self.players[0], self.players[0].buildings[-1], self.map)
+                elif key == ord('t'):
+                    self.players[0].owned_resources["Wood"] = 100
 
 
                 #########################

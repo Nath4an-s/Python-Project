@@ -338,6 +338,8 @@ class IA:
                     least_constructed_building = "Camp"
                     self.recovery_strategy = True
                     self.debug_print("Strategy : No Town Center, not enough Wood, building a Camp", 'Magenta')
+            else:
+                return False
                     
         # Check if food is low and prioritize building a Farm
         elif self.player.owned_resources["Food"] < 50 and self.player.owned_resources["Wood"] >= 60:
