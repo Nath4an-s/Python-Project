@@ -409,7 +409,7 @@ class IA:
             player_should_build = self.player.buildings
 
         for existing_building in player_should_build:
-            x, y = existing_building.position if isinstance(existing_building, Building) else existing_building
+            x, y = existing_building.position if isinstance(existing_building, Building) else existing_building.position
             for radius in range(5, 15): # buildings not too close to each other nor too far
                 for dx in range(-radius, radius + 1):
                     for dy in range(-radius, radius + 1):

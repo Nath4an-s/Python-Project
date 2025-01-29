@@ -132,6 +132,8 @@ class GameEngine:
                     action.move_unit(self.players[1].units[1],15,15,self.get_current_time())
                 elif key == ord('u'):
                     Building.kill_building(self.players[0], self.players[0].buildings[0], self.map)
+                elif key == ord('y'):
+                    Building.kill_building(self.players[2], self.players[2].buildings[-1], self.map)
 
 
                 #########################
