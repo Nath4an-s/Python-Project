@@ -20,7 +20,7 @@ GUI_size.y = 600
 # Initialize empty players list
 players = []
 
-global_speedS = 1
+global_speedS = 10
 
 class StartMenu:
     def __init__(self, screen_width=800, screen_height=600):

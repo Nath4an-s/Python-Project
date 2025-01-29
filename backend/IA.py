@@ -1,5 +1,6 @@
 #IA
 import random
+import math
 
 from Actions import *
 from logger import debug_print
@@ -24,7 +25,6 @@ class IA:
         self.secure_gold = [0, 0, 0] # True/False(need to secure), Number of Keep, True/False(presence of Camp), True/False(Camp just placed)
         self.nb_keep = 0
         self.entouring_units = []
-        self.entouring_strategy_ready = True
         self.nb_encircling_attacks = 0
         self.already_encircling_units = []
 
@@ -450,7 +450,7 @@ class IA:
             self.player.owned_resources["Wood"] >= 2000 and 
             self.player.owned_resources["Gold"] >= 2000 and 
             any(type(building).__name__ in ["Barracks", "Stable", "ArcheryRange"] for building in self.player.buildings) and 
-            self.mode == "aggressive") and self.entouring_strategy_ready and self.nb_encircling_attacks <= 3:
+            self.mode == "aggressive") and self.nb_encircling_attacks < 1:
             self.group_attack(troops)
         else:
             self.strategic_attack(troops)
@@ -461,23 +461,31 @@ class IA:
             self.entouring_units.extend(troops[:needed_attackers])
             for troop in troops[:needed_attackers]:
                 troop.task = "encircling"
-        if len(self.entouring_units) == 10:
+        else:
+            self.already_encircling_units = True
+        
+        if not self.already_encircling_units:
             target = self.find_ennemy_base()
             for troop in self.entouring_units:
-                target_x, target_y = target
-                while not self.game_map.is_tile_free(target_x, target_y):
-                    angle = random.uniform(0, 2 * math.pi)
-                    distance_to_target = len(self.target_player.buildings) * 2.5 + 4
-                    target_x = int(target[0] + distance_to_target * math.cos(angle))
-                    target_y = int(target[1] + distance_to_target * math.sin(angle))
-                    self.debug_print(f"Trying to cercle the ennemy base at {target_x, target_y} for {target}", 'Magenta')
-                Action(self.game_map).move_unit(troop, target_x, target_y, self.current_time_called)
-            self.entouring_strategy_ready = False
-        if all(not troop.is_moving for troop in self.entouring_units):
-            self.debug_print(f"Entouring strategy ready, attacking", 'Magenta')
+                if troop.target_position is None:  # Assign target only once
+                    target_x, target_y = target
+                    while not self.game_map.is_tile_free(target_x, target_y):
+                        angle = random.uniform(0, 2 * math.pi)
+                        distance_to_target = len(self.target_player.buildings) * 2.5 + 7
+                        target_x = int(target[0] + distance_to_target * math.cos(angle))
+                        target_y = int(target[1] + distance_to_target * math.sin(angle))
+                    troop.target_position = (target_x, target_y)
+                    self.debug_print(f"Target set to {target_x, target_y} for {troop.name}", 'Magenta')
+                    self.debug_print(f"Trying to circle the enemy base at {target_x, target_y} for {target}", 'Magenta')
+        
+        if len(self.entouring_units) == 10 and (
+            all(not troop.is_moving for troop in self.entouring_units) or 
+            any(troop.task == "attacking" for troop in self.entouring_units)):
+            
+            self.debug_print("Encircling strategy ready, attacking", 'Magenta')
             self.strategic_attack(self.entouring_units)
-            self.entouring_strategy_ready = True
-            self.already_encircling_units.extend(self.entouring_units)
+            
+            self.already_encircling_units = False
             self.entouring_units = []
             self.nb_encircling_attacks += 1
 
