@@ -1,7 +1,5 @@
 # Projet Python : Alge of EmpAlres
 
-![Bannière du projet](https://via.placeholder.com/1200x400.png?text=Alge+of+EmpAlres+Banner)
-
 ## 📜 Introduction
 
 Ce projet consiste à implémenter un moteur de jeu de stratégie en temps réel (RTS) simplifié, inspiré par *Age of Empires*. L'objectif est de créer un environnement où des intelligences artificielles (IA) s'affrontent dans des batailles stratégiques. Le projet se concentre sur le développement du moteur de jeu et la création de profils d'IA variés (défensifs, offensifs, etc.).
@@ -37,14 +35,6 @@ Le jeu se déroule sur une carte générée aléatoirement, avec des ressources 
 ### 💾 Sauvegarde et Chargement
 - **Sauvegarde rapide** (F11) et **chargement rapide** (F12).
 - **Gestion de fichiers** : Nombre illimité de sauvegardes.
-
-## 📸 Captures d'Écran
-
-### Mode Terminal
-![Mode Terminal](https://via.placeholder.com/600x400.png?text=Terminal+View)
-
-### Mode 2.5D
-![Mode 2.5D](https://via.placeholder.com/600x400.png?text=2.5D+View)
 
 ## 📊 Schémas
 
