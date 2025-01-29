@@ -108,10 +108,17 @@ class IA:
         self.adjust_priorities()
         self.manage_defenders()  # New call to manage defenders
         building_villagers, gathering_villagers, inactive_troops = self.get_inactive_units()
+
+        self.train_units()
         
         if self.recovery_strategy and self.player.owned_resources["Wood"] < 350:
             gathering_villagers.extend(building_villagers)
             building_villagers = []
+        elif (self.player.owned_resources["Food"] >= 2000 and 
+            self.player.owned_resources["Wood"] >= 2000 and 
+            self.player.owned_resources["Gold"] >= 2000):
+            building_villagers.extend(gathering_villagers)
+            gathering_villagers = []
 
         self.build_structures(list(set(building_villagers)))
         
@@ -133,8 +140,6 @@ class IA:
         # Handle remaining military strategy
         if inactive_troops:
             self.attack(list(set(inactive_troops)))
-        
-        self.train_units()
 
 
 #### TRAINING STRATEGY ####

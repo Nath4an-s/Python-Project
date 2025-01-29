@@ -593,6 +593,9 @@ class Action:
                 "start_time": current_time_called,
                 "completed": False
             }
+            for resource, amount in building_type(player).cost.items():
+                player.owned_resources[resource] -= amount
+                self.debug_print(f"{player.name} spent {amount} {resource} to construct {building_type.__name__}.", 'Blue')
             player.constructing_buildings.append(new_entry)
 
     def _construct(self, unit, building_type, x, y, player, current_time_called):
