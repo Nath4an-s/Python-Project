@@ -1436,7 +1436,7 @@ class GUI(threading.Thread):
             pygame.draw.rect(self.screen, colors['text'], border, 2, border_radius=10)
             pygame.draw.rect(self.screen, colors['loading_bar'], progress_bar, border_radius=10)
 
-            # Draw progress percentage - moved up by 20
+            # Draw progress percentage
             progress_text = small_font.render(f"{int(progress)}%", True, colors['text'])
             progress_rect = progress_text.get_rect(center=(400, 310))  
             self.screen.blit(progress_text, progress_rect)
@@ -1454,7 +1454,7 @@ class GUI(threading.Thread):
                     pygame.quit()
                     sys.exit()
 
-            clock.tick(1)
+            clock.tick(3)
 
     def initialize_pygame(self):
         """Initialize pygame and load resources."""
