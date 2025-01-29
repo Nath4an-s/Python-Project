@@ -1,8 +1,3 @@
-# Civilizations' starting resources
-Means_starting_resources = {"Wood": 200, "Food": 50, "Gold": 50}
-Leans_starting_resources = {"Wood": 2000, "Food": 2000, "Gold": 2000}
-Marines_starting_resources = {"Wood": 20000, "Food": 20000, "Gold": 20000}
-
 # Player Class
 class Player:
     def __init__(self, name, civilization, ai_profile, player_id, color=None):
