@@ -1258,7 +1258,6 @@ class GUI(threading.Thread):
                 screen_x1 = x - self.camera.offset_x + offset_x
                 screen_y2 = y - self.camera.offset_y + offset_y
                 if image:
-                    #img = self.replace_color_range(image,obj.player)
                     self.screen.blit(image, (screen_x1, screen_y2))
                     if obj.is_attacked_by:
                         self.draw_health_bar(screen_x, screen_y, obj.hp, obj.max_hp,entity_type,width=30, height=4)
@@ -1627,6 +1626,9 @@ class GUI(threading.Thread):
 
         # Parcourir chaque joueur
         for i, player in enumerate(self.game_data.players[:len(self.game_data.players)]):
+            if not player.units and not player.buildings:
+                continue
+
             y_position = y_start + i * (hud_height + spacing)  # Position verticale pour ce joueur
             x_position = x_start  # Position horizontale de départ pour ce joueur
 
