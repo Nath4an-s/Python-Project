@@ -123,7 +123,8 @@ class GameEngine:
                 ###### TEST KEYS #######
 
                 elif key == ord('r'):
-                    self.debug_print(self.ias[2].decided_builds)
+                    self.debug_print(self.players[0].buildings[0].position)
+                    self.debug_print(action.get_adjacent_positions(self.players[0].buildings[0].position[0], self.players[0].buildings[0].position[1], self.players[0].buildings[0].size))
                 elif key == ord('o'):
                     self.terminalon = not self.terminalon   
                 elif key == ord('i'):

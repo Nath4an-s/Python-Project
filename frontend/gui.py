@@ -1249,7 +1249,7 @@ class GUI(threading.Thread):
                 if obj.is_moving == True:
                     state = "walking"  
                 else :
-                    if state is None:
+                    if state is None or state == "encircling":
                         obj.direction = "south"
                         state = "idle"
                     if state == "marching" or  state == "returning" or state == "going_to_battle" or  state == "going_to_construction_site" or obj.is_moving == True:
@@ -1417,7 +1417,7 @@ class GUI(threading.Thread):
             self.screen.blit(self.load_screen, (0, 0))
 
             # Draw title
-            title = font.render("AIge of Empire", True, colors['text'])
+            title = font.render("AIge of EmpAIre", True, colors['text'])
             title_rect = title.get_rect(center=(400, 150))
             self.screen.blit(title, title_rect)
 

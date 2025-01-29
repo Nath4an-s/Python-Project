@@ -22,6 +22,11 @@ class IA:
         self.min_villagers = 2  # Minimum villagers to keep
         self.recovery_strategy = False
         self.secure_gold = [0, 0, 0] # True/False(need to secure), Number of Keep, True/False(presence of Camp), True/False(Camp just placed)
+        self.nb_keep = 0
+        self.entouring_units = []
+        self.entouring_strategy_ready = True
+        self.nb_encircling_attacks = 0
+        self.already_encircling_units = []
 
 
 #### PRIORITIES and UNIT_RESOURCES ####
@@ -96,12 +101,6 @@ class IA:
         else:
             self.priorities = self.set_priorities()  # Rétablir les priorités par défaut
 
-        # Gestion des limites de population
-        if total_population >= max_population - 5:
-            self.priorities["build_house"] = True
-        else:
-            self.priorities["build_house"] = False
-
 
 #### MAIN LOOP ####
 
@@ -124,7 +123,7 @@ class IA:
         self.gather_resources(gathering_villagers)
         
         # Check for nearby enemies for all units
-        for unit in self.player.units:
+        for unit in (u for u in self.player.units if u.task != "encircling"):
             nearby_enemies = self.find_nearby_enemies(5, unit.position)  # 5 tile radius
             if nearby_enemies:
                 closest_enemy = min(nearby_enemies, 
@@ -132,8 +131,8 @@ class IA:
                 Action(self.game_map).go_battle(unit, closest_enemy, self.current_time_called)
         
         # Handle remaining military strategy
-        if self.mode == "aggressive":
-            self.strategic_attack(list(set(inactive_troops)))
+        if inactive_troops:
+            self.attack(list(set(inactive_troops)))
         
         self.train_units()
 
@@ -368,7 +367,9 @@ class IA:
                     key=lambda b: building_counts[b],
                     default="Farm"  # Default to Farm if no buildings are constructable
                 )
-                self.debug_print(f"No Particular strategy, building {least_constructed_building}", 'Magenta')
+        elif self.mode == "defensive" and len(self.decided_builds)%5 == self.nb_keep and self.player.owned_resources["Gold"] >= 125 and self.player.owned_resources["Wood"] >= 35:
+            least_constructed_building = "Keep"
+            self.debug_print("Strategy : Defensive mode, building a Keep", 'Magenta')
         else:
             # Filter out military buildings that have reached their limit
             constructable_buildings = [
@@ -384,8 +385,13 @@ class IA:
                 key=lambda b: building_counts[b],
                 default="Farm"  # Default to Farm if no buildings are constructable
             )
-            self.debug_print(f"No Particular strategy, building {least_constructed_building}", 'Magenta')
         building_class = eval(least_constructed_building) # Get the class of the least constructed building
+        if any(resource not in self.player.owned_resources or self.player.owned_resources[resource] < amount 
+               for resource, amount in building_class(self.player).cost.items()):
+            self.debug_print("Strategy : Cannot build, not enough resources, gathering", 'Magenta')
+            self.gather_resources(villagers)
+            return
+        self.debug_print(f"No Particular strategy, building {least_constructed_building}", 'Magenta')
         # Check if the player has enough resources to construct the identified building
         build_position = None
         #Trick to build where we want
@@ -403,14 +409,9 @@ class IA:
                     for dy in range(-radius, radius + 1):
                         new_x = x + dx
                         new_y = y + dy
-                        if GameMode == "Gold Rush" and building_class.__name__ == "Camp":
-                            if self.is_position_valid(new_x, new_y, building_class(self.player).size + 1, is_building=True):
-                                build_position = (new_x, new_y)
-                                break
-                        else:
-                            if self.is_position_valid(new_x, new_y, building_class(self.player).size, is_building=True):
-                                build_position = (new_x, new_y)
-                                break
+                        if self.is_position_valid(new_x, new_y, building_class(self.player).size, is_building=True):
+                            build_position = (new_x, new_y)
+                            break
                     if build_position:
                         break
                 if build_position:
@@ -432,14 +433,56 @@ class IA:
                     self.decided_builds.append((build_position[0], build_position[1], building_class(self.player).size))
                 if self.secure_gold[0]:
                     if building_class.__name__ == "Keep":
+                        self.nb_keep += 1
                         self.secure_gold[1] += 1
                     self.secure_gold[0] = 0
 
 
 #### ATTACK STRATEGY ####
 
+    def attack(self, troops):
+        if not troops:
+            return
+        if not self.target_player:
+            self.target_player = self.choose_best_target()
+
+        if (self.player.owned_resources["Food"] >= 2000 and 
+            self.player.owned_resources["Wood"] >= 2000 and 
+            self.player.owned_resources["Gold"] >= 2000 and 
+            any(type(building).__name__ in ["Barracks", "Stable", "ArcheryRange"] for building in self.player.buildings) and 
+            self.mode == "aggressive") and self.entouring_strategy_ready and self.nb_encircling_attacks <= 3:
+            self.group_attack(troops)
+        else:
+            self.strategic_attack(troops)
+
+    def group_attack(self, troops):
+        needed_attackers = 10 - len(self.entouring_units)
+        if needed_attackers > 0:
+            self.entouring_units.extend(troops[:needed_attackers])
+            for troop in troops[:needed_attackers]:
+                troop.task = "encircling"
+        if len(self.entouring_units) == 10:
+            target = self.find_ennemy_base()
+            for troop in self.entouring_units:
+                target_x, target_y = target
+                while not self.game_map.is_tile_free(target_x, target_y):
+                    angle = random.uniform(0, 2 * math.pi)
+                    distance_to_target = len(self.target_player.buildings) * 2.5 + 4
+                    target_x = int(target[0] + distance_to_target * math.cos(angle))
+                    target_y = int(target[1] + distance_to_target * math.sin(angle))
+                    self.debug_print(f"Trying to cercle the ennemy base at {target_x, target_y} for {target}", 'Magenta')
+                Action(self.game_map).move_unit(troop, target_x, target_y, self.current_time_called)
+            self.entouring_strategy_ready = False
+        if all(not troop.is_moving for troop in self.entouring_units):
+            self.debug_print(f"Entouring strategy ready, attacking", 'Magenta')
+            self.strategic_attack(self.entouring_units)
+            self.entouring_strategy_ready = True
+            self.already_encircling_units.extend(self.entouring_units)
+            self.entouring_units = []
+            self.nb_encircling_attacks += 1
+
     def strategic_attack(self, troops):
-        if not troops or len(troops) < self.priorities["attack_threshold"]:
+        if len(troops) < self.priorities["attack_threshold"]:
             return
 
         if self.target_player is None or (self.target_player.units == [] and self.target_player.buildings == []):
@@ -467,7 +510,7 @@ class IA:
                 targets.extend(player.buildings)  # Add remaining buildings
                 targets.extend(player.units)      # Add all units
         
-        return targets
+        return targets 
 
     def choose_best_target(self):
         return min(
@@ -498,6 +541,9 @@ class IA:
                     if dist <= max_distance:
                         enemies.append(building)
         return enemies
+    
+    def find_ennemy_base(self):
+        return self.target_player.buildings[0].position
 
 
 #### DEFENSE STRATEGY ####

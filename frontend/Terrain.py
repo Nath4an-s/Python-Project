@@ -244,7 +244,14 @@ class Map:
             for resource_x, resource_y in self.resources[resource_type]:
                 distance = abs(start_position[0] - resource_x) + abs(start_position[1] - resource_y)
 
-                if distance < min_distance:
+                adjacent_tiles = []
+                for x in range(-1, 2):
+                    for y in range(-1, 2):
+                        if x == 0 and y == 0:
+                            continue
+                        adjacent_tiles.append((resource_x + x, resource_y + y))
+
+                if distance < min_distance and any(self.is_tile_free_for_unit(x, y) for x, y in adjacent_tiles):
                     min_distance = distance
                     nearest_resource = (resource_x, resource_y)
 

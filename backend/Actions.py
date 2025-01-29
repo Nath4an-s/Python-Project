@@ -203,26 +203,42 @@ class Action:
 
     def get_adjacent_positions(self, x, y, size):
         adjacent_positions = []
-        
+
+        # Left side and right side (excluding corners)
         for i in range(size):
-            adjacent_positions.append((x - 1, y + i))  # left side
-            adjacent_positions.append((x + size, y + i))  # right side
-            adjacent_positions.append((x + i, y - 1))  # top row
-            adjacent_positions.append((x + i, y + size))  # bottom row
+            # Left side (vertical from y to y+size-1, column x-1)
+            if 0 <= x - 1 < self.map.width:  # Check if left is within bounds
+                adjacent_positions.append((x - 1, y + i))
 
-        adjacent_positions.extend([
-            (x - 1, y - 1),  # corners
-            (x - 1, y + size),
-            (x + size, y - 1),
-            (x + size, y + size)
-        ])
+            # Right side (vertical from y to y+size-1, column x + size)
+            if 0 <= x + size < self.map.width:  # Check if right is within bounds
+                adjacent_positions.append((x + size - 1, y + i))
 
-        adjacent_positions = [
-            (px, py) for px, py in adjacent_positions
-            if 0 <= px < self.map.width and 0 <= py < self.map.height
-        ]
-        
+            # Top side (horizontal from x to x+size-1, row y-1)
+            if 0 <= y - 1 < self.map.height:  # Check if top is within bounds
+                adjacent_positions.append((x + i, y - 1))
+
+            # Bottom side (horizontal from x to x+size-1, row y + size)
+            if 0 <= y + size - 1 < self.map.height:  # Check if bottom is within bounds
+                adjacent_positions.append((x + i, y + size - 1))  # y + size - 1 is the bottom row, use y+size for adjacent
+
+        # Corners (if not already included)
+        if 0 <= x - 1 < self.map.width and 0 <= y - 1 < self.map.height:  # Top-left corner
+            adjacent_positions.append((x - 1, y - 1))
+        if 0 <= x + size -1 < self.map.width and 0 <= y - 1 < self.map.height:  # Top-right corner
+            adjacent_positions.append((x + size - 1, y - 1))
+        if 0 <= x - 1 < self.map.width and 0 <= y + size < self.map.height:  # Bottom-left corner
+            adjacent_positions.append((x - 1, y + size - 1))
+        if 0 <= x + size < self.map.width and 0 <= y + size - 1 < self.map.height:  # Bottom-right corner
+            adjacent_positions.append((x + size - 1, y + size - 1))
+
+        # Remove duplicates by converting to a set and back to a list
+        adjacent_positions = list(set(adjacent_positions))
+
         return adjacent_positions
+
+
+
 
     def _move_cost(self, current, neighbor):
         return 1 if abs(current[0] - neighbor[0]) + abs(current[1] - neighbor[1]) == 1 else 1.414
@@ -419,7 +435,8 @@ class Action:
 
         # Get the current position of the enemy
         if isinstance(enemy_unit, Building):
-            free_tiles = self.get_adjacent_positions(enemy_unit.position[0], enemy_unit.position[1], enemy_unit.size)
+            adjacent_tiles = self.get_adjacent_positions(enemy_unit.position[0], enemy_unit.position[1], enemy_unit.size)
+            free_tiles = [tile for tile in adjacent_tiles if self.map.is_tile_free_for_unit(tile[0], tile[1])]
             for tile in free_tiles:
                 if self.map.is_tile_free_for_unit(tile[0], tile[1]):
                     target_x, target_y = tile
@@ -428,16 +445,19 @@ class Action:
             target_x, target_y = enemy_unit.position
 
         # Check if the unit is within range to attack
-        if ((unit.position[0] - target_x)**2 + (unit.position[1] - target_y)**2)**0.5 <= unit.range + 0.25: # Add a small threshold to ensure the unit is within range
+        if isinstance(enemy_unit, Unit) and ((unit.position[0] - target_x)**2 + (unit.position[1] - target_y)**2)**0.5 <= unit.range + 0.25: # Add a small threshold to ensure the unit is within range
             unit.task = "attacking"
-            if not isinstance(enemy_unit, Building):
-                enemy_unit.is_attacked_by = unit
-                enemy_unit.task = "is_attacked"
+            enemy_unit.is_attacked_by = unit
+            enemy_unit.task = "is_attacked"
+            unit.is_moving = False
+            self._attack(unit, enemy_unit, current_time_called)
+        elif isinstance(enemy_unit, Building) and (unit.position[0] == target_x and unit.position[1] == target_y or (isinstance(unit, Archer) and abs(unit.position[0] - target_x) <= unit.range and unit.position[1] == target_y)):
+            unit.task = "attacking"
+            unit.target_position = None
             unit.is_moving = False
             self._attack(unit, enemy_unit, current_time_called)
         else:
             self.move_unit(unit, int(target_x), int(target_y), current_time_called)
-
 
     
     def _attack(self, unit, enemy_unit, current_time_called):
@@ -452,7 +472,7 @@ class Action:
             unit.task = None
             unit.target_attack = None
             return
-        distance = ((unit.position[0] - enemy_unit.position[0])**2 + (unit.position[1] - enemy_unit.position[1])**2)**0.5
+        distance = ((unit.position[0] - enemy_unit.position[0])**2 + (unit.position[1] - enemy_unit.position[1])**2)**0.5 if not isinstance(enemy_unit, Building) else 0
         if distance <= unit.range + 0.6: # Add a small threshold to ensure the unit is within range
             if not hasattr(unit, 'last_hit_time'):
                 unit.last_hit_time = 0
@@ -514,6 +534,12 @@ class Action:
             unit.task = None
             return False
         
+        if any(resource not in unit.player.owned_resources or unit.player.owned_resources[resource] < amount 
+               for resource, amount in building_type(player).cost.items()):
+            self.debug_print("Cannot construct building: insufficient resources.", 'Yellow')
+            unit.task = None
+            return False
+
         # Set construction attributes
         unit.construction_type = building_type
         unit.target_building = (x, y)
@@ -527,7 +553,7 @@ class Action:
                 if self.map.is_tile_free_for_unit(pos[0], pos[1]):
                     self.move_unit(unit, pos[0], pos[1], current_time_called)
                     break
-
+        
         # Reached construction site
         if unit.target_position is None:
             unit.task = "constructing"
@@ -541,8 +567,7 @@ class Action:
                 unit.start_building = current_time_called
             
             # Spawn construction marker if needed
-            if not self.map.grid[y][x].building:
-                Building.spawn_building(player, x, y, Construct, self.map)
+            Building.spawn_building(player, x, y, Construct, self.map)
 
         return True
 
@@ -552,7 +577,7 @@ class Action:
             (b for b in player.constructing_buildings if b["position"] == (x, y)), 
             None
         )
-        
+
         if construction_entry:
             # Prevent duplicate workers
             if unit not in construction_entry.get("workers", []):
@@ -588,7 +613,8 @@ class Action:
         # Check construction completion
         if current_time_called - unit.start_building >= actual_building_time:
             # Remove existing building
-            Building.kill_building(player, self.map.grid[y][x].building, self.map)
+            if self.map.grid[y][x].building:
+                Building.kill_building(player, self.map.grid[y][x].building, self.map)
             
             # Spawn new building
             Building.spawn_building(player, x, y, building_type, self.map)

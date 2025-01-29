@@ -20,13 +20,13 @@ GUI_size.y = 600
 # Initialize empty players list
 players = []
 
-global_speedS = 10
+global_speedS = 20
 
 class StartMenu:
     def __init__(self, screen_width=800, screen_height=600):
         pygame.init()
         self.screen = pygame.display.set_mode((screen_width, screen_height))
-        pygame.display.set_caption("AIge of Empire")
+        pygame.display.set_caption("AIge of EmpAIre")
         
         self.colors = {
             'background': (50, 50, 50),
@@ -60,7 +60,7 @@ class StartMenu:
     def draw(self):
         self.screen.blit(self.background_image, (0, 0))
         
-        title = self.font.render("AIge of Empire", True, self.colors['text'])
+        title = self.font.render("AIge of EmpAIre", True, self.colors['text'])
         title_rect = title.get_rect(center=(400, 150))
         self.screen.blit(title, title_rect)
         
@@ -96,7 +96,7 @@ class StartMenu:
 class LoadGameMenu:
     def __init__(self, screen_width=800, screen_height=600):
         self.screen = pygame.display.set_mode((screen_width, screen_height))
-        pygame.display.set_caption("AIge of Empire - Load a game")
+        pygame.display.set_caption("AIge of EmpAIre - Load a game")
         
         self.colors = {
             'background': (50, 50, 50),
@@ -280,7 +280,7 @@ class GameSettingsMenu:
     def __init__(self, screen_width=800, screen_height=600):
 
         self.screen = pygame.display.set_mode((screen_width, screen_height))
-        pygame.display.set_caption("AIge of Empire - Setting of the game")
+        pygame.display.set_caption("AIge of EmpAIre - Setting of the game")
         
         # Store screen dimensions and center position
         self.screen_width = screen_width
@@ -587,7 +587,7 @@ class PlayerSettingsMenu:
             pygame.font.init()
             
         self.screen = pygame.display.set_mode((screen_width, screen_height))
-        pygame.display.set_caption("AIge of Empire - Player Settings")
+        pygame.display.set_caption("AIge of EmpAIre - Player Settings")
         
         self.num_players = num_players
         self.civilizations = ["Means", "Leans", "Marines"]
