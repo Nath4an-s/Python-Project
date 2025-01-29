@@ -142,6 +142,17 @@ if __name__ == "__main__":
         (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Villager\Walk\Villagerwalk046.png", False),  # northwest
         (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Villager\Walk\Villagerwalk016.png", False),  # southwest
         (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Villager\Walk\Villagerwalk016.png", True),   # southeast (flipped)
+        
+        # Etat "attacking" (attack) - Directions spécifiques
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Villager\Attack\Villagerattack001.png", False),  # south
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Villager\Attack\Villagerattack061.png", False),  # north
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Villager\Attack\Villagerattack031.png", False),  # west
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Villager\Attack\Villagerattack031.png", True),   # east (flipped)
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Villager\Attack\Villagerattack046.png", True),   # northeast (flipped)
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Villager\Attack\Villagerattack046.png", False),  # northwest
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Villager\Attack\Villagerattack016.png", False),  # southwest
+        (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Villager\Attack\Villagerattack016.png", True),   # southeast (flipped)
+
 
         # Etat "idle" (inactif) - Position spécifique
         (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Villager\Stand\Villagerstand017.png", False),  # south
@@ -222,7 +233,7 @@ if __name__ == "__main__":
         (r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\Archer\Stand\Archerstand001.png", False),  # south
     ]
 
-    imagedetree = [(r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\resources\soil.png",False)]
+    imagedetree = [(r"C:\Users\gtfor\Documents\STI 3A\Python-Project\assets\units\2\villager\attacking\northeast\13.png",False)]
 
     # Position cible (où le point rouge doit apparaître)
     target_position = (400, 300)  # Position au centre de la fenêtre
