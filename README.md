@@ -33,7 +33,7 @@ Le jeu se déroule sur une carte générée aléatoirement, avec des ressources 
 - **Mode 2.5D** : Vue isométrique avec des sprites pour une expérience immersive.
 
 ### 💾 Sauvegarde et Chargement
-- **Sauvegarde rapide** (F11) et **chargement rapide** (F12).
+- **Sauvegarde rapide** (F10) et **chargement rapide** (F12).
 - **Gestion de fichiers** : Nombre illimité de sauvegardes.
 
 ## 📊 Schémas
